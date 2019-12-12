@@ -224,7 +224,7 @@ namespace Unreal.Core.Models
         [NetFieldExport("SupplyDropWaveStartedSoundCue", RepLayoutCmdType.Pointer, 192, "SupplyDropWaveStartedSoundCue", "USoundCue*", 16)]
         public uint? SupplyDropWaveStartedSoundCue { get; set; } //Type: USoundCue* Bits: 16
 
-        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Property, 193, "TeamXPlayersLeft", "", 160)]
+        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Ignore, 193, "TeamXPlayersLeft", "", 160)]
         public DebuggingObject TeamXPlayersLeft { get; set; } //Type:  Bits: 160
 
         [NetFieldExport("SafeZoneIndicator", RepLayoutCmdType.Pointer, 197, "SafeZoneIndicator", "AFortSafeZoneIndicator*", 16)]

@@ -533,7 +533,14 @@ namespace Unreal.Core
 
         public override float ReadSingle()
         {
-            return BitConverter.ToSingle(ReadBytes(4));
+            byte[] arr = ReadBytes(4);
+
+            if(IsError)
+            {
+                return 0;
+            }
+
+            return BitConverter.ToSingle(arr);
         }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)
@@ -543,12 +550,26 @@ namespace Unreal.Core
 
         public override ushort ReadUInt16()
         {
-            return BitConverter.ToUInt16(ReadBytes(2));
+            byte[] arr = ReadBytes(2);
+
+            if (IsError)
+            {
+                return 0;
+            }
+
+            return BitConverter.ToUInt16(arr);
         }
 
         public override uint ReadUInt32()
         {
-            return BitConverter.ToUInt32(ReadBytes(4));
+            byte[] arr = ReadBytes(4);
+
+            if(IsError)
+            {
+                return 0;
+            }
+
+            return BitConverter.ToUInt32(arr);
         }
 
         public override bool ReadUInt32AsBoolean()
@@ -563,7 +584,14 @@ namespace Unreal.Core
 
         public override ulong ReadUInt64()
         {
-            return BitConverter.ToUInt64(ReadBytes(8));
+            byte[] arr = ReadBytes(8);
+
+            if(IsError)
+            {
+                return 0;
+            }
+
+            return BitConverter.ToUInt64(arr);
         }
 
         /// <summary>

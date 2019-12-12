@@ -20,14 +20,14 @@ namespace Unreal.Core.Models
         [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyUInt32, 6, "AttachParent", "", 16)]
         public uint? AttachParent { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("LocationOffset", RepLayoutCmdType.Ignore, 7, "LocationOffset", "", 35)]
-        public object LocationOffset { get; set; } //Type:  Bits: 35
+        [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100, 7, "LocationOffset", "", 35)]
+        public FVector LocationOffset { get; set; } //Type:  Bits: 35
 
-        [NetFieldExport("RelativeScale3D", RepLayoutCmdType.Ignore, 8, "RelativeScale3D", "", 23)]
-        public object RelativeScale3D { get; set; } //Type:  Bits: 23
+        [NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100, 8, "RelativeScale3D", "", 23)]
+        public FVector RelativeScale3D { get; set; } //Type:  Bits: 23
 
-        [NetFieldExport("RotationOffset", RepLayoutCmdType.Ignore, 9, "RotationOffset", "", 51)]
-        public object RotationOffset { get; set; } //Type:  Bits: 51
+        [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator, 9, "RotationOffset", "", 51)]
+        public FRotator RotationOffset { get; set; } //Type:  Bits: 51
 
         [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyUInt32, 11, "AttachComponent", "", 16)]
         public uint? AttachComponent { get; set; } //Type:  Bits: 16
@@ -74,11 +74,11 @@ namespace Unreal.Core.Models
         [NetFieldExport("bIsDirty", RepLayoutCmdType.PropertyBool, 31, "bIsDirty", "bool", 1)]
         public bool? bIsDirty { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray, 34, "StateValues", "TArray", 343)]
-        public object[] StateValues { get; set; } //Type: TArray Bits: 343
+        [NetFieldExport("StateValues", RepLayoutCmdType.Property, 34, "StateValues", "TArray", 343)]
+        public DebuggingObject StateValues { get; set; } //Type: TArray Bits: 343
 
-        [NetFieldExport("StateType", RepLayoutCmdType.Ignore, 34, "StateType", "", 0)]
-        public object StateType { get; set; } //Type:  Bits: 0
+        [NetFieldExport("StateType", RepLayoutCmdType.Property, 34, "StateType", "", 0)]
+        public DebuggingObject StateType { get; set; } //Type:  Bits: 0
 
         [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt, 35, "IntValue", "int32", 0)]
         public int? IntValue { get; set; } //Type: int32 Bits: 0
@@ -86,8 +86,8 @@ namespace Unreal.Core.Models
         [NetFieldExport("NameValue", RepLayoutCmdType.Property, 36, "NameValue", "FName", 0)]
         public FName NameValue { get; set; } //Type: FName Bits: 0
 
-        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.Ignore, 41, "GenericAttributeValues", "", 80)]
-        public object GenericAttributeValues { get; set; } //Type:  Bits: 80
+        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray, 41, "GenericAttributeValues", "", 80)]
+        public float[] GenericAttributeValues { get; set; } //Type:  Bits: 80
 
         [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyUInt32, 73, "CombineTarget", "", 16)]
         public uint? CombineTarget { get; set; } //Type:  Bits: 16
