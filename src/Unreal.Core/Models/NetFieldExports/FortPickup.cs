@@ -74,10 +74,10 @@ namespace Unreal.Core.Models
         [NetFieldExport("bIsDirty", RepLayoutCmdType.PropertyBool, 31, "bIsDirty", "bool", 1)]
         public bool? bIsDirty { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("StateValues", RepLayoutCmdType.Property, 34, "StateValues", "TArray", 343)]
-        public DebuggingObject StateValues { get; set; } //Type: TArray Bits: 343
+        [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray, 34, "StateValues", "TArray", 343)]
+        public FortPickup[] StateValues { get; set; } //Type: TArray Bits: 343
 
-        [NetFieldExport("StateType", RepLayoutCmdType.Property, 34, "StateType", "", 0)]
+        [NetFieldExport("StateType", RepLayoutCmdType.Ignore, 34, "StateType", "", 0)]
         public DebuggingObject StateType { get; set; } //Type:  Bits: 0
 
         [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt, 35, "IntValue", "int32", 0)]
@@ -136,6 +136,5 @@ namespace Unreal.Core.Models
 
         [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.Pointer, 96, "PawnWhoDroppedPickup", "AFortPawn*", 8)]
         public uint? PawnWhoDroppedPickup { get; set; } //Type: AFortPawn* Bits: 8
-
     }
 }

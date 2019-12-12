@@ -122,18 +122,17 @@ namespace Unreal.Core
         public int ReadBitsToInt(int bitCount)
         {
             var result = new byte();
-            for (var i = 0; i < bitCount; i++)
-            {
-                if (IsError)
-                {
-                    return 0;
-                }
 
-                if (ReadBit())
+            bool[] bits = ReadBits(bitCount);
+
+            for (var i = 0; i < bits.Length; i++)
+            {
+                if (bits[i])
                 {
                     result |= (byte)(1 << i);
                 }
             }
+
             return (int)result;
         }
 
@@ -206,13 +205,18 @@ namespace Unreal.Core
             }
 
             var result = new byte();
+
+            var pos = Position;
+
             for (var i = 0; i < 8; i++)
             {
-                if (Bits[Position++])
+                if (Bits[pos + i])
                 {
                     result |= (byte)(1 << i);
                 }
             }
+
+            Position += 8;
 
             return result;
         }
@@ -237,10 +241,21 @@ namespace Unreal.Core
             }
 
             var result = new byte[byteCount];
+            bool[] bits = ReadBits(byteCount * 8);
 
-            for (var i = 0; i < byteCount; i++)
+            for(int i = 0; i < bits.Length; i+= 8)
             {
-                result[i] = ReadByte();
+                byte b = new byte();
+
+                for(int x = 0; x < 8; x++)
+                {
+                    if (bits[i + x])
+                    {
+                        b |= (byte)(1 << x);
+                    }
+                }
+
+                result[i / 8] = b;
             }
 
             return result;

@@ -79,12 +79,6 @@ namespace FortniteReplayReader
                         case GameStateC gameState:
                             break;
                         case FortPickup fortPickup:
-                            if(fortPickup.StateValues != null)
-                            {
-                                var a = fortPickup.StateValues;
-
-                            }
-
                             break;
                     }
                 }
