@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -15,81 +16,6 @@ namespace Unreal.Core
         public NetBitReader(bool[] input) : base(input) { }
         public NetBitReader(bool[] input, int bitCount) : base(input, bitCount) { }
 
-        /// <summary>
-        /// Read the property.
-        /// see RepLayout 2516
-        /// </summary>
-        /// <param name="type"></param>
-        public void NetSerializeItem(RepLayoutCmdType type)
-        {
-            switch (type)
-            {
-                case RepLayoutCmdType.RepMovement:
-                    SerializeRepMovement();
-                    break;
-                case RepLayoutCmdType.PropertyByte:
-                    //SerializePropertyByte();
-                    break;
-                case RepLayoutCmdType.PropertyObject:
-                    SerializePropertyObject();
-                    break;
-                case RepLayoutCmdType.PropertyVector:
-                    SerializePropertyVector();
-                    break;
-                case RepLayoutCmdType.PropertyVector10:
-                    SerializePropertyVector10();
-                    break;
-                case RepLayoutCmdType.PropertyVector100:
-                    SerializePropertyVector100();
-                    break;
-                case RepLayoutCmdType.PropertyRotator:
-                    SerializePropertyRotator();
-                    break;
-                case RepLayoutCmdType.PropertyVectorNormal:
-                    SerializePropertyVectorNormal();
-                    break;
-                case RepLayoutCmdType.PropertyVectorQ:
-                    break;
-                case RepLayoutCmdType.PropertyNetId:
-                    SerializePropertyNetId();
-                    break;
-                case RepLayoutCmdType.PropertyBool:
-                    SerializePropertyBool();
-                    break;
-                case RepLayoutCmdType.PropertyFloat:
-                    SerializePropertyFloat();
-                    break;
-                //case RepLayoutCmdType.DynamicArray:
-                //    SerializeDynamicArray();
-                //    break;
-                case RepLayoutCmdType.Property:
-                    break;
-                case RepLayoutCmdType.PropertyInt:
-                    SerializePropertyInt();
-                    break;
-                case RepLayoutCmdType.PropertyName:
-                    SerializePropertyName();
-                    break;
-                case RepLayoutCmdType.PropertyUInt32:
-                    SerializePropertyUInt32();
-                    break;
-                case RepLayoutCmdType.PropertyPlane:
-                    SerializPropertyPlane();
-                    break;
-                case RepLayoutCmdType.PropertyString:
-                    SerializePropertyString();
-                    break;
-                case RepLayoutCmdType.PropertyUInt64:
-                    SerializePropertyUInt64();
-                    break;
-                case RepLayoutCmdType.PropertyNativeBool:
-                    SerializePropertyNativeBool();
-                    break;
-                default:
-                    throw new NotImplementedException();
-            };
-        }
-
         public int SerializePropertyInt()
         {
             return ReadInt32();
@@ -99,15 +25,15 @@ namespace Unreal.Core
         {
             return ReadUInt32();
         }
-        
+
         public uint SerializePropertyUInt16()
         {
             return ReadUInt16();
         }
 
-        public void SerializePropertyUInt64()
+        public ulong SerializePropertyUInt64()
         {
-
+            return ReadUInt64();
         }
 
         public float SerializePropertyFloat()
@@ -122,9 +48,15 @@ namespace Unreal.Core
 
         public string SerializePropertyString()
         {
+            if(GetBitsLeft() == 32)
+            {
+                ReadBits(GetBitsLeft());
+
+                return String.Empty;
+            }
+
             return ReadFString();
         }
-
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
@@ -146,52 +78,6 @@ namespace Unreal.Core
             }
 
             return repMovement;
-
-            //// pack bitfield with flags
-            //uint8 Flags = (bSimulatedPhysicSleep << 0) | (bRepPhysics << 1);
-            //Ar.SerializeBits(&Flags, 2);
-            //bSimulatedPhysicSleep = (Flags & (1 << 0)) ? 1 : 0;
-            //bRepPhysics = (Flags & (1 << 1)) ? 1 : 0;
-
-            //bOutSuccess = true;
-
-            //// update location, rotation, linear velocity
-            //bOutSuccess &= SerializeQuantizedVector(Ar, Location, LocationQuantizationLevel);
-
-            //switch (RotationQuantizationLevel)
-            //{
-            //    case ERotatorQuantization::ByteComponents:
-            //        {
-            //            Rotation.SerializeCompressed(Ar);
-            //            break;
-            //        }
-
-            //    case ERotatorQuantization::ShortComponents:
-            //        {
-            //            Rotation.SerializeCompressedShort(Ar);
-            //            break;
-            //        }
-            //}
-
-            //bOutSuccess &= SerializeQuantizedVector(Ar, LinearVelocity, VelocityQuantizationLevel);
-
-            //// update angular velocity if required
-            //if (bRepPhysics)
-            //{
-            //    bOutSuccess &= SerializeQuantizedVector(Ar, AngularVelocity, VelocityQuantizationLevel);
-            //}
-
-            //return true;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57
-        /// </summary>
-        public void SerializePropertyVector()
-        {
-            var x = ReadSingle();
-            var y = ReadSingle();
-            var z = ReadSingle();
         }
 
         /// <summary>
@@ -207,19 +93,17 @@ namespace Unreal.Core
         /// <summary>
         /// NetSerialization.cpp 1858
         /// </summary>
-        public void SerializePropertyVectorNormal()
+        public FVector SerializePropertyVectorNormal()
         {
-            ReadFixedCompressedFloat();
-            ReadFixedCompressedFloat();
-            ReadFixedCompressedFloat();
+            return new FVector(ReadFixedCompressedFloat(1, 16), ReadFixedCompressedFloat(1, 16), ReadFixedCompressedFloat(1, 16));
         }
 
         /// <summary>
         /// NetSerialization.h 1768
         /// </summary>
-        public void SerializePropertyVector10()
+        public FVector SerializePropertyVector10()
         {
-            ReadPackedVector(10, 30);
+            return ReadPackedVector(10, 24);
         }
 
         /// <summary>
@@ -230,6 +114,11 @@ namespace Unreal.Core
             return ReadPackedVector(100, 30);
         }
 
+        public FVector SerializePropertyQuantizeVector()
+        {
+            return ReadPackedVector(1, 20);
+        }
+
         public void SerializPropertyPlane()
         {
 
@@ -238,32 +127,29 @@ namespace Unreal.Core
         /// <summary>
         /// NetSerialization.h 1821
         /// </summary>
-        public void ReadFixedCompressedFloat()
+        public float ReadFixedCompressedFloat(int maxValue, int numBits)
         {
-            // Note: enums are used in this function to force bit shifting to be done at compile time
-            // NumBits = 8:
-            //enum { MaxBitValue = (1 << (NumBits - 1)) - 1 };    //   0111 1111 - Max abs value we will serialize
-            //enum { Bias = (1 << (NumBits - 1)) };       //   1000 0000 - Bias to pivot around (in order to support signed values)
-            //enum { SerIntMax = (1 << (NumBits - 0)) };      // 1 0000 0000 - What we pass into SerializeInt
-            //enum { MaxDelta = (1 << (NumBits - 0)) - 1 };   //   1111 1111 - Max delta is
+            int maxBitValue = (1 << (numBits - 1)) - 1;
+            int bias = (1 << (numBits - 1));
+            int serIntMax = (1 << (numBits - 0));
+            //int maxDelta = (1 << (numBits - 0)) -1;
 
-            //    uint32 Delta;
-            //    Ar.SerializeInt(Delta, SerIntMax);
-            //    float UnscaledValue = static_cast<float>(static_cast<int32>(Delta) - Bias);
+            uint delta = ReadSerializedInt(serIntMax);
+            float unscaledValue = unchecked((int)delta) - bias;
 
-            //    if (MaxValue > MaxBitValue)
-            //    {
-            //        // We have to scale down, scale needs to be a float:
-            //        const float InvScale = MaxValue / (float)MaxBitValue;
-            //        Value = UnscaledValue * InvScale;
-            //    }
-            //    else
-            //    {
+            if(maxValue > maxBitValue)
+            {
+                float invScale = maxValue / (float)maxBitValue;
+                
+                return unscaledValue * invScale;
+            }
+            else
+            {
+                float scale = maxBitValue / (float)maxValue;
+                float invScale = 1f / scale;
 
-            //enum { scale = MaxBitValue / MaxValue };
-            //const float InvScale = 1.f / (float)scale;
-
-            //Value = UnscaledValue* InvScale;
+                return unscaledValue * invScale;
+            }
         }
 
         /// <summary>
@@ -283,9 +169,19 @@ namespace Unreal.Core
             return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
         }
 
-        public int SerializePropertyByte()
+        public byte SerializePropertyByte()
         {
-            return SerializePropertyByte(-1);
+            return (byte)SerializePropertyByte(-1);
+        }
+
+        public int SerializeEnum(int bits)
+        {
+            return ReadBitsToInt(bits);
+        }
+
+        public int SerializeEnum()
+        {
+            return ReadBitsToInt(GetBitsLeft());
         }
 
         /// <summary>
@@ -320,7 +216,19 @@ namespace Unreal.Core
         public int SerializePropertyEnum(int enumMaxValue)
         {
             return ReadBitsToInt((int)CeilLogTwo64((ulong)enumMaxValue));
+
             // Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
+
+            /*
+             * if (Ar.EngineNetVer() < HISTORY_FIX_ENUM_SERIALIZATION)
+            {
+            Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
+            }
+            else
+            {
+            Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue() + 1));
+            }
+            */
         }
 
         /// <summary>
@@ -393,6 +301,13 @@ namespace Unreal.Core
         /// </summary>
         public string SerializePropertyNetId()
         {
+            if(GetBitsLeft() == 32)
+            {
+                ReadBits(GetBitsLeft());
+
+                return String.Empty;
+            }
+
             // Use highest value for type for other (out of engine) oss type 
             const byte typeHashOther = 31;
 
@@ -445,7 +360,6 @@ namespace Unreal.Core
 
             return "";
         }
-
 
         /// <summary>
         /// Computes the base 2 logarithm for a 64-bit value that is greater than 0.

@@ -19,5 +19,7 @@ namespace Unreal.Core.Extensions
             after.CopyTo(bools, current.Count);
             return new BitArray(bools);
         }
+
+        
     }
 }

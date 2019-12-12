@@ -1,6 +1,8 @@
-﻿namespace Unreal.Core.Models
+﻿using Unreal.Core.Contracts;
+
+namespace Unreal.Core.Models
 {
-    public abstract class ActorState
+    public abstract class ActorState : INetFieldExportGroup
     {
         //public uint Id { get; set; }
         //public FVector Position { get; set; }

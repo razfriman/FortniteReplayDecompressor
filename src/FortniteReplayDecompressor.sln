@@ -22,7 +22,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Encryption.Test", "U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Network.Test", "Unreal.Network.Test\Unreal.Network.Test.csproj", "{FAB8E1B2-AE0E-4A49-AB60-EC62338F2AE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FortniteReplayReader.Test", "FortniteReplayReader.Test\FortniteReplayReader.Test.csproj", "{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FortniteReplayReader.Test", "FortniteReplayReader.Test\FortniteReplayReader.Test.csproj", "{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastMember", "FastMember\FastMember.csproj", "{B6BB3AEF-6C47-47F8-9C4F-407094DD972F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +68,10 @@ Global
 		{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6BB3AEF-6C47-47F8-9C4F-407094DD972F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6BB3AEF-6C47-47F8-9C4F-407094DD972F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6BB3AEF-6C47-47F8-9C4F-407094DD972F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6BB3AEF-6C47-47F8-9C4F-407094DD972F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

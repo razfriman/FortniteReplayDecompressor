@@ -3,9 +3,12 @@ using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Unreal.Core;
+using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -14,6 +17,8 @@ namespace FortniteReplayReader
 {
     public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
+        public GameInformation GameInformation { get; private set; }
+
         public ReplayReader(ILogger logger = null)
         {
             Replay = new FortniteReplay();
@@ -24,13 +29,17 @@ namespace FortniteReplayReader
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive);
+            return ReadReplay(stream);
         }
 
         public FortniteReplay ReadReplay(Stream stream)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive);
+            var replay = ReadReplay(archive);
+
+            GenerateGameInformation();
+
+            return replay;
         }
 
         private string _branch;
@@ -52,7 +61,33 @@ namespace FortniteReplayReader
             }
         }
 
-        public override void ReadReplayHeader(FArchive archive)
+        private void GenerateGameInformation()
+        {
+            GameInformation = new GameInformation();
+
+            foreach (KeyValuePair<uint, List<INetFieldExportGroup>> exportKvp in ExportGroups)
+            {
+                foreach (INetFieldExportGroup exportGroup in exportKvp.Value)
+                {
+                    switch (exportGroup)
+                    {
+                        case SupplyDropLlamaC llama:
+                            GameInformation.UpdateLlama(exportKvp.Key, llama);
+                            break;
+                        case FortPlayerState playerState:
+                            break;
+                        case GameStateC gameState:
+                            if(gameState.GoldenPoiLocationTags != null)
+                            {
+
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
+        protected override void ReadReplayHeader(FArchive archive)
         {
             base.ReadReplayHeader(archive);
             Branch = Replay.Header.Branch;
@@ -63,7 +98,7 @@ namespace FortniteReplayReader
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        public override void ReadEvent(FArchive archive)
+        protected override void ReadEvent(FArchive archive)
         {
             var info = new EventInfo
             {
@@ -84,43 +119,36 @@ namespace FortniteReplayReader
                 Replay.Eliminations.Add(elimination);
                 return;
             }
-
             else if (info.Metadata == ReplayEventTypes.MATCH_STATS)
             {
                 Replay.Stats = ParseMatchStats(archive, info);
                 return;
             }
-
             else if (info.Metadata == ReplayEventTypes.TEAM_STATS)
             {
                 Replay.TeamStats = ParseTeamStats(archive, info);
                 return;
             }
-
             else if (info.Metadata == ReplayEventTypes.ENCRYPTION_KEY)
             {
                 ParseEncryptionKeyEvent(archive, info);
                 return;
             }
-
             else if (info.Metadata == ReplayEventTypes.CHARACTER_SAMPLE)
             {
                 ParseCharacterSample(archive, info);
                 return;
             }
-
             else if (info.Group == ReplayEventTypes.ZONE_UPDATE)
             {
                 ParseZoneUpdateEvent(archive, info);
                 return;
             }
-
             else if (info.Group == ReplayEventTypes.BATTLE_BUS)
             {
                 ParseBattleBusFlightEvent(archive, info);
                 return;
             }
-
             else if (info.Group == "fortBenchEvent")
             {
                 return;
@@ -131,7 +159,7 @@ namespace FortniteReplayReader
             throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
         }
 
-        public virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
+        protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
         {
             return new CharacterSample()
             {
@@ -139,7 +167,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)
+        protected virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)
         {
             return new EncryptionKey()
             {
@@ -148,7 +176,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual ZoneUpdate ParseZoneUpdateEvent(FArchive archive, EventInfo info)
+        protected virtual ZoneUpdate ParseZoneUpdateEvent(FArchive archive, EventInfo info)
         {
             // 21 bytes in 9, 20 in 9.10...
             return new ZoneUpdate()
@@ -157,7 +185,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual BattleBusFlight ParseBattleBusFlightEvent(FArchive archive, EventInfo info)
+        protected virtual BattleBusFlight ParseBattleBusFlightEvent(FArchive archive, EventInfo info)
         {
             // Added in 9 and removed again in 9.10?
             return new BattleBusFlight()
@@ -166,7 +194,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
+        protected virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
         {
             return new TeamStats()
             {
@@ -177,7 +205,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
+        protected virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
         {
             return new Stats()
             {
@@ -197,7 +225,7 @@ namespace FortniteReplayReader
             };
         }
 
-        public virtual PlayerElimination ParseElimination(FArchive archive, EventInfo info)
+        protected virtual PlayerElimination ParseElimination(FArchive archive, EventInfo info)
         {
             try
             {
@@ -242,7 +270,7 @@ namespace FortniteReplayReader
             }
         }
 
-        public virtual string ParsePlayer(FArchive archive)
+        protected virtual string ParsePlayer(FArchive archive)
         {
             // TODO player type enum
             var botIndicator = archive.ReadByte();
@@ -258,5 +286,6 @@ namespace FortniteReplayReader
             var size = archive.ReadByte();
             return archive.ReadGUID(size);
         }
+
     }
 }

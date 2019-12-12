@@ -11,7 +11,7 @@ namespace Unreal.Core.Models
         public string ChannelName { get; set; }
         public uint ChannelIndex { get; set; }
         public ChannelType ChannelType { get; set; }
-
+        public bool Broken { get; set; }
         public Actor Actor { get; set; }
     }
 }

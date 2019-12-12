@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
@@ -42,33 +45,72 @@ namespace Unreal.Core
         private DataBunch PartialBunch;
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
-        private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
+        public Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
         private Dictionary<uint, uint> ChannelNetGuids = new Dictionary<uint, uint>();
-        private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
-        private Dictionary<uint, uint> OuterNetGuidCache = new Dictionary<uint, uint>();
-        private Dictionary<uint, NetFieldExportGroup> ArchetypeToNetFieldGroup = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
-        private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap = new Dictionary<string, NetFieldExportGroup>();
-        private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup = new Dictionary<uint, NetFieldExportGroup>();
 
-        private Dictionary<uint, List<AthenaPlayerState>> ActorStates = new Dictionary<uint, List<AthenaPlayerState>>();
-        private Dictionary<uint, List<AthenaPlayerPawn>> PlayerPawns = new Dictionary<uint, List<AthenaPlayerPawn>>();
+        public NetGuidCache GuidCache = new NetGuidCache();
+        public int NullHandles { get; private set; }
+        public int TotalErrors { get; private set; }
+        public int TotalGroupsRead { get; private set; }
+        public int TotalFailedBunches { get; private set; }
+        public int TotalFailedReplicatorReceives { get; private set; }
+        public int PropertyError { get; private set; }
+        public int TotalMappedGUIDs { get; private set; }
+        public int FailedToRead { get; private set; }
+
+        public Dictionary<uint, List<INetFieldExportGroup>> ExportGroups { get; private set; } = new Dictionary<uint, List<INetFieldExportGroup>>();
+
         //private List<string> UnknownFields = new List<string>();
 
         /// <summary>
         /// Tracks channels that we should ignore when handling special demo data.
         /// </summary>
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>(); // channel index, actorguid
+        private HashSet<uint> RejectedChans = new HashSet<uint>();
+
+        private Dictionary<string, StreamWriter> _streamWriters = new Dictionary<string, StreamWriter>();
 
         public virtual T ReadReplay(FArchive archive)
         {
+            Directory.CreateDirectory("debugFiles");
+
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
+
+            Cleanup();
+
             return Replay;
         }
 
-        public virtual void Debug(string filename, string directory, byte[] data)
+        private void Cleanup()
         {
+            foreach (StreamWriter writer in _streamWriters.Values)
+            {
+                using (writer)
+                {
+                    writer.Flush();
+                }
+            }
+
+            _streamWriters.Clear();
+
+            InReliable.Clear();
+            Channels.Clear();
+            ChannelActors.Clear();
+            GuidCache.NetFieldExportGroupIndexToGroup.Clear();
+            GuidCache.NetFieldExportGroupMap.Clear();
+            GuidCache.NetFieldExportGroupPathToIndex.Clear();
+            GuidCache.NetGuidToPathName.Clear();
+            GuidCache.ObjectLookup.Clear();
+            GuidCache.NetFieldExportGroupMapPathFixed.Clear();
+
+        }
+
+        protected virtual void Debug(string filename, string directory, byte[] data)
+        {
+            return;
+
             if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -77,9 +119,20 @@ namespace Unreal.Core
             File.WriteAllBytes($"{directory}/{filename}.dump", data);
         }
 
-        public void Debug(string filename, string line)
+        private void Debug(string filename, string line)
         {
-            File.AppendAllLines($"{filename}.txt", new string[1] { line });
+            return;
+
+            string name = $"debugFiles/{filename}.txt";
+
+            if (!_streamWriters.TryGetValue(name, out StreamWriter writer))
+            {
+                writer = new StreamWriter(name, true);
+
+                _streamWriters.TryAdd(name, writer);
+            }
+
+            writer.WriteLine(line);
         }
 
         /// <summary>
@@ -88,10 +141,8 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        public virtual void ReadCheckpoint(FArchive archive)
+        protected virtual void ReadCheckpoint(FArchive archive)
         {
-            // TODO add support for bDeltaCheckpoint ??
-
             var info = new CheckpointInfo
             {
                 Id = archive.ReadFString(),
@@ -102,10 +153,22 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using var binaryArchive = Decompress(archive);
+            if (!archive.CanRead(info.SizeInBytes))
+            {
+                _logger?.LogError($"Can't read checkpoint data {info.Id}");
+
+                return;
+            }
+
+            using var binaryArchive = Decompress(archive, info.SizeInBytes);
 
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
+
+            if (binaryArchive.HasDeltaCheckpoints())
+            {
+                var checkPointSize = binaryArchive.ReadUInt32();
+            }
 
             if (binaryArchive.HasLevelStreamingFixes())
             {
@@ -119,6 +182,11 @@ namespace Unreal.Core
 
             if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
             {
+                if (binaryArchive.HasDeltaCheckpoints())
+                {
+                    throw new NotImplementedException("Delta checkpoints not supported currently");
+                }
+
                 var deletedNetStartupActors = binaryArchive.ReadArray(binaryArchive.ReadFString);
             }
 
@@ -128,30 +196,50 @@ namespace Unreal.Core
             for (var i = 0; i < count; i++)
             {
                 var guid = binaryArchive.ReadIntPacked();
-                var outerGuid = binaryArchive.ReadIntPacked();
-                var path = binaryArchive.ReadFString();
-                var checksum = binaryArchive.ReadUInt32();
-                var flags = binaryArchive.ReadByte();
+
+                NetGuidCacheObject cacheObject = new NetGuidCacheObject
+                {
+                    OuterGuid = new NetworkGUID
+                    {
+                        Value = binaryArchive.ReadIntPacked()
+                    },
+                    PathName = binaryArchive.ReadFString(),
+                    NetworkChecksum = binaryArchive.ReadUInt32(),
+                    Flags = binaryArchive.ReadByte()
+                };
+
+                GuidCache.ObjectLookup[guid] = cacheObject;
 
                 // TODO DemoNetDriver 5319
                 // GuidCache->ObjectLookup.Add(Guid, CacheObject);
             }
 
-            // SerializeNetFieldExportGroupMap 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
-
-            // Clear all of our mappings, since we're starting over
-            NetFieldExportGroupMap.Clear();
-            NetFieldExportGroupIndexToGroup.Clear();
-
-            var numNetFieldExportGroups = binaryArchive.ReadUInt32();
-            for (var i = 0; i < numNetFieldExportGroups; i++)
+            if (binaryArchive.HasDeltaCheckpoints())
             {
-                var group = ReadNetFieldExportGroupMap(binaryArchive);
+                throw new NotImplementedException("Delta checkpoints not implemented");
+            }
+            else
+            {
+                // Clear all of our mappings, since we're starting over
+                GuidCache.NetFieldExportGroupMap.Clear();
+                GuidCache.NetFieldExportGroupPathToIndex.Clear();
+                GuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
-                // Add the export group to the map
-                NetFieldExportGroupMap.Add(group.PathName, group);
-                NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
+
+                // SerializeNetFieldExportGroupMap 
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
+
+                var numNetFieldExportGroups = binaryArchive.ReadUInt32();
+
+                for (var i = 0; i < numNetFieldExportGroups; i++)
+                {
+                    var group = ReadNetFieldExportGroupMap(binaryArchive);
+
+                    // Add the export group to the map
+                    //GuidCache.NetFieldExportGroupPathToIndex[group.PathName] = group.PathNameIndex;
+                    GuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group;
+                    GuidCache.AddToExportGroupMap(group.PathName, group);
+                }
             }
 
             // SerializeDemoFrameFromQueuedDemoPackets
@@ -163,6 +251,8 @@ namespace Unreal.Core
                 {
                     Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "checkpoint-packets", packet.Data);
                     packetIndex++;
+
+                    //Not accurate currently
                     ReceivedRawPacket(packet);
                 }
             }
@@ -173,7 +263,7 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363
         /// </summary>
         /// <param name="archive"></param>
-        public virtual void ReadEvent(FArchive archive)
+        protected virtual void ReadEvent(FArchive archive)
         {
             var info = new EventInfo
             {
@@ -192,7 +282,7 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
         /// </summary>
         /// <param name="archive"></param>
-        public virtual void ReadReplayChunks(FArchive archive)
+        protected virtual void ReadReplayChunks(FArchive archive)
         {
             while (!archive.AtEnd())
             {
@@ -200,9 +290,12 @@ namespace Unreal.Core
                 var chunkSize = archive.ReadInt32();
                 var offset = archive.Position;
 
+                //Console.WriteLine($"Chunk {chunkType}. Size: {chunkSize}. Offset: {offset}");
+
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
-                    ReadCheckpoint(archive);
+                    //Failing to read checkpoints properly
+                    //ReadCheckpoint(archive);
                 }
 
                 else if (chunkType == ReplayChunkType.Event)
@@ -222,18 +315,17 @@ namespace Unreal.Core
 
                 if (archive.Position != offset + chunkSize)
                 {
-                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not fully read...");
+                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not incorrectly read...");
                     archive.Seek(offset + chunkSize, SeekOrigin.Begin);
                 }
             }
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318
         /// </summary> 
         /// <param name="archive"></param>
-        public virtual void ReadReplayData(FArchive archive)
+        protected virtual void ReadReplayData(FArchive archive)
         {
             var info = new ReplayDataInfo();
             if (archive.ReplayVersion >= ReplayVersionHistory.StreamChunkTimes)
@@ -247,20 +339,19 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            using var binaryArchive = Decompress(archive);
+            using var binaryArchive = Decompress(archive, (int)info.Length);
+
             while (!binaryArchive.AtEnd())
             {
                 var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
-                foreach (var packet in playbackPackets)
+
+                foreach (var packet in playbackPackets.Where(x => x.State == PacketState.Success))
                 {
-                    if (packet.State == PacketState.Success)
-                    {
-                        Debug($"replaydata-{replayDataIndex}-packet-{packetIndex}", "replay-packets", packet.Data);
-                        packetIndex++;
-                        ReceivedRawPacket(packet);
-                    }
+                    Debug($"replaydata-{replayDataIndex}-packet-{packetIndex}", "replay-packets", packet.Data);
+                    packetIndex++;
+                    ReceivedRawPacket(packet);
                 }
             }
             replayDataIndex++;
@@ -271,7 +362,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns>ReplayHeader</returns>
-        public virtual void ReadReplayHeader(FArchive archive)
+        protected virtual void ReadReplayHeader(FArchive archive)
         {
             var magic = archive.ReadUInt32();
 
@@ -346,13 +437,12 @@ namespace Unreal.Core
             Replay.Header = header;
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183
         /// </summary>
         /// <param name="archive"></param>
         /// <returns>ReplayInfo</returns>
-        public virtual void ReadReplayInfo(FArchive archive)
+        protected virtual void ReadReplayInfo(FArchive archive)
         {
             var magicNumber = archive.ReadUInt32();
 
@@ -391,7 +481,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3220
         /// </summary>
-        public virtual PlaybackPacket ReadPacket(FArchive archive)
+        protected virtual PlaybackPacket ReadPacket(FArchive archive)
         {
             var packet = new PlaybackPacket();
 
@@ -399,6 +489,24 @@ namespace Unreal.Core
             if (bufferSize == 0)
             {
                 packet.State = PacketState.End;
+                return packet;
+            }
+            else if (bufferSize > 2048)
+            {
+                //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
+                _logger.LogError("UDemoNetDriver::ReadPacket: OutBufferSize > 2048");
+
+                packet.State = PacketState.Error;
+
+                return packet;
+            }
+            else if (bufferSize < 0)
+            {
+                //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
+                _logger.LogError("UDemoNetDriver::ReadPacket: OutBufferSize < 0");
+
+                packet.State = PacketState.Error;
+
                 return packet;
             }
 
@@ -410,7 +518,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2106
         /// </summary>
-        public virtual void ReadExternalData(FArchive archive)
+        protected virtual void ReadExternalData(FArchive archive)
         {
             while (true)
             {
@@ -453,17 +561,16 @@ namespace Unreal.Core
             }
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
-        public virtual string StaticParseName(FArchive archive)
+        protected virtual string StaticParseName(FArchive archive)
         {
             var isHardcoded = archive.ReadBoolean();
             if (isHardcoded)
             {
                 uint nameIndex;
-                if (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
                     nameIndex = archive.ReadUInt32();
                 }
@@ -499,9 +606,10 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64
         /// </summary>
-        public virtual NetFieldExport ReadNetFieldExport(FArchive archive)
+        protected virtual NetFieldExport ReadNetFieldExport(FArchive archive)
         {
             var isExported = archive.ReadBoolean();
+
             if (isExported)
             {
                 var fieldExport = new NetFieldExport()
@@ -510,7 +618,7 @@ namespace Unreal.Core
                     CompatibleChecksum = archive.ReadUInt32()
                 };
 
-                if (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
+                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
                 {
                     fieldExport.Name = archive.ReadFString();
                     fieldExport.Type = archive.ReadFString();
@@ -534,34 +642,35 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L133
         /// </summary>
-        public virtual NetFieldExportGroup ReadNetFieldExportGroupMap(FArchive archive)
+        protected virtual NetFieldExportGroup ReadNetFieldExportGroupMap(FArchive archive)
         {
             var group = new NetFieldExportGroup()
             {
                 PathName = archive.ReadFString(),
                 PathNameIndex = archive.ReadIntPacked(),
-                NetFieldExportsLength = archive.ReadIntPacked(),
-                NetFieldExports = new List<NetFieldExport>()
+                NetFieldExportsLength = archive.ReadIntPacked()
             };
+
+            group.NetFieldExports = new NetFieldExport[group.NetFieldExportsLength];
 
             for (var i = 0; i < group.NetFieldExportsLength; i++)
             {
                 var netFieldExport = ReadNetFieldExport(archive);
+
                 if (netFieldExport != null)
                 {
                     // TODO fix null fields
-                    group.NetFieldExports.Add(netFieldExport);
+                    group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
                 }
             }
 
             return group;
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348
         /// </summary>
-        public virtual void ReadExportData(FArchive archive)
+        protected virtual void ReadExportData(FArchive archive)
         {
             ReadNetFieldExports(archive);
             ReadNetExportGuids(archive);
@@ -570,22 +679,26 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
         /// </summary>
-        public virtual void ReadNetExportGuids(FArchive archive)
+        protected virtual void ReadNetExportGuids(FArchive archive)
         {
             var numGuids = archive.ReadIntPacked();
             // TODO bIgnoreReceivedExportGUIDs ?
+
             for (var i = 0; i < numGuids; i++)
             {
                 // TODO seperate reader?
                 var size = archive.ReadInt32();
-                InternalLoadObject(archive, true);
+
+                NetBitReader reader = new NetBitReader(archive.ReadBytes(size));
+
+                InternalLoadObject(reader, true);
             }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
         /// </summary>
-        public virtual void ReadNetFieldExports(FArchive archive)
+        protected virtual void ReadNetFieldExports(FArchive archive)
         {
             var numLayoutCmdExports = archive.ReadIntPacked();
             for (var i = 0; i < numLayoutCmdExports; i++)
@@ -599,7 +712,7 @@ namespace Unreal.Core
                     var pathName = archive.ReadFString();
                     var numExports = archive.ReadIntPacked();
 
-                    if (!NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
                     {
                         group = new NetFieldExportGroup
                         {
@@ -609,25 +722,25 @@ namespace Unreal.Core
                         };
 
                         // TODO: 0 is reserved !?
-                        group.NetFieldExports = new List<NetFieldExport>((int)numExports);
+                        group.NetFieldExports = new NetFieldExport[numExports];
 
-                        NetFieldExportGroupMap.Add(pathName, group);
-                        NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group); //TODO outside if statement!?
+
+                        GuidCache.AddToExportGroupMap(pathName, group);
                     }
-                    //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
-                    //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
+
+                    //GuidCache.NetFieldExportGroupPathToIndex[pathName] = pathNameIndex;
+                    GuidCache.NetFieldExportGroupIndexToGroup[pathNameIndex] = group;
                 }
                 else
                 {
-                    NetFieldExportGroupIndexToGroup.TryGetValue(pathNameIndex, out group);
+                    GuidCache.NetFieldExportGroupIndexToGroup.TryGetValue(pathNameIndex, out group);
                 }
 
                 var netField = ReadNetFieldExport(archive);
 
                 if (group != null)
                 {
-                    group.NetFieldExports.Add(netField);
-                    // TODO preserve compatibility flag ?
+                    group.NetFieldExports[netField.Handle] = netField;
                 }
                 else
                 {
@@ -640,14 +753,15 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
         /// <returns></returns>
-        public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
             if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
                 var currentLevelIndex = archive.ReadInt32();
             }
+
             var timeSeconds = archive.ReadSingle();
-            _logger?.LogInformation($"ReadDemoFrameIntoPlaybackPackets at {timeSeconds}");
+            //_logger?.LogInformation($"ReadDemoFrameIntoPlaybackPackets at {timeSeconds}");
 
             if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
             {
@@ -672,6 +786,8 @@ namespace Unreal.Core
                     // FTransform
                     //var levelTransform = reader.ReadFString();
                     // filter duplicates
+
+                    throw new NotImplementedException("FTransform deserialize not implemented");
                 }
             }
 
@@ -680,23 +796,36 @@ namespace Unreal.Core
                 var externalOffset = archive.ReadUInt64();
             }
 
-            // if (!bForLevelFastForward)
             ReadExternalData(archive);
-            // else skip externalOffset
+
+            if (archive.HasGameSpecificFrameData())
+            {
+                var skipExternalOffset = archive.ReadUInt64();
+
+                if (skipExternalOffset > 0)
+                {
+                    // ignore it for now
+                    var bytes = archive.ReadBytes((int)skipExternalOffset);
+                }
+            }
 
             var playbackPackets = new List<PlaybackPacket>();
-            var @continue = true;
-            while (@continue)
+            var toContinue = true;
+            while (toContinue)
             {
+                uint seenLevelIndex = 0;
+
                 if (archive.HasLevelStreamingFixes())
                 {
-                    var seenLevelIndex = archive.ReadIntPacked();
+                    seenLevelIndex = archive.ReadIntPacked();
                 }
 
                 var packet = ReadPacket(archive);
+                packet.SeenLevelIndex = seenLevelIndex;
+
                 playbackPackets.Add(packet);
 
-                @continue = packet.State switch
+                toContinue = packet.State switch
                 {
                     PacketState.End => false,
                     PacketState.Error => false,
@@ -711,7 +840,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1409
         /// </summary>
-        public virtual void ReceiveNetFieldExportsCompat(FBitArchive bitArchive)
+        protected virtual void ReceiveNetFieldExportsCompat(FBitArchive bitArchive)
         {
             var numLayoutCmdExports = bitArchive.ReadUInt32();
             for (var i = 0; i < numLayoutCmdExports; i++)
@@ -724,7 +853,7 @@ namespace Unreal.Core
                     var pathName = bitArchive.ReadFString();
                     var numExports = bitArchive.ReadUInt32();
 
-                    if (!NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
                     {
                         group = new NetFieldExportGroup
                         {
@@ -732,14 +861,18 @@ namespace Unreal.Core
                             PathNameIndex = pathNameIndex,
                             NetFieldExportsLength = numExports
                         };
-                        NetFieldExportGroupMap.Add(pathName, group);
+
+                        group.NetFieldExports = new NetFieldExport[numExports];
+
+                        GuidCache.AddToExportGroupMap(pathName, group);
                     }
 
-                    NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
+                    //GuidCache.NetFieldExportGroupPathToIndex.Add(pathName, pathNameIndex);
+                    GuidCache.NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
                 }
                 else
                 {
-                    group = NetFieldExportGroupIndexToGroup[pathNameIndex];
+                    group = GuidCache.NetFieldExportGroupIndexToGroup[pathNameIndex];
                 }
 
                 var netField = ReadNetFieldExport(bitArchive);
@@ -761,9 +894,15 @@ namespace Unreal.Core
         /// Loads a UObject from an FArchive stream. Reads object path if there, and tries to load object if its not already loaded
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
         /// </summary>
-        public virtual NetworkGUID InternalLoadObject(FArchive archive, bool isExportingNetGUIDBunch)
+        protected virtual NetworkGUID InternalLoadObject(FArchive archive, bool isExportingNetGUIDBunch, int internalLoadObjectRecursionCount = 0)
         {
-            // TODO: INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
+            if (internalLoadObjectRecursionCount > 16)
+            {
+                _logger.LogWarning("InternalLoadObject: Hit recursion limit.");
+
+                return new NetworkGUID();
+            }
+
             var netGuid = new NetworkGUID()
             {
                 Value = archive.ReadIntPacked()
@@ -771,47 +910,43 @@ namespace Unreal.Core
 
             if (!netGuid.IsValid())
             {
-                return null;
+                return netGuid;
             }
+
+            ExportFlags flags = ExportFlags.None;
 
             if (netGuid.IsDefault() || isExportingNetGUIDBunch)
             {
-                var flags = archive.ReadByteAsEnum<ExportFlags>();
+                flags = archive.ReadByteAsEnum<ExportFlags>();
+            }
 
-                // outerguid
-                if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
+            // outerguid
+            if (flags.HasFlag(ExportFlags.bHasPath))
+            {
+                var outerGuid = InternalLoadObject(archive, true, internalLoadObjectRecursionCount + 1);
+
+                var pathName = archive.ReadFString();
+
+                if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                 {
-                    var outerGuid = InternalLoadObject(archive, true);
-
-                    var pathName = archive.ReadFString();
-
-                    if (!NetGuidCache.ContainsKey(netGuid.Value))
-                    {
-                        NetGuidCache.Add(netGuid.Value, pathName);
-                    }
-
-                    if (outerGuid != null && !OuterNetGuidCache.ContainsKey(netGuid.Value))
-                    {
-                        OuterNetGuidCache.Add(netGuid.Value, outerGuid.Value);
-                    }
-
-                    if (flags >= ExportFlags.bHasNetworkChecksum)
-                    {
-                        var networkChecksum = archive.ReadUInt32();
-                    }
-
-                    return netGuid;
+                    var networkChecksum = archive.ReadUInt32();
                 }
+
+                if (isExportingNetGUIDBunch)
+                {
+                    GuidCache.NetGuidToPathName[netGuid.Value] = GuidCache.RemoveAllPathPrefixes(pathName);
+                }
+
+                return netGuid;
             }
 
             return netGuid;
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1203
         /// </summary>
-        public virtual void ReceiveNetGUIDBunch(FBitArchive bitArchive)
+        protected virtual void ReceiveNetGUIDBunch(FBitArchive bitArchive)
         {
             var bHasRepLayoutExport = bitArchive.ReadBit();
 
@@ -827,6 +962,7 @@ namespace Unreal.Core
             const int MAX_GUID_COUNT = 2048;
             if (numGUIDsInBunch > MAX_GUID_COUNT)
             {
+                _logger.LogError($"UPackageMapClient::ReceiveNetGUIDBunch: NumGUIDsInBunch > MAX_GUID_COUNT({numGUIDsInBunch})");
                 return;
             }
 
@@ -843,9 +979,10 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedRawBunch(DataBunch bunch)
+        protected virtual void ReceivedRawBunch(DataBunch bunch)
         {
             // bDeleted =
+
             ReceivedNextBunch(bunch);
 
             // if (bDeleted) return;
@@ -857,7 +994,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedNextBunch(DataBunch bunch)
+        protected virtual void ReceivedNextBunch(DataBunch bunch)
         {
             // We received the next bunch. Basically at this point:
             // -We know this is in order if reliable
@@ -912,7 +1049,7 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        _logger?.LogInformation("Received New partial bunch. It only contained NetGUIDs.");
+                        //_logger?.LogInformation("Received New partial bunch. It only contained NetGUIDs.");
                     }
 
                     return;
@@ -977,17 +1114,6 @@ namespace Unreal.Core
                             PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
                             PartialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
 
-                            // debugging
-                            PartialBunch.Archive.Mark();
-                            var alignpartial = PartialBunch.Archive.GetBitsLeft() % 8;
-                            if (alignpartial != 0)
-                            {
-                                var append = new bool[alignpartial];
-                                PartialBunch.Archive.AppendDataFromChecked(append);
-                            }
-                            Debug($"partialbunch-{PartialBunch.ChIndex}-{PartialBunch.ChName}", "partialbunches", PartialBunch.Archive.ReadBytes(PartialBunch.Archive.GetBitsLeft() / 8));
-                            PartialBunch.Archive.Pop();
-
                             ReceivedSequencedBunch(PartialBunch);
                             return;
                         }
@@ -1015,7 +1141,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual bool ReceivedSequencedBunch(DataBunch bunch)
+        protected virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
             // if ( !Closing ) {
             switch (bunch.ChName)
@@ -1032,6 +1158,7 @@ namespace Unreal.Core
             if (bunch.bClose)
             {
                 // We have fully received the bunch, so process it.
+                ChannelActors[bunch.ChIndex] = false;
                 return true;
             }
 
@@ -1043,7 +1170,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedControlBunch(DataBunch bunch)
+        protected virtual void ReceivedControlBunch(DataBunch bunch)
         {
             // control channel
             while (!bunch.Archive.AtEnd())
@@ -1057,34 +1184,29 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedActorBunch(DataBunch bunch)
+        protected virtual void ReceivedActorBunch(DataBunch bunch)
         {
             if (bunch.bHasMustBeMappedGUIDs)
             {
+                ++TotalMappedGUIDs;
+
                 var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
                     var guid = bunch.Archive.ReadIntPacked();
+
                 }
             }
 
+            /*
             // if actor == null
             var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
             if (!actor && bunch.bOpen)
             {
-                // FBitReaderMark (how does this even work??)
-                // Take a sneak peak at the actor guid so we have a copy of it now
-                bunch.Archive.Mark();
-                var actorGuid = bunch.Archive.ReadIntPacked();
-                bunch.Archive.Pop();
 
-                // TODO set channel actor here??
-                // we can now map guid to channel, even if all the bunches get queued
-                //if (Connection->InternalAck)
-                //{
-                //    Connection->NotifyActorNetGUID(this);
-                //}
-            }
+            }*/
+
+            //_logger?.LogError($"Processing new bunch. MustBeMappedGUIDs {bunch.bHasMustBeMappedGUIDs}");
 
             ProcessBunch(bunch);
         }
@@ -1094,8 +1216,17 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ProcessBunch(DataBunch bunch)
+        protected virtual void ProcessBunch(DataBunch bunch)
         {
+            UChannel channel = Channels[bunch.ChIndex];
+
+            if (channel.Broken)
+            {
+                //_logger?.LogInformation($"Channel {bunch.ChIndex} broken. Ignoring bunch");
+
+                return;
+            }
+
             var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
             if (!actor)
             {
@@ -1104,6 +1235,8 @@ namespace Unreal.Core
                     _logger?.LogError("New actor channel received non-open packet.");
                     return;
                 }
+
+                #region SerializeNewActor https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
 
                 var inActor = new Actor
                 {
@@ -1129,46 +1262,59 @@ namespace Unreal.Core
                         inActor.Level = InternalLoadObject(bunch.Archive, false);
                     }
 
-                    // bSerializeLocation
-                    if (bunch.Archive.ReadBit())
+                    FVector ConditionallySerializeQuantizedVector(FVector defaultValue)
                     {
-                        // Location.NetSerialize(Ar, this, SerSuccess);
-                        inActor.Location = bunch.Archive.ReadPackedVector(10, 24);
+                        bool bWasSerialized = bunch.Archive.ReadBit();
+                        bool bShouldQuantize = false;
+
+                        if (bWasSerialized)
+                        {
+                            if (bunch.Archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO)
+                            {
+                                bShouldQuantize = true;
+                            }
+                            else
+                            {
+                                bShouldQuantize = bunch.Archive.ReadBit();
+                            }
+
+                            if (bShouldQuantize)
+                            {
+                                return bunch.Archive.ReadPackedVector(10, 24);
+                            }
+                            else
+                            {
+                                return new FVector(bunch.Archive.ReadSingle(), bunch.Archive.ReadSingle(), bunch.Archive.ReadSingle());
+                            }
+                        }
+                        else
+                        {
+                            return defaultValue;
+                        }
                     }
+
+
+                    inActor.Location = ConditionallySerializeQuantizedVector(new FVector(0, 0, 0));
 
                     // bSerializeRotation
                     if (bunch.Archive.ReadBit())
                     {
-                        // Rotation.NetSerialize(Ar, this, SerSuccess);
                         inActor.Rotation = bunch.Archive.ReadRotationShort();
                     }
-
-                    // bSerializeScale
-                    if (bunch.Archive.ReadBit())
+                    else
                     {
-                        // Scale.NetSerialize(Ar, this, SerSuccess);
-                        inActor.Scale = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Rotation = new FRotator(0, 0, 0);
                     }
 
-                    // bSerializeVelocity
-                    if (bunch.Archive.ReadBit())
-                    {
-                        // Velocity.NetSerialize(Ar, this, SerSuccess);
-                        inActor.Velocity = bunch.Archive.ReadPackedVector(10, 24);
-                    }
+                    inActor.Scale = ConditionallySerializeQuantizedVector(new FVector(1, 1, 1));
+                    inActor.Velocity = ConditionallySerializeQuantizedVector(new FVector(0, 0, 0));
                 }
+
+                #endregion
+
                 Channels[bunch.ChIndex].Actor = inActor;
-                //SetChannelActor(NewChannelActor);
-
-                //NotifyActorChannelOpen(Actor, Bunch);
-                // OnActorChannelOpen
-                // Attempt to match the player controller to a local viewport (client side)
-                // var netPlayerIndex = bunch.Archive.ReadByte();
-
-                //RepFlags.bNetInitial = true;
-
-                ChannelActors.Add(bunch.ChIndex, true);
-                ChannelNetGuids.Add(bunch.ChIndex, inActor.ActorNetGUID.Value);
+                ChannelActors[bunch.ChIndex] = true;
+                //ChannelNetGuids[bunch.ChIndex] = inActor.ActorNetGUID.Value;
             }
 
             // RepFlags.bNetOwner = true; // ActorConnection == Connection is always true??
@@ -1184,11 +1330,18 @@ namespace Unreal.Core
 
                 if (bunch.Archive.IsError)
                 {
-                    _logger?.LogError("UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED.");
+                    //channel.Broken = true;
+                    ++TotalFailedBunches;
+
+                    _logger?.LogError($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. Bunch Info: {bunch}");
                     break;
                 }
+                else
+                {
+                    //_logger?.LogError($"No error. Bunch Info: {bunch}");
+                }
 
-                if (reader == null || reader.AtEnd())
+                if (reader.AtEnd())
                 {
                     // Nothing else in this block, continue on (should have been a delete or create block)
                     continue;
@@ -1197,6 +1350,7 @@ namespace Unreal.Core
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
                 if (!ReceivedReplicatorBunch(bunch, reader, bHasRepLayout))
                 {
+                    ++TotalFailedReplicatorReceives;
                     // Don't consider this catastrophic in replays
                     _logger?.LogWarning("UActorChannel::ProcessBunch: Replicator.ReceivedBunch returned false");
                     continue;
@@ -1205,126 +1359,96 @@ namespace Unreal.Core
             // PostReceivedBunch, not interesting?
         }
 
+        private List<NetFieldExportGroup> GeneratePossibleClasses(FBitArchive archive, uint channelIndex)
+        {
+            var testArchive = new NetBitReader(archive.ReadBits(archive.GetBitsLeft()));
+
+            List<NetFieldExportGroup> possibleClasses = new List<NetFieldExportGroup>();
+
+            foreach (var netFieldExport in GuidCache.NetFieldExportGroupMap.Values)
+            {
+                bool didFail = false;
+                testArchive.Reset();
+                testArchive.Mark();
+
+                var doChecksum = testArchive.ReadBit();
+
+                while (true)
+                {
+                    var handle = testArchive.ReadIntPacked();
+
+                    if (handle == 0)
+                    {
+                        break;
+                    }
+
+                    handle--;
+
+                    if(handle >= netFieldExport.NetFieldExportsLength)
+                    {
+                        break;
+                    }
+
+                    var numBits = testArchive.ReadIntPacked();
+                        testArchive.ReadBits(numBits);
+
+                    if (netFieldExport.NetFieldExports[handle] == null)
+                    {
+                        didFail = true;
+                    }
+                }
+
+                if(testArchive.AtEnd())
+                {
+                    if(!didFail)
+                    {
+                        possibleClasses.Add(netFieldExport);
+                    }
+                }
+
+                testArchive.Pop();
+            }
+
+            return possibleClasses;
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
         /// </summary>
         /// <param name="archive"></param>
-        public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, bool bHasRepLayout)
+        protected virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, bool bHasRepLayout)
         {
             // outer is used to get path name
             // coreredirects.cpp ...
-            NetFieldExportGroup netFieldExportGroup = null;
-            if (Channels[bunch.ChIndex].Actor.Archetype != null)
+            NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(Channels[bunch.ChIndex].Actor, out string testPath);
+
+            //Mainly props. If needed, add them in
+            if (netFieldExportGroup == null)
             {
-                var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
+                //_logger?.LogWarning($"Failed group. {bunch.ChIndex}");
 
-                if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
-                {
-                    var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
-                    path = RemoveAllPathPrefixes(path);
-                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
-                    {
-                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                        if (groupPathFixed.Contains(path))
-                        {
-                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
-                            break;
-                        }
-                    }
-
-                    if (netFieldExportGroup == null)
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[archetype]}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
-                }
-            }
-            else
-            {
-                if (!ArchetypeToNetFieldGroup.ContainsKey(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value))
-                {
-                    var path = CoreRedirects.GetRedirect(RemovePathSuffix(NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]));
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]}");
-                        return false;
-                    }
-
-                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
-                    {
-                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                        if (groupPathFixed.Contains(path))
-                        {
-                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value, netFieldExportGroup);
-                            break;
-                        }
-                    }
-
-                    if (netFieldExportGroup == null)
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    netFieldExportGroup = ArchetypeToNetFieldGroup[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value];
-                }
+                return true;
             }
 
             // Handle replayout properties
             if (bHasRepLayout)
             {
                 // if ENABLE_PROPERTY_CHECKSUMS
-                var doChecksum = archive.ReadBit();
+                //var doChecksum = archive.ReadBit();
 
-                // TODO track bHasReplicatedProperties per channel?
-                //if (!bHasReplicatedProperties)
-                //{
-                //    bHasReplicatedProperties = true;        // Persistent, not reset until PostNetReceive is called
-                //    PreNetReceive();
-                //}
-
-                //if (Connection->Driver->ShouldReceiveRepNotifiesForObject(Object))
-                //{
-                //    ReceivePropFlags |= EReceivePropertiesFlags::RepNotifies;
-                //}
-
-                //if (RepFlags.bSkipRoleSwap)
-                //{
-                //    ReceivePropFlags |= EReceivePropertiesFlags::SkipRoleSwap;
-                //}
-
-                // if ( !RepLayout->ReceiveProperties(OwningChannel, ObjectClass, RepState.Get(), ( void* )Object, Bunch, bLocalHasUnmapped, bGuidsChanged, ReceivePropFlags ) )
-                // RepLayout.cpp
-                // FRepLayout::ReceiveProperties(
-                //      ReceiveProperties_BackwardsCompatible
-                //          ReceiveProperties_BackwardsCompatible_r
-
-                // TODO bool
-                //if (!ReceiveProperties())
-                //{
-                //    _logger?.LogError("RepLayout->ReceiveProperties FAILED");
-                //    return false;
-                //}
-                ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex);
+                if(!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
+                {
+                    return false;
+                }
             }
 
-            //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
-
-            // Read fields from stream
-            // const FFieldNetCache* FieldCache = nullptr;
-
+            //Disabled
+            /*
             FBitArchive reader;
-            while (ReadFieldHeaderAndPayload(bunch, netFieldExportGroup, out reader))
+            while (ReadFieldHeaderAndPayload(archive, netFieldExportGroup, out reader))
             {
                 _logger?.LogDebug($"RPCs to read for group {netFieldExportGroup.PathName} and numbits: {reader.GetBitsLeft()}");
+
                 //if (FieldCache == nullptr)
                 //{
                 //    UE_LOG(LogNet, Warning, TEXT("ReceivedBunch: FieldCache == nullptr: %s"), *Object->GetFullName());
@@ -1365,7 +1489,8 @@ namespace Unreal.Core
                 // Handle function call
                 //Cast<UFunction>(FieldCache->Field)
                 //}
-            }
+            }*/
+
 
             return true;
         }
@@ -1373,9 +1498,11 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3141
         /// </summary>
-        public IList<uint> ReceivePropertiesArray(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
+        private IList<uint> ReceivePropertiesArray(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
         {
             IList<uint> result = new List<uint>();
+
+            var stateValue = new FortItemEntryStateValue();
 
             var arrayNum = archive.ReadIntPacked();
             while (true)
@@ -1430,8 +1557,7 @@ namespace Unreal.Core
                     // We purposely add 1 on save, so we can reserve 0 for "done"
                     handle--;
 
-                    // TODO remove loop...
-                    var export = group.NetFieldExports.FirstOrDefault(i => i.Handle == handle);
+                    var export = group.NetFieldExports[handle];
                     //var export = netFieldExportGroup.NetFieldExports[(int)handle];
 
                     var numBits = archive.ReadIntPacked();
@@ -1443,10 +1569,10 @@ namespace Unreal.Core
                         archive.ReadBits(numBits);
                         continue;
                     }
-                    
+
                     if (export.Incompatible)
                     {
-                        _logger?.LogInformation("Incompatible export");
+                        //_logger?.LogInformation("Incompatible export");
                         archive.ReadBits(numBits);
                         // We've already warned that this property doesn't load anymore
                         continue;
@@ -1458,14 +1584,33 @@ namespace Unreal.Core
 
                     var cmdReader = new NetBitReader(archive.ReadBits(numBits));
 
-                    switch (export.Name)
+                    if (group.PathName == "/Script/FortniteGame.FortPickupAthena")
                     {
-                        case "Dances":
-                            result.Add(cmdReader.SerializePropertyObject());
-                            break;
-                        case "ItemWraps":
-                            result.Add(cmdReader.SerializePropertyObject());
-                            break;
+                        switch (export.Name)
+                        {
+                            // FFortItemEntryStateValue
+                            case "StateType":
+                                stateValue.StateType = cmdReader.SerializePropertyEnum(11); // EFortItemEntryState
+                                break;
+                            case "IntValue":
+                                stateValue.IntValue = cmdReader.SerializePropertyInt();
+                                break;
+                            case "NameValue":
+                                stateValue.NameValue = StaticParseName(cmdReader);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (export.Name)
+                        {
+                            case "Dances":
+                                result.Add(cmdReader.SerializePropertyObject());
+                                break;
+                            case "ItemWraps":
+                                result.Add(cmdReader.SerializePropertyObject());
+                                break;
+                        }
                     }
                 }
 
@@ -1495,27 +1640,31 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        public virtual void ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
+        protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
         {
+            ++TotalGroupsRead;
+
+            var doChecksum = archive.ReadBit();
             Debug("types", $"\n{group.PathName}");
 
-            AthenaPlayerState playerState = new AthenaPlayerState();
-            if (group.PathName == "/Script/FortniteGame.FortPlayerStateAthena")
+            if(NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName))
             {
-                if (!ActorStates.ContainsKey(channelIndex))
+                return true;
+            }
+
+            INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
+
+            List<INetFieldExportGroup> groups = new List<INetFieldExportGroup>();
+
+            if (exportGroup != null)
+            {
+                if (!ExportGroups.TryAdd(channelIndex, groups))
                 {
-                    ActorStates[channelIndex] = new List<AthenaPlayerState>();
+                    ExportGroups.TryGetValue(channelIndex, out groups);
                 }
             }
 
-            AthenaPlayerPawn playerPawn = new AthenaPlayerPawn();
-            if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
-            {
-                if (!PlayerPawns.ContainsKey(channelIndex))
-                {
-                    PlayerPawns[channelIndex] = new List<AthenaPlayerPawn>();
-                }
-            }
+            bool hasData = false;
 
             while (true)
             {
@@ -1523,653 +1672,96 @@ namespace Unreal.Core
 
                 if (handle == 0)
                 {
-                    // We're done
                     break;
-                    // return true;
                 }
 
-                // We purposely add 1 on save, so we can reserve 0 for "done"
                 handle--;
 
-                // TODO remove loop...
-                var export = group.NetFieldExports.FirstOrDefault(i => i.Handle == handle);
-                //var export = netFieldExportGroup.NetFieldExports[(int)handle];
+                if (group.NetFieldExports.Length <= handle)
+                {
+                    _logger.LogError($"NetFieldExport length ({group.NetFieldExports.Length}) < handle ({handle})");
 
+                    return false;
+                }
+
+                var export = group.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
+
+                if (numBits == 0)
+                {
+                    continue;
+                }
 
                 if (export == null)
                 {
-                    _logger?.LogError($"Couldnt find handle {handle}, numbits is {numBits}");
-                    Debug("missinghandles", $"\n{group.PathName}\t{handle}\t{numBits}");
-                    archive.ReadBits(numBits);
+                    NullHandles++;
+
+                    archive.SkipBits((int)numBits);
+
                     continue;
                 }
-
-                Debug("types", $"{ export.Name}\t{export.Type}\t{numBits}");
 
                 if (export.Incompatible)
                 {
-                    _logger?.LogInformation("Incompatible export");
-                    archive.ReadBits(numBits);
-                    // We've already warned that this property doesn't load anymore
+                    archive.SkipBits((int)numBits);
+
                     continue;
                 }
 
-                archive.Mark();
-                Debug($"cmd-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
-                archive.Pop();
+                hasData = true;
 
-                var cmdReader = new NetBitReader(archive.ReadBits(numBits));
-
-                if (group.PathName == "/Script/FortniteGame.FortPlayerStateAthena")
+                try
                 {
-                    switch (export.Name)
+                    var cmdReader = new NetBitReader(archive.ReadBits(numBits))
                     {
-                        case "PlayerID":
-                            playerState.PlayerId = cmdReader.ReadInt32();
-                            Debug("playerIDs", $"{playerState.PlayerId}");
-                            break;
-                        case "StartTime":
-                            playerState.StartTime = cmdReader.ReadInt32();
-                            break;
-                        case "PlatformUniqueNetId":
-                            playerState.PlatformId = cmdReader.SerializePropertyNetId();
-                            break;
-                        case "UniqueId":
-                            playerState.UniqueId = cmdReader.SerializePropertyNetId();
-                            break;
-                        case "ColorId":
-                            playerState.ColorId = cmdReader.ReadFString();
-                            break;
-                        case "IconId":
-                            playerState.IconId = cmdReader.ReadFString();
-                            break;
-                        case "StreamerModeName":
-                            var unknown = cmdReader.ReadByte();
-                            cmdReader.SkipBytes(8);
-                            playerState.PlayerNameId = cmdReader.ReadFString();
-                            playerState.SkinName = cmdReader.ReadFString();
-                            Debug("playernames", $"[StreamerModeName] {unknown} {playerState.PlayerNameId} {playerState.SkinName}");
-                            break;
-                        case "PlayerNamePrivate":
-                            playerState.PlayerNamePrivate = cmdReader.ReadFString();
-                            Debug("playernames", playerState.PlayerNamePrivate);
-                            break;
-                        case "PartyOwnerUniqueId":
-                            playerState.PartyOwnerUniqueId = cmdReader.SerializePropertyNetId();
-                            break;
-                        case "WorldPlayerId":
-                            playerState.WorldPlayerId = cmdReader.ReadInt32();
+                        EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                        NetworkVersion = Replay.Header.NetworkVersion
+                    };
 
-                            Debug("WorldPlayerIds", $"{playerState.WorldPlayerId}");
-                            break;
-                        case "Platform":
-                            playerState.Platform = cmdReader.ReadFString();
-                            break;
-                        case "PlayerTeamPrivate":
-                            playerState.PlayerTeamPrivate = cmdReader.SerializePropertyByte();
-                            break;
-                        case "Team":
-                            playerState.Team = cmdReader.SerializePropertyEnum(104);
-                            break;
-                        case "TeamIndex":
-                            playerState.TeamIndex = cmdReader.SerializePropertyByte();
-                            break;
-                        case "SquadListUpdateValue":
-                            playerState.SquadListUpdateValue = cmdReader.ReadInt32();
-                            break;
-                        case "SquadId":
-                            playerState.SquadId = cmdReader.ReadByte();
-                            break;
-                        case "Level":
-                            playerState.Level = cmdReader.ReadUInt32();
-                            break;
-                        case "bInAircraft":
-                            playerState.bInAircraft = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bHasFinishedLoading":
-                            playerState.bHasFinishedLoading = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bHasStartedPlaying":
-                            playerState.bHasStartedPlaying = cmdReader.SerializePropertyBool();
-                            break;
-                        case "HeroType":
-                            playerState.HeroType = cmdReader.SerializePropertyObject();
-                            break;
-                        case "CharacterGender":
-                            playerState.CharacterGender = cmdReader.SerializePropertyEnum(4);
-                            break;
-                        case "CharacterBodyType":
-                            playerState.CharacterBodyType = cmdReader.SerializePropertyEnum(8);
-                            break;
-                        case "WasReplicatedFlags":
-                            playerState.WasReplicatedFlags = cmdReader.SerializePropertyByte();
-                            break;
-                        case "MapIndicatorPos":
-                            playerState.MapIndicatorPos = cmdReader.SerializeVector2D();
-                            break;
-                        case "Owner":
-                            playerState.Owner = cmdReader.SerializePropertyUInt32();
-                            break;
-                        case "Parts":
-                            playerState.Parts = cmdReader.SerializePropertyObject();
-                            break;
-                        case "bUsingStreamerMode":
-                            playerState.bUsingStreamerMode = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bThankedBusDriver":
-                            playerState.bThankedBusDriver = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bOnlySpectator":
-                            playerState.bOnlySpectator = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bIsDisconnected":
-                            playerState.bIsDisconnected = cmdReader.SerializePropertyBool();
-                            break;
-                        case "FinisherOrDowner":
-                            playerState.FinisherOrDowner = cmdReader.SerializePropertyObject();
-                            break;
-                        case "bInitialized":
-                            playerState.bInitialized = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bUsingAnonymousMode":
-                            playerState.bUsingAnonymousMode = cmdReader.SerializePropertyBool();
-                            break;
-                        case "ResurrectionExpirationTime":
-                            playerState.ResurrectionExpirationTime = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "Ping":
-                            playerState.Ping = cmdReader.SerializePropertyUInt32();
-                            break;
-                        case "Role":
-                        case "RemoteRole":
-                        case "PlayerRole":
-                        case "DeathTags":
-                            break;
-                        default:
-                            Debug("playerstate-fields", $"{export.Name}\t{numBits}");
-                            _logger.LogDebug($"unknown field {export.Name} in player state");
-                            break;
+                    NetFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+
+                    if (cmdReader.IsError)
+                    {
+                        ++PropertyError;
+
+                        _logger?.LogError($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+
+#if DEBUG
+                        cmdReader.Reset();
+
+                        NetFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+#endif
+                        continue;
+                    }
+
+                    if (archive.IsError)
+                    {
+                        _logger?.LogError($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        continue;
+                    }
+
+                    if (!cmdReader.AtEnd())
+                    {
+                        ++FailedToRead;
+
+                        _logger?.LogWarning($"Property {export.Name} {group.PathName} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+
+                        continue;
                     }
                 }
-
-                else if (group.PathName == "/Script/FortniteGame.FortPickupAthena")
+                catch(Exception ex)
                 {
-                    switch (export.Name)
-                    {
-                        case "bReplicateMovement":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        case "ReplicatedMovement":
-                            cmdReader.SerializeRepMovement();
-                            break;
-                        case "bRandomRotation":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        // UFortItemDefinition
-                        case "ItemDefinition":
-                            cmdReader.SerializePropertyObject();
-                            break;
-                        case "Durability":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "Level":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "A":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "B":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "C":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "D":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "bIsDirty":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        case "bTossedFromContainer":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        case "bServerStoppedSimulation":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        case "ServerImpactSoundFlash":
-                            cmdReader.SerializePropertyByte();
-                            break;
-                        case "PickupTarget":
-                            cmdReader.SerializePropertyObject();
-                            break;
-                        case "ItemOwner":
-                            cmdReader.SerializePropertyObject();
-                            break;
-                        case "FlyTime":
-                            cmdReader.SerializePropertyFloat();
-                            break;
-                        case "FinalTossRestLocation":
-                            cmdReader.SerializePropertyVector10();
-                            break;
-                        case "TossState":
-                            cmdReader.SerializePropertyEnum(3);
-                            break;
-                        case "bPickedUp":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                        case "Count":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "LoadedAmmo":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "PawnWhoDroppedPickup":
-                            cmdReader.SerializePropertyObject();
-                            break;
-                        case "StartDirection":
-                            cmdReader.SerializePropertyVectorNormal();
-                            break;
-                        case "LootInitialPosition":
-                            cmdReader.SerializePropertyVector10();
-                            break;
-                        case "LootFinalPosition":
-                            cmdReader.SerializePropertyVector10();
-                            break;
-                        // TArray<struct FFortItemEntryStateValue>
-                        case "StateValues":
-                            break;
-                        // FFortItemEntryStateValue
-                        case "StateType":
-                            cmdReader.SerializePropertyEnum(11); // EFortItemEntryState
-                            break;
-                        case "IntValue":
-                            cmdReader.SerializePropertyInt();
-                            break;
-                        case "NameValue":
-                            StaticParseName(cmdReader);
-                            break;
-                        case "Role":
-                        case "RemoteRole":
-                            break;
-                        default:
-                            Debug("pickup-fields", $"{export.Name}\t{numBits}");
-                            _logger.LogDebug($"unknown field {export.Name} in pickup");
-                            break;
-                    }
+                    _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
                 }
 
-                else if (group.PathName == "/Game/Athena/Aircraft/AthenaAircraft.AthenaAircraft_C")
-                {
-                    switch (export.Name)
-                    {
-                        case "FlightStartLocation":
-                            var startLocation = cmdReader.SerializePropertyVector100();
-                            break;
-                        case "FlightStartRotation":
-                            var startRotation = cmdReader.SerializePropertyRotator();
-                            break;
-                        case "FlightSpeed":
-                            var speed = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillFlightEnd":
-                            var flightEnd = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillDropStart":
-                            var dropStart = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillDropEnd":
-                            var dropEnd = cmdReader.ReadSingle();
-                            break;
-                    }
-                }
-
-                else if (group.PathName == "/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C")
-                {
-                    switch (export.Name)
-                    {
-                        case "ReplicatedMovement":
-                            cmdReader.SerializeRepMovement();
-                            break;
-                        case "bEditorPlaced":
-                            cmdReader.SerializePropertyBool();
-                            break;
-                    }
-                }
-
-                else if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
-                {
-                    switch (export.Name)
-                    {
-                        case "PawnUniqueID":
-                            playerPawn.PawnUniqueID = cmdReader.SerializePropertyInt();
-                            break;
-                        case "ReplicatedMovement":
-                            playerPawn.RepMovement = cmdReader.SerializeRepMovement();
-                            break;
-                        case "ReplicatedMovementMode":
-                            playerPawn.ReplicatedMovementMode = cmdReader.SerializePropertyByte();
-                            break;
-                        case "ReplayLastTransformUpdateTimeStamp":
-                            playerPawn.ReplayLastTransformUpdateTimeStamp = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "AccelerationPack":
-                            playerPawn.AccelerationPack = cmdReader.SerializePropertyUInt16();
-                            break;
-                        case "AccelerationZPack":
-                            playerPawn.AccelerationZPack = cmdReader.SerializePropertyByte();
-                            break;
-                        case "RemoteViewData32":
-                            playerPawn.RemoteViewData32 = cmdReader.SerializePropertyUInt32();
-                            break;
-                        case "bCanBeDamaged":
-                            playerPawn.bCanBeDamaged = cmdReader.SerializePropertyBool();
-                            break;
-                        case "Instigator":
-                            playerPawn.Instigator = cmdReader.SerializePropertyObject();
-                            break;
-                        case "PlayerState":
-                            playerPawn.PlayerState = cmdReader.SerializePropertyObject();
-                            break;
-                        case "VocalChords":
-                            break;
-                        case "CapsuleRadiusAthena":
-                            playerPawn.CapsuleRadiusAthena = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "CapsuleHalfHeightAthena":
-                            playerPawn.CapsuleHalfHeightAthena = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "WalkSpeed":
-                            playerPawn.WalkSpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "RunSpeed":
-                            playerPawn.RunSpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "SprintSpeed":
-                            playerPawn.SprintSpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "CrouchedRunSpeed":
-                            playerPawn.CrouchedRunSpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "CrouchedSprintSpeed":
-                            playerPawn.CrouchedSprintSpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "FlySpeed":
-                            playerPawn.FlySpeed = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "BannerIconId":
-                            playerPawn.BannerIconId = cmdReader.SerializePropertyString();
-                            break;
-                        case "BannerColorId":
-                            playerPawn.BannerColorId = cmdReader.SerializePropertyString();
-                            break;
-                        case "SkyDiveContrail":
-                            playerPawn.SkyDiveContrail = cmdReader.SerializePropertyObject();
-                            break;
-                        case "Glider":
-                            playerPawn.Glider = cmdReader.SerializePropertyObject();
-                            break;
-                        case "Pickaxe":
-                            playerPawn.Pickaxe = cmdReader.SerializePropertyObject();
-                            break;
-                        case "Character":
-                            playerPawn.Character = cmdReader.SerializePropertyObject();
-                            break;
-                        case "Backpack":
-                            playerPawn.Backpack = cmdReader.SerializePropertyObject();
-                            break;
-                        case "LoadingScreen":
-                            playerPawn.LoadingScreen = cmdReader.SerializePropertyObject();
-                            break;
-                        case "MusicPack":
-                            playerPawn.MusicPack = cmdReader.SerializePropertyObject();
-                            break;
-                        case "EncryptedPawnReplayData":
-                            break;
-                        case "MovementBase":
-                            playerPawn.AnimMontage = cmdReader.SerializePropertyObject();
-                            break;
-                        case "bServerHasBaseComponent":
-                            playerPawn.bServerHasBaseComponent = cmdReader.SerializePropertyBool();
-                            break;
-                        case "CharacterVariantChannels":
-                            break;
-                        case "JumpFlashCount":
-                            playerPawn.JumpFlashCount = cmdReader.SerializePropertyByte();
-                            break;
-                        case "CurrentWeapon":
-                            playerPawn.CurrentWeapon = cmdReader.SerializePropertyObject();
-                            break;
-                        case "AnimMontage":
-                            playerPawn.AnimMontage = cmdReader.SerializePropertyObject();
-                            break;
-                        case "PlayRate":
-                            playerPawn.PlayRate = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "BlendTime":
-                            playerPawn.BlendTime = cmdReader.SerializePropertyFloat();
-                            break;
-                        case "ForcePlayBit":
-                            playerPawn.ForcePlayBit = cmdReader.SerializePropertyBool();
-                            break;
-                        case "IsStopped":
-                            playerPawn.ForcePlayBit = cmdReader.SerializePropertyBool();
-                            break;
-                        case "RepAnimMontageStartSection":
-                            playerPawn.RepAnimMontageStartSection = cmdReader.SerializePropertyInt();
-                            break;
-                        case "bIsProxySimulationTimedOut":
-                            playerPawn.bIsProxySimulationTimedOut = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bIsDefaultCharacter":
-                            playerPawn.bIsDefaultCharacter = cmdReader.SerializePropertyBool();
-                            break;
-                        case "PetState":
-                            playerPawn.PetState = cmdReader.SerializePropertyObject();
-                            break;
-                        case "PetSkin":
-                            playerPawn.PetSkin = cmdReader.SerializePropertyObject();
-                            break;
-                        case "bProxyIsJumpForceApplied":
-                            playerPawn.bProxyIsJumpForceApplied = cmdReader.SerializePropertyBool();
-                            break;
-                        case "BuildingState":
-                            playerPawn.BuildingState = cmdReader.SerializePropertyEnum(3);
-                            break;
-                        case "CurrentMovementStyle":
-                            playerPawn.CurrentMovementStyle = cmdReader.SerializePropertyEnum(5);
-                            break;
-                        case "bIsCrouched":
-                            playerPawn.bIsCrouched = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bWeaponHolstered":
-                            playerPawn.bWeaponHolstered = cmdReader.SerializePropertyBool();
-                            break;
-                        case "PawnMontage":
-                            playerPawn.PawnMontage = cmdReader.SerializePropertyObject();
-                            break;
-                        case "bPlayBit":
-                            playerPawn.bPlayBit = cmdReader.SerializePropertyBool();
-                            break;
-                        case "WeaponActivated":
-                            playerPawn.WeaponActivated = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bIsTargeting":
-                            playerPawn.bIsTargeting = cmdReader.SerializePropertyBool();
-                            break;
-                        case "PackedReplicatedSlopeAngles":
-                            break;
-                        case "bIsSlopeSliding":
-                            playerPawn.bIsSlopeSliding = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bIsInsideSafeZone":
-                            playerPawn.bIsInsideSafeZone = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bCanQue":
-                            playerPawn.bCanQue = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bCanBeInterrupted":
-                            playerPawn.bCanBeInterrupted = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bInterruptCurrentLine":
-                            playerPawn.bInterruptCurrentLine = cmdReader.SerializePropertyBool();
-                            break;
-                        case "bIsPlayingEmote":
-                            playerPawn.bIsPlayingEmote = cmdReader.SerializePropertyBool();
-                            break;
-                        case "LastReplicatedEmoteExecuted":
-                            playerPawn.LastReplicatedEmoteExecuted = cmdReader.SerializePropertyObject();
-                            break;
-                        case "SkipPositionCorrection":
-                            playerPawn.SkipPositionCorrection = cmdReader.SerializePropertyBool();
-                            break;
-                        case "Location":
-                            playerPawn.Location = cmdReader.SerializeRepMovement();
-                            break;
-                        case "Position":
-                            playerPawn.Position = cmdReader.ReadUInt32();
-                            break;
-                        case "NextSectionID":
-                            cmdReader.SerializePropertyByte();
-                            break;
-                        case "JumpFlashCountPacked":
-                            cmdReader.SerializePropertyByte();
-                            break;
-                        case "LandingFlashCountPacked":
-                            cmdReader.SerializePropertyByte();
-                            break;
-                        case "FastReplicationMinimalReplicationTags":
-                            break;
-                        case "Dances":
-                            playerPawn.Dances = ReceivePropertiesArray(cmdReader, group, channelIndex);
-                            break;
-                        case "ItemWraps":
-                            playerPawn.ItemWraps = ReceivePropertiesArray(cmdReader, group, channelIndex);
-                            break;
-                        case "Role":
-                        case "RemoteRole":
-                            break;
-                        default:
-                            Debug("playerpawn-fields", $"{export.Name}\t{numBits}");
-                            _logger.LogDebug($"unknown field {export.Name} in playerpawn");
-                            break;
-                    }
-                }
-
-
-                // /Script/FortniteGame.FortTeamPrivateInfo
-                // /Script/FortniteGame.GameMemberInfo
-
-                // /Script/FortniteGame.ActiveGameplayModifier
-
-                // NetworkGameplayTagNodeIndex
-                // /Script/FortniteGame.FortPoiManager
-
-                // /Game/Athena/Playlists/GameplayMutators/Mutator_SpecialEvent.Mutator_SpecialEvent_C
-                // /Game/Athena/Playlists/Respawn/SifMutator_HealthAndShieldSet.SifMutator_HealthAndShieldSet_C
-
-
-                // /Game/Weapons/FORT_Sniper/Blueprints/B_Prj_Bullet_Sniper_Heavy.B_Prj_Bullet_Sniper_Heavy_C
-                // /Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_Light_PDW_Athena.B_Pistol_Light_PDW_Athena_C
-                // /Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Auto_Athena.B_Assault_Auto_Athena_C
-                // /Game/Weapons/FORT_Shotguns/Blueprints/B_Shotgun_Standard_Athena.B_Shotgun_Standard_Athena_C
-
-
-                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_Floor.PBWA_W1_Floor_C
-                // /Game/Building/ActorBlueprints/Player/Stone/L1/PBWA_S1_Floor.PBWA_S1_Floor_C
-
-                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_Solid.PBWA_W1_Solid_C
-
-                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_StairW.PBWA_W1_StairW_C
-                // /Game/Building/ActorBlueprints/Player/Metal/L1/PBWA_M1_StairW.PBWA_M1_StairW_C
-                //A int32   32
-                //B int32   32
-                //C int32   32
-                //D int32   32
-                //OwnerPersistentID int32   32
-                //bEditorPlaced uint8   1
-                //bPlayerPlaced uint8   1
-                //Team TEnumAsByte<EFortTeam::Type > 7
-                //BuildTime FQuantizedBuildingAttribute 16
-                //RepairTime FQuantizedBuildingAttribute 16
-                //Health int16   16
-                //MaxHealth int16   16
-
-
-
-                // /Game/Building/ActorBlueprints/Player/Metal/L1/PBWA_M1_DoorC.PBWA_M1_DoorC_C
-                // /Game/Athena/BuildingActors/Prop/Athena_Soccerball.Athena_Soccerball_C
-
-                else
-                {
-                    cmdReader.ReadBits(numBits);
-                }
-
-                if (cmdReader.IsError)
-                {
-                    _logger?.LogError($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
-                    continue;
-                }
-
-                if (!cmdReader.AtEnd())
-                {
-                    // allow until we figured out how this works
-                    _logger?.LogWarning($"Property {export.Name} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
-                    continue;
-
-                    //_logger?.LogError("Property didn't read proper number of bits.");
-                    //return;
-                    //return false;
-                }
-
-                // RepLayout 3139
-                // Find this property
-                // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
-                // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
             }
 
-            if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
+            if (hasData)
             {
-                PlayerPawns[channelIndex].Add(playerPawn);
+                groups.Add(exportGroup);
             }
 
-            if (group.PathName == "/Script/FortniteGame.FortPlayerStateAthena")
-            {
-                ActorStates[channelIndex].Add(playerState);
-            }
-        }
-
-        // see UObjectBaseUtility
-        private string RemoveAllPathPrefixes(string path)
-        {
-            path = RemovePathPrefix(path, "Default__");
-
-            if (path.Contains("."))
-            {
-                var index = path.IndexOf(".");
-                path = path.Remove(0, index + 1);
-            }
-            return path;
-        }
-
-        private string RemovePathPrefix(string path, string toRemove)
-        {
-            if (path.Contains(toRemove))
-            {
-                var index = path.IndexOf(toRemove);
-                path = path.Remove(index, toRemove.Length);
-            }
-            return path;
-        }
-
-        private string RemovePathSuffix(string path)
-        {
-            return Regex.Replace(path, @"(_?[0-9]+)+$", "");
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            return Regex.Replace(path, $@"{toRemove}$", "");
+            return true;
         }
 
         /// <summary>
@@ -2177,38 +1769,41 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        public virtual bool ReadFieldHeaderAndPayload(DataBunch bunch, NetFieldExportGroup group, out FBitArchive reader)
+        protected virtual bool ReadFieldHeaderAndPayload(FBitArchive bunch, NetFieldExportGroup group, out NetFieldExport outField, out FBitArchive reader)
         {
-            if (bunch.Archive.AtEnd())
+            if (bunch.AtEnd())
             {
                 reader = null;
+                outField = null;
                 return false;
             }
 
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
-            if (bunch.Archive.IsError)
+            var netFieldExportHandle = bunch.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
+            if (bunch.IsError)
             {
                 reader = null;
+                outField = null;
                 _logger?.LogError("ReadFieldHeaderAndPayload: Error reading NetFieldExportHandle.");
                 return false;
             }
 
             // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
-            // var netfieldexport = group.NetFieldExports[(int) netFieldExportHandle];
+            outField = group.NetFieldExports[(int)netFieldExportHandle];
 
-            var numPayloadBits = bunch.Archive.ReadIntPacked();
-            if (bunch.Archive.IsError)
+            var numPayloadBits = bunch.ReadIntPacked();
+            if (bunch.IsError)
             {
                 reader = null;
+                outField = null;
                 _logger?.LogError("ReadFieldHeaderAndPayload: Error reading numbits.");
                 return false;
             }
 
-            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits));
-            if (bunch.Archive.IsError)
+            reader = new BitReader(bunch.ReadBits(numPayloadBits));
+            if (bunch.IsError)
             {
-                _logger?.LogError($"ReadFieldHeaderAndPayload: Error reading payload. Channel: {bunch.ChIndex}, Bunch: {bunch.ChSequence}, OutField: {netFieldExportHandle}");
+                _logger?.LogError($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");
                 return false;
             }
 
@@ -2219,39 +1814,19 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        public virtual FBitArchive ReadContentBlockPayload(DataBunch bunch, out bool bOutHasRepLayout)
+        protected virtual FBitArchive ReadContentBlockPayload(DataBunch bunch, out bool bOutHasRepLayout)
         {
-            //bool bObjectDeleted = false;
-            //// Read the content block header and payload
-            //UObject* RepObj = ReadContentBlockHeader(Bunch, bObjectDeleted, bOutHasRepLayout);
-            // sets bObjectDeleted and bOutHasRepLayout
-
             bOutHasRepLayout = ReadContentBlockHeader(bunch);
 
-            //if (bObjectDeleted)
-            //{
-            //    OutPayload.SetData(Bunch, 0);
-
-            //    // Nothing else in this block, continue on
-            //    return nullptr;
-            //}
-
             var numPayloadBits = bunch.Archive.ReadIntPacked();
-            if (numPayloadBits == 0)
-            {
-                _logger?.LogWarning($"ReadContentBlockPayload found payload of 0, bunch: {bunch.ChIndex}");
-                return null;
-            }
 
             return new BitReader(bunch.Archive.ReadBits(numPayloadBits));
-            //OutPayload.SetData(Bunch, NumPayloadBits);
-            //return RepObj;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        public virtual bool ReadContentBlockHeader(DataBunch bunch)
+        protected virtual bool ReadContentBlockHeader(DataBunch bunch)
         {
             //  bool& bObjectDeleted, bool& bOutHasRepLayout 
             //var bObjectDeleted = false;
@@ -2265,6 +1840,7 @@ namespace Unreal.Core
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
+
             var netGuid = InternalLoadObject(bunch.Archive, false);
 
             var bStablyNamed = bunch.Archive.ReadBit();
@@ -2275,12 +1851,12 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
+
             var classNetGUID = InternalLoadObject(bunch.Archive, false);
 
-            if (classNetGUID == null || !classNetGUID.IsValid())
+            //Object deleteed
+            if (!classNetGUID.IsValid())
             {
-                // TODO not sure if we ever reach here...
-                _logger?.LogDebug("[!!!!] classnetguid not valid");
                 // bObjectDeleted = true;
             }
 
@@ -2291,17 +1867,29 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
         /// </summary>
         /// <param name="packet"></param>
-        public virtual void ReceivedRawPacket(PlaybackPacket packet)
+        protected virtual void ReceivedRawPacket(PlaybackPacket packet)
         {
+            if (Replay.Header.HasLevelStreamingFixes() && packet.SeenLevelIndex == 0)
+            {
+                return;
+            }
+
+            if (packet.Data.Length == 0)
+            {
+                _logger?.LogError($"Received zero-size packet");
+
+                return;
+            }
+
             var lastByte = packet.Data[^1];
 
             if (lastByte != 0)
             {
-
                 var bitSize = (packet.Data.Length * 8) - 1;
 
                 // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
-                while (!((lastByte & 0x80) >= 1))
+                //while (!((lastByte & 0x80) >= 1))
+                while (!((lastByte & 0x80) > 0))
                 {
                     lastByte *= 2;
                     bitSize--;
@@ -2313,9 +1901,13 @@ namespace Unreal.Core
                     NetworkVersion = Replay.Header.NetworkVersion,
                     ReplayHeaderFlags = Replay.Header.Flags
                 };
+
                 try
                 {
-                    ReceivedPacket(bitArchive);
+                    if (bitArchive.GetBitsLeft() > 0)
+                    {
+                        ReceivedPacket(bitArchive);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -2335,7 +1927,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bitReader"><see cref="Core.BitReader"/></param>
         /// <param name="packet"><see cref="PlaybackPacket"/></param>
-        public virtual void ReceivedPacket(FBitArchive bitReader)
+        protected virtual void ReceivedPacket(FBitArchive bitReader)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
             // InternalAck always true!
@@ -2421,8 +2013,7 @@ namespace Unreal.Core
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
-                    var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
-                    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
+                    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)bitReader.ReadSerializedInt((int)ChannelType.MAX) : ChannelType.None;
 
                     if (chType == ChannelType.Control)
                     {
@@ -2441,14 +2032,12 @@ namespace Unreal.Core
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                        //chName = UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
-                        try
-                        {
-                            chName = StaticParseName(bitReader);
-                        }
-                        catch
+                        chName = StaticParseName(bitReader);
+
+                        if (bitReader.IsError)
                         {
                             _logger.LogError("Channel name serialization failed.");
+
                             return;
                         }
 
@@ -2466,81 +2055,56 @@ namespace Unreal.Core
                         }
                     }
                 }
+
                 bunch.ChType = chType;
                 bunch.ChName = chName;
 
-                // UChannel* Channel = Channels[Bunch.ChIndex];
                 var channel = Channels.ContainsKey(bunch.ChIndex);
-
-                // If there's an existing channel and the bunch specified it's channel type, make sure they match.
-                // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadSerializedInt(maxPacket * 8);
-                // Bunch.SetData( Reader, BunchDataBits );
+
                 bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits))
                 {
                     EngineNetworkVersion = bitReader.EngineNetworkVersion,
                     NetworkVersion = bitReader.NetworkVersion,
                     ReplayHeaderFlags = bitReader.ReplayHeaderFlags
                 };
-                bunchIndex++;
 
-                // debugging
-                bunch.Archive.Mark();
-                var bits = bunch.Archive.ReadBits(bunch.Archive.GetBitsLeft());
-                byte[] ret = new byte[(int)Math.Ceiling(bits.Length / 8.0)];
-                for (int i = 0; i < bits.Length; i += 8)
-                {
-                    int value = 0;
-                    for (int j = 0; j < 8; j++)
-                    {
-                        if (i + j < bits.Length)
-                        {
-                            if (bits[i + j])
-                            {
-                                value += 1 << (7 - j);
-                            }
-                        }
-                    }
-                    ret[i / 8] = (byte)value;
-                }
-                Debug($"bunch-{bunchIndex}-{bunch.ChIndex}-{bunch.ChName}", "bunches", ret);
-                bunch.Archive.Pop();
+                bunchIndex++;
 
                 if (bunch.bHasPackageMapExports)
                 {
-                    // Driver->NetGUIDInBytes += (BunchDataBits + (HeaderPos - IncomingStartPos)) >> 3 ??
-                    // Cast<UPackageMapClient>( PackageMap )->ReceiveNetGUIDBunch( Bunch );
                     ReceiveNetGUIDBunch(bunch.Archive);
                 }
-
-                // Can't handle other channels until control channel exists.
-                //if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control.ToString()))
-                //{
-                //    if (!Channels.ContainsKey(0))
-                //    {
-                //        return;
-                //    }
-                //}
-
-                // ignore control channel close if it hasn't been opened yet
-                //if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
-                //{
-                //    return;
-                //}
 
                 // We're on a 100% reliable connection and we are rolling back some data.
                 // In that case, we can generally ignore these bunches.
                 // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
                 // bIgnoreAlreadyOpenedChannels always true?  https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4393
-                if (channel)
+
+                /*
+                if (channel && (bunch.ChIndex != 0 || bunch.ChType != ChannelType.Control))
+                {
+                    if (!Channels.TryGetValue(0, out var controlChannel))
+                    {
+                        _logger?.LogWarning($"UNetConnection::ReceivedPacket: Received non-control bunch before control channel was created. ChIndex: {bunch.ChIndex}, ChName: {bunch.ChName}");
+
+                        Console.WriteLine($"UNetConnection::ReceivedPacket: Received non-control bunch before control channel was created. ChIndex: {bunch.ChIndex}, ChName: {bunch.ChName}");
+
+                        return;
+                    }
+                }
+                */
+                var ignoreAlreadyOpenedChannels = true;
+
+                if (channel && false)
                 {
                     var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor.ToString()) && (!bunch.bPartial || bunch.bPartialInitial);
+
                     if (bNewlyOpenedActorChannel)
                     {
-                        // GetActorGUIDFromOpenBunch(Bunch);
                         if (bunch.bHasMustBeMappedGUIDs)
                         {
                             var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
@@ -2563,42 +2127,29 @@ namespace Unreal.Core
                             //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
                             IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
                         }
+
                         continue;
                     }
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                if (bunch.bReliable && InReliable.TryGetValue(bunch.ChIndex, out int reliableChIndex) && bunch.ChSequence <= reliableChIndex)
                 {
                     continue;
                 }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
-                //if (!Channel && !bunch.bReliable)
-                //{
-                //    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
-                //    {
-                //        continue;
-                //    }
-                //}
+                if (!channel && !bunch.bReliable)
+                {
+                    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
+                    {
+                        continue;
+                    }
+                }
 
                 // Create channel if necessary
                 if (!channel)
                 {
-                    //if (rejectedChannels.ContainsKey(bunch.ChIndex))
-                    //{
-                    //    _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
-                    //    continue;
-                    //}
-
-                    //if (!Driver->IsKnownChannelName(Bunch.ChName))
-                    //{
-                    //    CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION
-                    //}
-
-                    // Reliable (either open or later), so create new channel.
-                    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-
                     var newChannel = new UChannel()
                     {
                         ChannelName = bunch.ChName,
@@ -2607,12 +2158,8 @@ namespace Unreal.Core
                     };
 
                     Channels.Add(bunch.ChIndex, newChannel);
-                    // Notify the server of the new channel.
-                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
                 }
 
-                // Dispatch the raw, unsequenced bunch to the channel
-                // Channel->ReceivedRawBunch( Bunch, bLocalSkipAck ); //warning: May destroy channel.
                 try
                 {
                     ReceivedRawBunch(bunch);
@@ -2632,18 +2179,24 @@ namespace Unreal.Core
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170
         }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private Core.BinaryReader Decompress(FArchive archive)
+        private Core.BinaryReader Decompress(FArchive archive, int size)
         {
             if (!Replay.Info.IsCompressed)
             {
-                return archive as Core.BinaryReader;
+                var uncompressed = new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                {
+                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                    NetworkVersion = Replay.Header.NetworkVersion,
+                    ReplayHeaderFlags = Replay.Header.Flags,
+                    ReplayVersion = Replay.Info.FileVersion
+                };
+                return uncompressed;
             }
 
             var decompressedSize = archive.ReadInt32();
@@ -2658,7 +2211,7 @@ namespace Unreal.Core
                 ReplayVersion = Replay.Info.FileVersion
             };
 
-            _logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
+            //_logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return decompressed;
         }
     }

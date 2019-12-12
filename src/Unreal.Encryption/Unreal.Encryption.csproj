@@ -10,4 +10,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="oo2core_5_win64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

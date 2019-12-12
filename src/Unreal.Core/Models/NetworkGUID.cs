@@ -21,5 +21,10 @@
         {
             return Value == 1;
         }
+
+        public bool IsStatic()
+        {
+            return (Value & 1) == 1;
+        }
     }
 }

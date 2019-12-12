@@ -6,7 +6,7 @@ namespace Unreal.Core.Models
     /// Replicated movement data of our RootComponent.
     /// see  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3005
     /// </summary>
-    public struct FRepMovement
+    public class FRepMovement
     {
         /// <summary>
         /// Velocity of component in world space
@@ -52,5 +52,10 @@ namespace Unreal.Core.Models
         /// Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts.
         /// </summary>
         public RotatorQuantization RotationQuantizationLevel { get; set;}
+
+        public override string ToString()
+        {
+            return Location.ToString();
+        }
     }
 }

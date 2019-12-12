@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Enums;
+﻿using System.Text;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -57,5 +58,26 @@ namespace Unreal.Core.Models
         public bool bHasMustBeMappedGUIDs { get; set; }  // This bunch has guids that must be mapped before we can process this bunch
         public bool bIgnoreRPCs { get; set; }
         public ChannelCloseReason CloseReason { get; set; }
+
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"{nameof(PacketId)}: {PacketId}");
+            builder.AppendLine($"{nameof(ChIndex)}: {ChIndex}");
+            builder.AppendLine($"{nameof(bOpen)}: {bOpen}");
+            builder.AppendLine($"{nameof(bClose)}: {bClose}");
+            builder.AppendLine($"{nameof(bDormant)}: {bDormant}");
+            builder.AppendLine($"{nameof(bIsReplicationPaused)}: {bIsReplicationPaused}");
+            builder.AppendLine($"{nameof(bReliable)}: {bReliable}");
+            builder.AppendLine($"{nameof(bPartial)}: {bPartial}");
+            builder.AppendLine($"{nameof(bPartialInitial)}: {bPartialInitial}");
+            builder.AppendLine($"{nameof(bPartialFinal)}: {bPartialFinal}");
+            builder.AppendLine($"{nameof(bHasPackageMapExports)}: {bHasPackageMapExports}");
+            builder.AppendLine($"{nameof(bHasMustBeMappedGUIDs)}: {bHasMustBeMappedGUIDs}");
+            builder.AppendLine($"{nameof(bIgnoreRPCs)}: {bIgnoreRPCs}");
+            builder.AppendLine($"{nameof(CloseReason)}: {CloseReason}");
+
+            return builder.ToString();
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace Unreal.Core
     /// </summary>
     public class BitReader : FBitArchive
     {
-        private BitArray Bits { get; set; }
+        private FBitArray Bits { get; set; }
 
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
@@ -38,13 +38,14 @@ namespace Unreal.Core
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
-            Bits = new BitArray(input);
+            Bits = new FBitArray(input);
+
             LastBit = Bits.Length;
         }
 
         public BitReader(byte[] input, int bitCount)
         {
-            Bits = new BitArray(input);
+            Bits = new FBitArray(input);
             LastBit = bitCount;
         }
 
@@ -55,13 +56,13 @@ namespace Unreal.Core
 
         public BitReader(bool[] input)
         {
-            Bits = new BitArray(input);
+            Bits = new FBitArray(input);
             LastBit = Bits.Length;
         }
 
         public BitReader(bool[] input, int bitCount)
         {
-            Bits = new BitArray(input);
+            Bits = new FBitArray(input);
             LastBit = bitCount;
         }
 
@@ -71,12 +72,16 @@ namespace Unreal.Core
         /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
         public override bool AtEnd()
         {
-            return Position >= LastBit || Position >= Bits.Length;
+            var pos = Position;
+
+            return pos >= LastBit || pos >= Bits.Length;
         }
 
         public override bool CanRead(int count)
         {
-            return Position + count <= LastBit || Position + count <= Bits.Length;
+            var pos = Position;
+
+            return pos + count <= LastBit || pos + count <= Bits.Length;
         }
 
         /// <summary>
@@ -139,21 +144,18 @@ namespace Unreal.Core
         /// <returns>bool[]</returns>
         public override bool[] ReadBits(int bitCount)
         {
-            if (!CanRead(bitCount))
+            if (!CanRead(bitCount) || bitCount < 0)
             {
                 IsError = true;
                 return Array.Empty<bool>();
             }
 
             var result = new bool[bitCount];
-            for (var i = 0; i < bitCount; i++)
-            {
-                if (IsError)
-                {
-                    return Array.Empty<bool>();
-                }
-                result[i] = ReadBit();
-            }
+
+            Bits.AsSpan(Position, bitCount).CopyTo(result);
+
+            Position += bitCount;
+
             return result;
         }
 
@@ -196,10 +198,17 @@ namespace Unreal.Core
         /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
         public override byte ReadByte()
         {
+            if (!CanRead(8))
+            {
+                IsError = true;
+
+                return 0;
+            }
+
             var result = new byte();
             for (var i = 0; i < 8; i++)
             {
-                if (ReadBit())
+                if (Bits[Position++])
                 {
                     result |= (byte)(1 << i);
                 }
@@ -215,22 +224,25 @@ namespace Unreal.Core
 
         public override byte[] ReadBytes(int byteCount)
         {
+            if(byteCount < 0)
+            {
+                IsError = true;
+                return new byte[0];
+            }
+
             if (!CanRead(byteCount))
             {
                 IsError = true;
-                return Array.Empty<byte>();
+                return new byte[0];
             }
 
             var result = new byte[byteCount];
+
             for (var i = 0; i < byteCount; i++)
             {
-                if (IsError)
-                {
-                    return result;
-                }
-
                 result[i] = ReadByte();
             }
+
             return result;
         }
 
@@ -253,12 +265,6 @@ namespace Unreal.Core
         {
             var length = ReadInt32();
 
-            if (!CanRead(length))
-            {
-                IsError = true;
-                return "";
-            }
-
             if (length == 0 || IsError)
             {
                 return "";
@@ -267,10 +273,22 @@ namespace Unreal.Core
             string value;
             if (length < 0)
             {
+                if (!CanRead(-2 * length))
+                {
+                    IsError = true;
+                    return "";
+                }
+
                 value = Encoding.Unicode.GetString(ReadBytes(-2 * length));
             }
             else
             {
+                if (!CanRead(length))
+                {
+                    IsError = true;
+                    return "";
+                }
+
                 value = Encoding.Default.GetString(ReadBytes(length));
             }
 
@@ -310,6 +328,25 @@ namespace Unreal.Core
             return value;
         }
 
+        public UInt32 ReadUInt32Max(Int32 maxValue)
+        {
+            var maxBits = Math.Floor(Math.Log10(maxValue) / Math.Log10(2)) + 1;
+
+            UInt32 value = 0;
+            for (int i = 0; i < maxBits && (value + (1 << i)) < maxValue; ++i)
+            {
+                value += (ReadBit() ? 1U : 0U) << i;
+            }
+
+            if (value > maxValue)
+            {
+                throw new Exception("ReadUInt32Max overflowed!");
+            }
+
+            return value;
+
+        }
+
         public override short ReadInt16()
         {
             var value = ReadBytes(2);
@@ -324,7 +361,9 @@ namespace Unreal.Core
 
         public override bool ReadInt32AsBoolean()
         {
-            return ReadInt32() == 1;
+            var i = ReadInt32();
+
+            return i == 1;
         }
 
         public override long ReadInt64()
@@ -363,7 +402,8 @@ namespace Unreal.Core
                 Position = byteAlignedPositon;
 
                 byte currentByte = ReadByte();
-                byte nextByte = 0;
+                byte nextByte = currentByte;
+
                 if (BitsUsed != 0)
                 {
                     nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
@@ -372,6 +412,7 @@ namespace Unreal.Core
                 OldPos += 8;
 
                 int readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
+
                 value = (uint)((readByte >> 1) << shift) | value;
 
                 if ((readByte & 1) == 0)
@@ -384,7 +425,6 @@ namespace Unreal.Core
 
             return value;
         }
-
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
@@ -411,9 +451,9 @@ namespace Unreal.Core
                 return new FVector(0, 0, 0);
             }
 
-            var x = (dx - bias) / scaleFactor;
-            var y = (dy - bias) / scaleFactor;
-            var z = (dz - bias) / scaleFactor;
+            var x = (float)(dx - bias) / scaleFactor;
+            var y = (float)(dy - bias) / scaleFactor;
+            var z = (float)(dz - bias) / scaleFactor;
 
             return new FVector(x, y, z);
         }
@@ -431,17 +471,17 @@ namespace Unreal.Core
 
             if (ReadBit()) // Pitch
             {
-                pitch = ReadByte() * 360 / 256;
+                pitch = ReadByte() * 360f / 256f;
             }
 
             if (ReadBit())
             {
-                yaw = ReadByte() * 360 / 256;
+                yaw = ReadByte() * 360f / 256f;
             }
 
             if (ReadBit())
             {
-                roll = ReadByte() * 360 / 256;
+                roll = ReadByte() * 360f / 256f;
             }
 
             if (IsError)
@@ -465,17 +505,17 @@ namespace Unreal.Core
 
             if (ReadBit()) // Pitch
             {
-                pitch = ReadUInt16() * 360 / 65536;
+                pitch = ReadUInt16() * 360 / 65536f;
             }
 
             if (ReadBit())
             {
-                yaw = ReadUInt16() * 360 / 65536;
+                yaw = ReadUInt16() * 360 / 65536f;
             }
 
             if (ReadBit())
             {
-                roll = ReadUInt16() * 360 / 65536;
+                roll = ReadUInt16() * 360 / 65536f;
             }
 
             if (IsError)
@@ -559,6 +599,18 @@ namespace Unreal.Core
             Seek(byteCount * 8, SeekOrigin.Current);
         }
 
+        public override void SkipBits(int numbits)
+        {
+            Position += numbits;
+
+            if (numbits < 0 || Position > Bits.Length)
+            {
+                IsError = true;
+
+                Position = Bits.Length;
+            }
+        }
+
         /// <summary>
         /// Save Position to <see cref="MarkPosition"/> so we can reset back to this point.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228
@@ -594,7 +646,7 @@ namespace Unreal.Core
         public override void AppendDataFromChecked(bool[] data)
         {
             LastBit += data.Length;
-            Bits = Bits.Append(data);
+            Bits.Append(data);
         }
     }
 }
