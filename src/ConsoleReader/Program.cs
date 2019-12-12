@@ -81,45 +81,5 @@ namespace ConsoleReader
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");
             Console.ReadLine();
         }
-
-        private static char[] decrypt(char[] ciphertext)
-        {
-            char[] plaintext = new char[500];
-
-            int key1 = 0xd9;
-            int key2 = 0x26;
-            int index = 0;
-
-            plaintext[index] = (char)(ciphertext[index] ^ key1);
-
-            while (plaintext[index] != 0)
-            {
-                ++index;
-                key2 = (index | (2 * key2));
-                plaintext[index] = (char)(ciphertext[index] ^ ~key2);
-            }
-
-            return plaintext;
-        }
-
-        /*private static char[] decrypt(string input)
-        {
-            char[] decrypted = input.ToCharArray();
-
-            uint length;
-            uint value = 0x22;
-
-            for (int i = 0; i < decrypted.Length; i++)
-            {
-                uint v6 = (uint)i | value;
-                length = ~v6;
-                value = (2 * v6);
-
-
-                decrypted[i] ^= (char)length;
-            }
-
-            return decrypted;
-        }*/
     }
 }
