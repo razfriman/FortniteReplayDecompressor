@@ -277,7 +277,7 @@ namespace Unreal.Core
 
         private static void SetType(object obj, Type netType, NetFieldInfo netFieldInfo, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
-            object data = null;
+            object data;
 
             switch (netFieldInfo.Attribute.Type)
             {

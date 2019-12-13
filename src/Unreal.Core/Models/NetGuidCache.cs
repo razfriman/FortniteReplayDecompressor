@@ -100,6 +100,9 @@ namespace Unreal.Core.Models
 
                 if(isActor)
                 {
+                    //The default types never end up here.
+                    return null;
+
                     var tempPath = CoreRedirects.GetRedirect(path);
 
                     if (!String.IsNullOrEmpty(tempPath))

@@ -1219,6 +1219,7 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         protected virtual void ProcessBunch(DataBunch bunch)
         {
+            /*
             UChannel channel = Channels[bunch.ChIndex];
 
             if (channel.Broken)
@@ -1226,9 +1227,10 @@ namespace Unreal.Core
                 //_logger?.LogInformation($"Channel {bunch.ChIndex} broken. Ignoring bunch");
 
                 return;
-            }
+            }*/
 
             var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
+
             if (!actor)
             {
                 if (!bunch.bOpen)
@@ -1336,10 +1338,6 @@ namespace Unreal.Core
 
                     _logger?.LogError($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. Bunch Info: {bunch}");
                     break;
-                }
-                else
-                {
-                    //_logger?.LogError($"No error. Bunch Info: {bunch}");
                 }
 
                 if (reader.AtEnd())
