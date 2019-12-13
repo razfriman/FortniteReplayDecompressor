@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
-    public class Llama : SearchableItem
+    public class SupplyDrop : SearchableItem
     {
+        public bool BalloonPopped { get; set; }
     }
 }

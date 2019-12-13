@@ -92,7 +92,7 @@ namespace Unreal.Core
             //Player info
             IncludedExportGroups.Add(typeof(FortPlayerState));
             IncludedExportGroups.Add(typeof(PlayerPawnC));
-            IncludedExportGroups.Add(typeof(FortInventory));
+            //IncludedExportGroups.Add(typeof(FortInventory));
             //IncludedExportGroups.Add(typeof(FortPickup));
 
             //Game state
@@ -103,7 +103,7 @@ namespace Unreal.Core
             //Supply drops / llamas
             IncludedExportGroups.Add(typeof(SupplyDropC));
             IncludedExportGroups.Add(typeof(SupplyDropLlamaC));
-            IncludedExportGroups.Add(typeof(SupplyDropBalloonC));
+            //IncludedExportGroups.Add(typeof(SupplyDropBalloonC));
 
             //////Projectiles
             //IncludedExportGroups.Add(typeof(BPrjBulletSniperC));

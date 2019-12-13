@@ -293,11 +293,11 @@ namespace Unreal.Core.Models
         [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyUInt32, 244, "PlayerBotsLeft", "", 32)]
         public uint? PlayerBotsLeft { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.PropertyUInt32, 268, "DefaultParachuteDeployTraceForGroundDistance", "", 32)]
-        public uint? DefaultParachuteDeployTraceForGroundDistance { get; set; } //Type:  Bits: 32
+        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.PropertyFloat, 268, "DefaultParachuteDeployTraceForGroundDistance", "", 32)]
+        public float? DefaultParachuteDeployTraceForGroundDistance { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.PropertyUInt32, 270, "DefaultRebootMachineHotfix", "", 32)]
-        public uint? DefaultRebootMachineHotfix { get; set; } //Type:  Bits: 32
+        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.PropertyFloat, 270, "DefaultRebootMachineHotfix", "", 32)]
+        public float? DefaultRebootMachineHotfix { get; set; } //Type:  Bits: 32
 
         [NetFieldExport("SignalInStormRegenSpeed", RepLayoutCmdType.PropertyFloat, 271, "SignalInStormRegenSpeed", "", 32)]
         public float? SignalInStormRegenSpeed { get; set; } //Type:  Bits: 32

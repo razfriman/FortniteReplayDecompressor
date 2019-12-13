@@ -44,8 +44,8 @@ namespace Unreal.Core.Models
 		[NetFieldExport("MegaStormDelayTimeBeforeDestruction", RepLayoutCmdType.PropertyFloat, 27, "MegaStormDelayTimeBeforeDestruction", "float", 32)]
 		public float? MegaStormDelayTimeBeforeDestruction { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("Radius", RepLayoutCmdType.PropertyUInt32, 31, "Radius", "", 32)]
-		public uint? Radius { get; set; } //Type:  Bits: 32
+		[NetFieldExport("Radius", RepLayoutCmdType.PropertyFloat, 31, "Radius", "float", 32)]
+		public float? Radius { get; set; } //Type:  Bits: 32
 
 	}
 }

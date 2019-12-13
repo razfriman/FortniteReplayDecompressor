@@ -70,19 +70,21 @@ namespace FortniteReplayReader
                 case SupplyDropLlamaC llama:
                     GameInformation.UpdateLlama(channel, llama);
                     break;
-                case SupplyDropBalloonC supplyDropBalloon:
+                case SupplyDropBalloonC supplyDropBalloon: //Ignored by default
                     break;
                 case SupplyDropC supplyDrop:
+                    GameInformation.UpdateSupplyDrop(channel, supplyDrop);
                     break;
                 case GameStateC gameState:
                     break;
                 case FortPlayerState playerState:
                     break;
-                case FortPickup fortPickup:
+                case FortPickup fortPickup: //Ignored by default
                     break;
-                case FortInventory fortInventory:
+                case FortInventory fortInventory: //No useful information
                     break;
                 case SafeZoneIndicatorC safeZoneIndicator:
+                    GameInformation.UpdateSafeZone(safeZoneIndicator);
                     break;
             }
         }
