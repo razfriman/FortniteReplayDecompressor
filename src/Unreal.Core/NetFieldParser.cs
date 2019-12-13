@@ -42,6 +42,10 @@ namespace Unreal.Core
 
                 NetFieldGroupInfo info = new NetFieldGroupInfo();
 
+                //Compiled linq for object creation
+                BlockExpression block = Expression.Block(type, Expression.New(type));
+                info.Builder = Expression.Lambda<Func<INetFieldExportGroup>>(block).Compile();
+
                 _netFieldGroupInfo[type] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
@@ -91,7 +95,7 @@ namespace Unreal.Core
             IncludedExportGroups.Add(typeof(FortPlayerState));
             IncludedExportGroups.Add(typeof(PlayerPawnC));
             IncludedExportGroups.Add(typeof(FortInventory));
-            IncludedExportGroups.Add(typeof(FortPickup));
+            //IncludedExportGroups.Add(typeof(FortPickup));
 
             //Game state
             IncludedExportGroups.Add(typeof(GameStateC));
@@ -422,6 +426,7 @@ namespace Unreal.Core
                 return null;
             }
 
+            //return _netFieldGroupInfo[_netFieldGroups[group]].Builder();
             return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
         }
 
@@ -690,6 +695,7 @@ namespace Unreal.Core
 
         private class NetFieldGroupInfo
         {
+            public Func<INetFieldExportGroup> Builder { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
         }
 

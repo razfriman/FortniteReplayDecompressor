@@ -74,11 +74,19 @@ namespace FortniteReplayReader
                         case SupplyDropLlamaC llama:
                             GameInformation.UpdateLlama(exportKvp.Key, llama);
                             break;
-                        case FortPlayerState playerState:
+                        case SupplyDropBalloonC supplyDropBalloon:
+                            break;
+                        case SupplyDropC supplyDrop:
                             break;
                         case GameStateC gameState:
                             break;
+                        case FortPlayerState playerState:
+                            break;
                         case FortPickup fortPickup:
+                            break;
+                        case FortInventory fortInventory:
+                            break;
+                        case SafeZoneIndicatorC safeZoneIndicator:
                             break;
                     }
                 }

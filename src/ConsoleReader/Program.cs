@@ -56,6 +56,8 @@ namespace ConsoleReader
 
             Stopwatch sw = new Stopwatch();
 
+            long totalTime = 0;
+
             foreach(string path in Directory.GetFiles("Replays"))
             {
                 //Console.WriteLine($"Reading {path}");
@@ -67,15 +69,25 @@ namespace ConsoleReader
 
                 sw.Stop();
 
-                //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
+                Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
+                //Console.WriteLine($"\t - Properties Read: {reader?.ExportGroups.Values.SelectMany(x => x).Count()}");
 
-                Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
+                /*foreach(var k in reader.ExportGroups)
+                {
+                    Console.WriteLine($"\t\tIgnored: {reader.Channels[k.Key].Ignore} {String.Join(", ", k.Value.Select(x => x.GetType().ToString()).Distinct())} Entries: {k.Value.Count}");
+                }*/
 
-                foreach(Llama llama in reader.GameInformation.Llamas)
+                //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
+
+                foreach (Llama llama in reader.GameInformation.Llamas)
                 {
                     //Console.WriteLine($"\t -{llama}");
                 }
+
+                totalTime += sw.ElapsedMilliseconds;
             }
+
+            Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");
 
             Console.WriteLine("---- done ----");
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");
