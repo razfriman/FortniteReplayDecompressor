@@ -19,7 +19,9 @@ namespace Unreal.Core
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
         /// </summary>
-        public override int Position { get; protected set; }
+        public override int Position { get => _position; protected set => _position = value; }
+
+        private int _position;
 
         /// <summary>
         /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
@@ -72,16 +74,12 @@ namespace Unreal.Core
         /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
         public override bool AtEnd()
         {
-            var pos = Position;
-
-            return pos >= LastBit || pos >= Bits.Length;
+            return _position >= LastBit || _position >= Bits.Length;
         }
 
         public override bool CanRead(int count)
         {
-            var pos = Position;
-
-            return pos + count <= LastBit || pos + count <= Bits.Length;
+            return _position + count <= LastBit || _position + count <= Bits.Length;
         }
 
         /// <summary>
@@ -91,7 +89,7 @@ namespace Unreal.Core
         /// <seealso cref="ReadBit"/>
         public override bool PeekBit()
         {
-            return Bits[Position];
+            return Bits[_position];
         }
 
         /// <summary>
@@ -107,12 +105,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            return Bits[Position++];
-        }
-
-        public override T[] ReadArray<T>(Func<T> func1)
-        {
-            throw new NotImplementedException();
+            return Bits[_position++];
         }
 
         /// <summary>
@@ -152,9 +145,9 @@ namespace Unreal.Core
 
             var result = new bool[bitCount];
 
-            Bits.AsSpan(Position, bitCount).CopyTo(result);
+            Bits.AsSpan(_position, bitCount).CopyTo(result);
 
-            Position += bitCount;
+            _position += bitCount;
 
             return result;
         }
@@ -187,7 +180,7 @@ namespace Unreal.Core
         public override byte PeekByte()
         {
             var result = ReadByte();
-            Position -= 8;
+            _position -= 8;
 
             return result;
         }
@@ -207,7 +200,7 @@ namespace Unreal.Core
 
             var result = new byte();
 
-            var pos = Position;
+            var pos = _position;
 
             for (var i = 0; i < 8; i++)
             {
@@ -217,7 +210,7 @@ namespace Unreal.Core
                 }
             }
 
-            Position += 8;
+            _position += 8;
 
             return result;
         }
@@ -265,6 +258,11 @@ namespace Unreal.Core
         public override byte[] ReadBytes(uint byteCount)
         {
             return ReadBytes((int)byteCount);
+        }
+
+        public override T[] ReadArray<T>(Func<T> func1)
+        {
+            throw new NotImplementedException();
         }
 
         public override string ReadBytesToString(int count)
@@ -395,14 +393,14 @@ namespace Unreal.Core
         /// <returns>uint</returns>
         public override uint ReadIntPacked()
         {
-            int BitsUsed = (int)Position % 8;
+            int BitsUsed = (int)_position % 8;
             int BitsLeft = 8 - BitsUsed;
             int SourceMask0 = (1 << BitsLeft) - 1;
             int SourceMask1 = (1 << BitsUsed) - 1;
 
             uint value = 0;
 
-            int OldPos = Position;
+            int OldPos = _position;
 
             int shift = 0;
             for (var it = 0; it < 5; it++)
@@ -412,17 +410,17 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                int currentBytePos = (int)Position / 8;
+                int currentBytePos = (int)_position / 8;
                 int byteAlignedPositon = currentBytePos * 8;
 
-                Position = byteAlignedPositon;
+                _position = byteAlignedPositon;
 
                 byte currentByte = ReadByte();
                 byte nextByte = currentByte;
 
                 if (BitsUsed != 0)
                 {
-                    nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
+                    nextByte = (_position + 8 <= LastBit) ? PeekByte() : new byte();
                 }
 
                 OldPos += 8;
@@ -437,7 +435,8 @@ namespace Unreal.Core
                 }
                 shift += 7;
             }
-            Position = OldPos;
+
+            _position = OldPos;
 
             return value;
         }
@@ -619,17 +618,17 @@ namespace Unreal.Core
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
-            if (offset < 0 || offset > Bits.Length || (seekOrigin == SeekOrigin.Current && offset + Position > Bits.Length))
+            if (offset < 0 || offset > Bits.Length || (seekOrigin == SeekOrigin.Current && offset + _position > Bits.Length))
             {
                 throw new ArgumentOutOfRangeException("Specified offset doesnt fit within the BitArray buffer");
             }
 
             _ = (seekOrigin switch
             {
-                SeekOrigin.Begin => Position = offset,
-                SeekOrigin.End => Position = Bits.Length - offset,
-                SeekOrigin.Current => Position += offset,
-                _ => Position = offset,
+                SeekOrigin.Begin => _position = offset,
+                SeekOrigin.End => _position = Bits.Length - offset,
+                SeekOrigin.Current => _position += offset,
+                _ => _position = offset,
             });
         }
 
@@ -645,13 +644,13 @@ namespace Unreal.Core
 
         public override void SkipBits(int numbits)
         {
-            Position += numbits;
+            _position += numbits;
 
-            if (numbits < 0 || Position > Bits.Length)
+            if (numbits < 0 || _position > Bits.Length)
             {
                 IsError = true;
 
-                Position = Bits.Length;
+                _position = Bits.Length;
             }
         }
 
@@ -661,7 +660,7 @@ namespace Unreal.Core
         /// </summary>
         public override void Mark()
         {
-            MarkPosition = Position;
+            MarkPosition = _position;
         }
 
         /// <summary>
@@ -671,7 +670,7 @@ namespace Unreal.Core
         public override void Pop()
         {
             // TODO: pop makes it sound like a list...
-            Position = MarkPosition;
+            _position = MarkPosition;
         }
 
         /// <summary>
@@ -680,7 +679,7 @@ namespace Unreal.Core
         /// <returns></returns>
         public override int GetBitsLeft()
         {
-            return Bits.Length - Position;
+            return Bits.Length - _position;
         }
 
         /// <summary>
