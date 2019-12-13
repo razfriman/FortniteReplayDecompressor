@@ -1506,13 +1506,13 @@ namespace Unreal.Core
         {
             ++TotalGroupsRead;
 
-            var doChecksum = archive.ReadBit();
-            Debug("types", $"\n{group.PathName}");
-
             if(NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName))
             {
                 return true;
             }
+
+            var doChecksum = archive.ReadBit();
+            //Debug("types", $"\n{group.PathName}");
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
 

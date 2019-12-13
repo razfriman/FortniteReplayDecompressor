@@ -51,7 +51,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/UnsavedReplay-2019.05.22-16.58.41.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.06.30-20.39.37.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.09.12-21.39.37.replay";
-            var replayFile = "Replays/S11-Duos.replay";
+            var replayFile = "Replays/UnsavedReplay-2019.12.11-02.43.14.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
 
             Stopwatch sw = new Stopwatch();
@@ -60,31 +60,40 @@ namespace ConsoleReader
 
             foreach(string path in Directory.GetFiles("Replays"))
             {
-                //Console.WriteLine($"Reading {path}");
-
-                sw.Restart();
-
-                var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(path);
-
-                sw.Stop();
-
-                Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
-                //Console.WriteLine($"\t - Properties Read: {reader?.ExportGroups.Values.SelectMany(x => x).Count()}");
-
-                /*foreach(var k in reader.ExportGroups)
+                for (int i = 0; i < 20; i++)
                 {
-                    Console.WriteLine($"\t\tIgnored: {reader.Channels[k.Key].Ignore} {String.Join(", ", k.Value.Select(x => x.GetType().ToString()).Distinct())} Entries: {k.Value.Count}");
-                }*/
 
-                //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
+                    //Console.WriteLine($"Reading {path}");
 
-                foreach (Llama llama in reader.GameInformation.Llamas)
-                {
-                    //Console.WriteLine($"\t -{llama}");
+                    sw.Restart();
+
+                    var reader = new ReplayReader(logger);
+                    var replay = reader.ReadReplay(replayFile);
+
+                    sw.Stop();
+
+                    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
+                    //Console.WriteLine($"\t - Properties Read: {reader?.ExportGroups.Values.SelectMany(x => x).Count()}");
+
+                    /*foreach(var k in reader.ExportGroups)
+                    {
+                        Console.WriteLine($"\t\tIgnored: {reader.Channels[k.Key].Ignore} {String.Join(", ", k.Value.Select(x => x.GetType().ToString()).Distinct())} Entries: {k.Value.Count}");
+                    }*/
+
+                    //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
+
+                    foreach (Llama llama in reader.GameInformation.Llamas)
+                    {
+                        //Console.WriteLine($"\t -{llama}");
+                    }
+
+                    if (i > 0)
+                    {
+                        totalTime += sw.ElapsedMilliseconds;
+                    }
                 }
 
-                totalTime += sw.ElapsedMilliseconds;
+                break;
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");
