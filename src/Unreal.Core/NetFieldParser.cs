@@ -18,6 +18,7 @@ namespace Unreal.Core
     public class NetFieldParser
     {
         public static bool IncludeOnlyMode { get; set; } = true;
+
         public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
 
         private static Dictionary<string, Type> _netFieldGroups = new Dictionary<string, Type>();
@@ -667,7 +668,6 @@ namespace Unreal.Core
             }
 
             fields.Add(fieldInfo);
-
         }
 
         private static void AddUnknownField(string exportName, string exportType, string group, uint handle, NetBitReader netBitReader)
@@ -679,7 +679,7 @@ namespace Unreal.Core
                 UnknownNetFields.TryGetValue(group, out fields);
             }
 
-            fields.Add(new UnknownFieldInfo(FixInvalidNames(exportName), exportType, netBitReader.GetBitsLeft(), handle));
+            fields.Add(new UnknownFieldInfo(exportName, exportType, netBitReader.GetBitsLeft(), handle));
 
         }
 
