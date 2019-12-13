@@ -27,6 +27,8 @@ namespace Unreal.Core
 
         public static bool HasNewNetFields => UnknownNetFields.Count > 0;
 
+        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+
         static NetFieldParser()
         {
             IEnumerable<Type> netFields = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
@@ -40,12 +42,7 @@ namespace Unreal.Core
                     _netFieldGroups[attribute.Path] = type;
                 }
 
-                NetFieldGroupInfo info = new NetFieldGroupInfo();
-
-                //Compiled linq for object creation
-                BlockExpression block = Expression.Block(type, Expression.New(type));
-                info.Builder = Expression.Lambda<Func<INetFieldExportGroup>>(block).Compile();
-
+                NetFieldGroupInfo info = new NetFieldGroupInfo(); 
                 _netFieldGroupInfo[type] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
@@ -189,7 +186,7 @@ namespace Unreal.Core
             switch(replayout)
             {
                 case RepLayoutCmdType.Property:
-                    data = Activator.CreateInstance(objectType);
+                    data = _linqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
                     break;
                 case RepLayoutCmdType.PropertyBool:
@@ -318,15 +315,7 @@ namespace Unreal.Core
                 {
                     replayout = RepLayoutCmdType.Ignore;
                 }
-                else
-                {
-                    if (elementType == typeof(DebuggingObject))
-                    {
-
-                    }
-                }
             }
-
 
             Array arr = Array.CreateInstance(elementType, arrayIndexes);
 
@@ -364,7 +353,7 @@ namespace Unreal.Core
 
                 if (groupInfo != null)
                 {
-                    data = Activator.CreateInstance(elementType);
+                    data = _linqCache.CreateObject(elementType);
                 }
 
                 while (true)
@@ -426,8 +415,9 @@ namespace Unreal.Core
                 return null;
             }
 
-            //return _netFieldGroupInfo[_netFieldGroups[group]].Builder();
-            return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
+            return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group]);
+
+            //return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
         }
 
         public static void GenerateFiles(string directory)
@@ -695,7 +685,6 @@ namespace Unreal.Core
 
         private class NetFieldGroupInfo
         {
-            public Func<INetFieldExportGroup> Builder { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
         }
 

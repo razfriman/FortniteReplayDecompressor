@@ -106,6 +106,7 @@ namespace Unreal.Core
                 IsError = true;
                 return false;
             }
+
             return Bits[Position++];
         }
 

@@ -354,6 +354,7 @@ namespace Unreal.Core
                     ReceivedRawPacket(packet);
                 }
             }
+
             replayDataIndex++;
         }
 
@@ -805,7 +806,7 @@ namespace Unreal.Core
                 if (skipExternalOffset > 0)
                 {
                     // ignore it for now
-                    var bytes = archive.ReadBytes((int)skipExternalOffset);
+                    archive.SkipBytes((int)skipExternalOffset);
                 }
             }
 
@@ -1493,145 +1494,6 @@ namespace Unreal.Core
 
 
             return true;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3141
-        /// </summary>
-        private IList<uint> ReceivePropertiesArray(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
-        {
-            IList<uint> result = new List<uint>();
-
-            var stateValue = new FortItemEntryStateValue();
-
-            var arrayNum = archive.ReadIntPacked();
-            while (true)
-            {
-                var index = archive.ReadIntPacked();
-                if (index == 0)
-                {
-                    // At this point, the 0 either signifies:
-                    //	An array terminator, at which point we're done.
-                    //	An array element terminator, which could happen if the array had tailing elements removed.
-                    if (archive.GetBitsLeft() == 8)
-                    {
-                        // We have bits left over, so see if its the Array Terminator.
-                        // This should be 0
-                        var terminator = archive.ReadIntPacked();
-
-                        if (terminator != 0)
-                        {
-                            _logger?.LogError("Invalid array terminator");
-                            break;
-                            //UE_LOG(LogRep, Warning, TEXT("ReceiveProperties_BackwardsCompatible_r: Invalid array terminator. Owner: %s, Name: %s, NetFieldExportHandle: %i, Terminator: %d"), *Owner->GetName(), *NetFieldExportGroup->NetFieldExports[NetFieldExportHandle].ExportName.ToString(), NetFieldExportHandle, Terminator);
-                            //return false;
-                        }
-                    }
-
-                    // We're done
-                    break;
-                }
-
-                // Shift all indexes down since 0 represents null handle
-                index--;
-
-                if (index > arrayNum)
-                {
-                    _logger?.LogError("Array index out of bounds.");
-                    //UE_LOG(LogRep, Warning, TEXT("ReceiveProperties_BackwardsCompatible_r: Array index out of bounds. Index: %i, ArrayNum: %i, Owner: %s, Name: %s, NetFieldExportHandle: %i, Checksum: %u"), Index, ArrayNum, *Owner->GetName(), *NetFieldExportGroup->NetFieldExports[NetFieldExportHandle].ExportName.ToString(), NetFieldExportHandle, Checksum);
-                    //return false;
-                }
-
-                // TODO remove duplicate code
-                while (true)
-                {
-                    var handle = archive.ReadIntPacked();
-
-                    if (handle == 0)
-                    {
-                        // We're done
-                        break;
-                        // return true;
-                    }
-
-                    // We purposely add 1 on save, so we can reserve 0 for "done"
-                    handle--;
-
-                    var export = group.NetFieldExports[handle];
-                    //var export = netFieldExportGroup.NetFieldExports[(int)handle];
-
-                    var numBits = archive.ReadIntPacked();
-
-                    if (export == null)
-                    {
-                        _logger?.LogError($"Couldnt find handle {handle}, numbits is {numBits}");
-                        Debug("missinghandles", $"\n{group.PathName}\t{handle}\t{numBits}");
-                        archive.ReadBits(numBits);
-                        continue;
-                    }
-
-                    if (export.Incompatible)
-                    {
-                        //_logger?.LogInformation("Incompatible export");
-                        archive.ReadBits(numBits);
-                        // We've already warned that this property doesn't load anymore
-                        continue;
-                    }
-
-                    archive.Mark();
-                    Debug($"cmdarray-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
-                    archive.Pop();
-
-                    var cmdReader = new NetBitReader(archive.ReadBits(numBits));
-
-                    if (group.PathName == "/Script/FortniteGame.FortPickupAthena")
-                    {
-                        switch (export.Name)
-                        {
-                            // FFortItemEntryStateValue
-                            case "StateType":
-                                stateValue.StateType = cmdReader.SerializePropertyEnum(11); // EFortItemEntryState
-                                break;
-                            case "IntValue":
-                                stateValue.IntValue = cmdReader.SerializePropertyInt();
-                                break;
-                            case "NameValue":
-                                stateValue.NameValue = StaticParseName(cmdReader);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch (export.Name)
-                        {
-                            case "Dances":
-                                result.Add(cmdReader.SerializePropertyObject());
-                                break;
-                            case "ItemWraps":
-                                result.Add(cmdReader.SerializePropertyObject());
-                                break;
-                        }
-                    }
-                }
-
-                //if (!ReceiveProperties_BackwardsCompatible_r(RepState, NetFieldExportGroup, TempReader, CmdIndex + 1, Cmd.EndCmd - 1, ElementShadowData, LocalData, ElementData, NewGuidReferencesArray, bOutHasUnmapped, bOutGuidsChanged))
-                //{
-                //    return false;
-                //}
-                if (archive.IsError)
-                {
-                    _logger?.LogError($"ReceiveProperties_BackwardsCompatible_r: Error reading array index element payload. Name: {group.PathName}, Channel: {channelIndex}");
-                    break;
-                }
-
-            }
-
-            // TODO wrong location-ish...
-            if (!archive.AtEnd())
-            {
-                _logger?.LogError($"ReceiveProperties_BackwardsCompatible_r: Array didn't read proper number of bits. Name: {group.PathName}, Channel: {channelIndex}");
-            }
-            return result;
         }
 
         /// <summary>
