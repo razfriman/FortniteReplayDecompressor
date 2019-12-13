@@ -59,7 +59,7 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
-        public Dictionary<uint, List<INetFieldExportGroup>> ExportGroups { get; private set; } = new Dictionary<uint, List<INetFieldExportGroup>>();
+        //public Dictionary<uint, List<INetFieldExportGroup>> ExportGroups { get; private set; } = new Dictionary<uint, List<INetFieldExportGroup>>();
 
         //private List<string> UnknownFields = new List<string>();
 
@@ -1514,15 +1514,16 @@ namespace Unreal.Core
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
 
-            List<INetFieldExportGroup> groups = new List<INetFieldExportGroup>();
+            //List<INetFieldExportGroup> groups = new List<INetFieldExportGroup>();
 
+            /*
             if (exportGroup != null)
             {
                 if (!ExportGroups.TryAdd(channelIndex, groups))
                 {
                     ExportGroups.TryGetValue(channelIndex, out groups);
                 }
-            }
+            }*/
 
             bool hasData = false;
 
@@ -1618,7 +1619,8 @@ namespace Unreal.Core
 
             if (hasData)
             {
-                groups.Add(exportGroup);
+                OnExportRead(channelIndex, exportGroup);
+
             }
 
             return true;
@@ -2074,5 +2076,7 @@ namespace Unreal.Core
             //_logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return decompressed;
         }
+
+        protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
     }
 }

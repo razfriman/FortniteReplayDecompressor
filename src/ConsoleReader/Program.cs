@@ -73,7 +73,7 @@ namespace ConsoleReader
                     sw.Stop();
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
-                    Console.WriteLine($"\t - Properties Read: {reader?.ExportGroups.Values.SelectMany(x => x).Count()}");
+                    Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
 
                     /*foreach(var k in reader.ExportGroups)
                     {

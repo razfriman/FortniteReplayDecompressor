@@ -17,7 +17,8 @@ namespace FortniteReplayReader
 {
     public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
-        public GameInformation GameInformation { get; private set; }
+        public GameInformation GameInformation { get; private set; } = new GameInformation();
+        public int TotalPropertiesRead { get; private set; }
 
         public ReplayReader(ILogger logger = null)
         {
@@ -36,8 +37,6 @@ namespace FortniteReplayReader
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
             var replay = ReadReplay(archive);
-
-            GenerateGameInformation();
 
             return replay;
         }
@@ -61,6 +60,34 @@ namespace FortniteReplayReader
             }
         }
 
+
+        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        {
+            ++TotalPropertiesRead;
+
+            switch (exportGroup)
+            {
+                case SupplyDropLlamaC llama:
+                    GameInformation.UpdateLlama(channel, llama);
+                    break;
+                case SupplyDropBalloonC supplyDropBalloon:
+                    break;
+                case SupplyDropC supplyDrop:
+                    break;
+                case GameStateC gameState:
+                    break;
+                case FortPlayerState playerState:
+                    break;
+                case FortPickup fortPickup:
+                    break;
+                case FortInventory fortInventory:
+                    break;
+                case SafeZoneIndicatorC safeZoneIndicator:
+                    break;
+            }
+        }
+
+        /*
         private void GenerateGameInformation()
         {
             GameInformation = new GameInformation();
@@ -69,29 +96,11 @@ namespace FortniteReplayReader
             {
                 foreach (INetFieldExportGroup exportGroup in exportKvp.Value)
                 {
-                    switch (exportGroup)
-                    {
-                        case SupplyDropLlamaC llama:
-                            GameInformation.UpdateLlama(exportKvp.Key, llama);
-                            break;
-                        case SupplyDropBalloonC supplyDropBalloon:
-                            break;
-                        case SupplyDropC supplyDrop:
-                            break;
-                        case GameStateC gameState:
-                            break;
-                        case FortPlayerState playerState:
-                            break;
-                        case FortPickup fortPickup:
-                            break;
-                        case FortInventory fortInventory:
-                            break;
-                        case SafeZoneIndicatorC safeZoneIndicator:
-                            break;
-                    }
+                    
                 }
             }
         }
+        */
 
         protected override void ReadReplayHeader(FArchive archive)
         {
@@ -292,6 +301,5 @@ namespace FortniteReplayReader
             var size = archive.ReadByte();
             return archive.ReadGUID(size);
         }
-
     }
 }
