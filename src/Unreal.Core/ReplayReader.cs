@@ -46,7 +46,6 @@ namespace Unreal.Core
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
         public Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
-        private Dictionary<uint, uint> ChannelNetGuids = new Dictionary<uint, uint>();
         private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
 
         public NetGuidCache GuidCache = new NetGuidCache();
@@ -67,9 +66,6 @@ namespace Unreal.Core
         /// Tracks channels that we should ignore when handling special demo data.
         /// </summary>
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>(); // channel index, actorguid
-        private HashSet<uint> RejectedChans = new HashSet<uint>();
-
-        private Dictionary<string, StreamWriter> _streamWriters = new Dictionary<string, StreamWriter>();
 
         public virtual T ReadReplay(FArchive archive)
         {
@@ -85,54 +81,15 @@ namespace Unreal.Core
 
         private void Cleanup()
         {
-            foreach (StreamWriter writer in _streamWriters.Values)
-            {
-                using (writer)
-                {
-                    writer.Flush();
-                }
-            }
-
-            _streamWriters.Clear();
-
             InReliable.Clear();
             Channels.Clear();
             ChannelActors.Clear();
             GuidCache.NetFieldExportGroupIndexToGroup.Clear();
             GuidCache.NetFieldExportGroupMap.Clear();
-            GuidCache.NetFieldExportGroupPathToIndex.Clear();
             GuidCache.NetGuidToPathName.Clear();
             GuidCache.ObjectLookup.Clear();
             GuidCache.NetFieldExportGroupMapPathFixed.Clear();
 
-        }
-
-        protected virtual void Debug(string filename, string directory, byte[] data)
-        {
-            return;
-
-            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            File.WriteAllBytes($"{directory}/{filename}.dump", data);
-        }
-
-        private void Debug(string filename, string line)
-        {
-            return;
-
-            string name = $"debugFiles/{filename}.txt";
-
-            if (!_streamWriters.TryGetValue(name, out StreamWriter writer))
-            {
-                writer = new StreamWriter(name, true);
-
-                _streamWriters.TryAdd(name, writer);
-            }
-
-            writer.WriteLine(line);
         }
 
         /// <summary>
@@ -222,7 +179,6 @@ namespace Unreal.Core
             {
                 // Clear all of our mappings, since we're starting over
                 GuidCache.NetFieldExportGroupMap.Clear();
-                GuidCache.NetFieldExportGroupPathToIndex.Clear();
                 GuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
 
@@ -249,7 +205,6 @@ namespace Unreal.Core
             {
                 if (packet.State == PacketState.Success)
                 {
-                    Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "checkpoint-packets", packet.Data);
                     packetIndex++;
 
                     //Not accurate currently
@@ -349,7 +304,6 @@ namespace Unreal.Core
 
                 foreach (var packet in playbackPackets.Where(x => x.State == PacketState.Success))
                 {
-                    Debug($"replaydata-{replayDataIndex}-packet-{packetIndex}", "replay-packets", packet.Data);
                     packetIndex++;
                     ReceivedRawPacket(packet);
                 }
@@ -533,7 +487,8 @@ namespace Unreal.Core
                 var netGuid = archive.ReadIntPacked();
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                var externalData = archive.ReadBytes(externalDataNumBytes);
+                //var externalData = archive.ReadBytes(externalDataNumBytes);
+                archive.SkipBytes(externalDataNumBytes);
 
                 // replayout setexternaldata
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
@@ -557,7 +512,6 @@ namespace Unreal.Core
                 //    var time = bitReader.ReadSingle();
                 //}
 
-                Debug($"externaldata-{externalDataIndex}-{netGuid}", "externaldata", externalData);
                 externalDataIndex++;
             }
         }
@@ -1959,7 +1913,6 @@ namespace Unreal.Core
                     }
                 }
                 */
-                var ignoreAlreadyOpenedChannels = true;
 
                 if (channel && false)
                 {
