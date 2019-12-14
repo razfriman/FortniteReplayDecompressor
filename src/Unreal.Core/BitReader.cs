@@ -74,12 +74,12 @@ namespace Unreal.Core
         /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
         public override bool AtEnd()
         {
-            return _position >= LastBit || _position >= Bits.Length;
+            return _position >= LastBit;
         }
 
         public override bool CanRead(int count)
         {
-            return _position + count <= LastBit || _position + count <= Bits.Length;
+            return _position + count <= LastBit;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Unreal.Core
         /// <seealso cref="PeekBit"/>
         public override bool ReadBit()
         {
-            if (AtEnd() || IsError)
+            if (_position >= LastBit || IsError)
             {
                 IsError = true;
                 return false;

@@ -11,7 +11,6 @@ namespace Unreal.Core
         private bool[] _items;
 
         public int Length => _items.Length;
-        public bool[] Bits => _items;
         public bool IsReadOnly => false;
 
         public FBitArray(bool[] bits)
@@ -24,7 +23,7 @@ namespace Unreal.Core
             _items = new bool[bytes.Length * 8];
 
             fixed (byte* bytePtr = bytes)
-            fixed (bool* itemPtr = Bits)
+            fixed (bool* itemPtr = _items)
             {
                 for (int i = 0; i < bytes.Length; i++)
                 {

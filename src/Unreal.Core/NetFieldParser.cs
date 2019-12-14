@@ -21,8 +21,8 @@ namespace Unreal.Core
 
         public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
 
-        private static Dictionary<string, Type> _netFieldGroups = new Dictionary<string, Type>();
-        private static Dictionary<Type, NetFieldGroupInfo> _netFieldGroupInfo = new Dictionary<Type, NetFieldGroupInfo>();
+        private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
+        //private static Dictionary<Type, NetFieldGroupInfo> _netFieldGroupInfo = new Dictionary<Type, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
         public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
 
@@ -38,19 +38,17 @@ namespace Unreal.Core
             {
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
 
-                if (attribute != null)
-                {
-                    _netFieldGroups[attribute.Path] = type;
-                }
+                NetFieldGroupInfo info = new NetFieldGroupInfo();
 
-                NetFieldGroupInfo info = new NetFieldGroupInfo(); 
-                _netFieldGroupInfo[type] = info;
+                info.Type = type;
+
+                _netFieldGroups[attribute.Path] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
                     NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
 
-                    if(netFieldExportAttribute == null)
+                    if (netFieldExportAttribute == null)
                     {
                         continue;
                     }
@@ -86,7 +84,7 @@ namespace Unreal.Core
 
             AddDefaultExportGroups();
         }
-        
+
         private static void AddDefaultExportGroups()
         {
             //Player info
@@ -121,11 +119,11 @@ namespace Unreal.Core
 
         public static bool WillReadType(string group)
         {
-            if(_netFieldGroups.ContainsKey(group))
+            if (_netFieldGroups.ContainsKey(group))
             {
-                Type type = _netFieldGroups[group];
+                Type type = _netFieldGroups[group].Type;
 
-                if(IncludedExportGroups.Contains(type))
+                if (IncludedExportGroups.Contains(type))
                 {
                     return true;
                 }
@@ -142,17 +140,16 @@ namespace Unreal.Core
 
             string fixedExportName = FixInvalidNames(export.Name);
 
-            if(!_netFieldGroups.ContainsKey(group))
+            if (!_netFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
             {
                 AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
 
                 return;
             }
 
-            Type netType = _netFieldGroups[group];
-            NetFieldGroupInfo netGroupInfo = _netFieldGroupInfo[netType];
+            Type netType = netGroupInfo.Type;
 
-            if(!netGroupInfo.Properties.ContainsKey(fixedExportName))
+            if (!netGroupInfo.Properties.ContainsKey(fixedExportName))
             {
                 AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
 
@@ -162,9 +159,9 @@ namespace Unreal.Core
             NetFieldInfo netFieldInfo = netGroupInfo.Properties[fixedExportName];
 
             //Update if it finds a higher bit count or an actual type
-            if(!String.IsNullOrEmpty(export.Type))
+            if (!String.IsNullOrEmpty(export.Type))
             {
-                if(String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
+                if (String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
                 {
                     AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
                 }
@@ -177,14 +174,14 @@ namespace Unreal.Core
                 }
             }*/
 
-            SetType(obj, netType, netFieldInfo, exportGroup, netBitReader);
+            SetType(obj, netType, netFieldInfo, netGroupInfo, exportGroup, netBitReader);
         }
 
         private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
         {
             object data = null;
 
-            switch(replayout)
+            switch (replayout)
             {
                 case RepLayoutCmdType.Property:
                     data = _linqCache.CreateObject(objectType);
@@ -276,14 +273,14 @@ namespace Unreal.Core
             return data;
         }
 
-        private static void SetType(object obj, Type netType, NetFieldInfo netFieldInfo, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
+        private static void SetType(object obj, Type netType, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             object data;
 
             switch (netFieldInfo.Attribute.Type)
             {
                 case RepLayoutCmdType.DynamicArray:
-                    data = ReadArrayField(obj, exportGroup, netFieldInfo, netBitReader);
+                    data = ReadArrayField(obj, exportGroup, netFieldInfo, groupInfo, netBitReader);
                     break;
                 default:
                     data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
@@ -297,20 +294,15 @@ namespace Unreal.Core
             }
         }
 
-        private static Array ReadArrayField(object obj, NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetBitReader netBitReader)
+        private static Array ReadArrayField(object obj, NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
 
             Type elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
             RepLayoutCmdType replayout = RepLayoutCmdType.Ignore;
+            bool isGroupType = elementType == groupInfo.Type;
 
-            NetFieldGroupInfo groupInfo = null;
-
-            if(_netFieldGroupInfo.ContainsKey(elementType))
-            {
-                groupInfo = _netFieldGroupInfo[elementType];
-            }
-            else
+            if (!isGroupType)
             {
                 if (!_primitiveTypeLayout.TryGetValue(elementType, out replayout))
                 {
@@ -320,21 +312,21 @@ namespace Unreal.Core
 
             Array arr = Array.CreateInstance(elementType, arrayIndexes);
 
-            while(true)
+            while (true)
             {
                 uint index = netBitReader.ReadIntPacked();
 
-                if(index == 0)
+                if (index == 0)
                 {
-                    if(netBitReader.GetBitsLeft() == 8)
+                    if (netBitReader.GetBitsLeft() == 8)
                     {
                         uint terminator = netBitReader.ReadIntPacked();
 
-                        if(terminator != 0x00)
+                        if (terminator != 0x00)
                         {
                             //Log error
 
-                            return arr; 
+                            return arr;
                         }
                     }
 
@@ -343,7 +335,7 @@ namespace Unreal.Core
 
                 --index;
 
-                if(index >= arrayIndexes)
+                if (index >= arrayIndexes)
                 {
                     //Log error
 
@@ -352,15 +344,15 @@ namespace Unreal.Core
 
                 object data = null;
 
-                if (groupInfo != null)
+                if (isGroupType)
                 {
                     data = _linqCache.CreateObject(elementType);
                 }
 
                 while (true)
                 {
-                    uint handle = netBitReader.ReadIntPacked(); 
-                    
+                    uint handle = netBitReader.ReadIntPacked();
+
                     if (handle == 0)
                     {
                         break;
@@ -411,33 +403,28 @@ namespace Unreal.Core
 
         public static INetFieldExportGroup CreateType(string group)
         {
-            if(!_netFieldGroups.ContainsKey(group))
+            if (!_netFieldGroups.ContainsKey(group))
             {
                 return null;
             }
 
-            return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group]);
+            return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
 
             //return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
         }
 
         public static void GenerateFiles(string directory)
         {
-            if(Directory.Exists(directory))
+            if (Directory.Exists(directory))
             {
                 Directory.Delete(directory, true);
             }
 
             Directory.CreateDirectory(directory);
 
-            foreach(KeyValuePair<string, Type> netFieldGroundKvp in _netFieldGroups)
+            foreach (KeyValuePair<string, NetFieldGroupInfo> netFieldGroundKvp in _netFieldGroups)
             {
-                if(!_netFieldGroupInfo.TryGetValue(netFieldGroundKvp.Value, out NetFieldGroupInfo groupInfo))
-                {
-                    continue;
-                }
-
-                foreach (KeyValuePair<string, NetFieldInfo> netFieldInfo in groupInfo.Properties)
+                foreach (KeyValuePair<string, NetFieldInfo> netFieldInfo in netFieldGroundKvp.Value.Properties)
                 {
                     AddUnknownField(netFieldGroundKvp.Key, netFieldInfo.Value.Attribute.Info);
                 }
@@ -473,10 +460,10 @@ namespace Unreal.Core
                     RepLayoutCmdType commandType = RepLayoutCmdType.Ignore;
                     string type = "object";
 
-                    if(!String.IsNullOrEmpty(unknownField.Type))
+                    if (!String.IsNullOrEmpty(unknownField.Type))
                     {
                         //8, 16, or 32
-                        if(unknownField.Type.EndsWith("*") || unknownField.Type.StartsWith("TSubclassOf"))
+                        if (unknownField.Type.EndsWith("*") || unknownField.Type.StartsWith("TSubclassOf"))
                         {
                             type = "uint?";
                             commandType = RepLayoutCmdType.Pointer;
@@ -649,7 +636,7 @@ namespace Unreal.Core
                 byte val = (byte)((c & 0xDF) - 0x40);
                 bool isChar = val > 0 && val <= 26;
 
-                if(isDigit || isChar)
+                if (isDigit || isChar)
                 {
                     *currentChar++ = c;
                 }
@@ -685,6 +672,7 @@ namespace Unreal.Core
 
         private class NetFieldGroupInfo
         {
+            public Type Type { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
         }
 
