@@ -60,7 +60,6 @@ namespace FortniteReplayReader
             }
         }
 
-
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
             ++TotalPropertiesRead;

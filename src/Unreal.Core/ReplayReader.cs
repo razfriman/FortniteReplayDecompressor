@@ -17,6 +17,8 @@ namespace Unreal.Core
 {
     public abstract class ReplayReader<T> where T : Replay
     {
+        private const int DefaultMaxChannelSize = 32767;
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L59
         /// </summary>
@@ -43,10 +45,10 @@ namespace Unreal.Core
 
         private int InPacketId;
         private DataBunch PartialBunch;
-        // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
-        private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
-        public Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
-        private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
+        private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        public UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
+        private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
+        private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
         public NetGuidCache GuidCache = new NetGuidCache();
         public int NullHandles { get; private set; }
@@ -65,7 +67,6 @@ namespace Unreal.Core
         /// <summary>
         /// Tracks channels that we should ignore when handling special demo data.
         /// </summary>
-        private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>(); // channel index, actorguid
 
         public virtual T ReadReplay(FArchive archive)
         {
@@ -81,9 +82,9 @@ namespace Unreal.Core
 
         private void Cleanup()
         {
-            InReliable.Clear();
-            Channels.Clear();
-            ChannelActors.Clear();
+            //InReliable.Clear();
+            //Channels.Clear();
+            //ChannelActors.Clear();
             GuidCache.NetFieldExportGroupIndexToGroup.Clear();
             GuidCache.NetFieldExportGroupMap.Clear();
             GuidCache.NetGuidToPathName.Clear();
@@ -1183,7 +1184,7 @@ namespace Unreal.Core
                 return;
             }*/
 
-            var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
+            var actor = ChannelActors[bunch.ChIndex] == true;
 
             if (!actor)
             {
@@ -1805,11 +1806,12 @@ namespace Unreal.Core
                     // We can derive the sequence for 100% reliable connections
                     //Bunch.ChSequence = InReliable[Bunch.ChIndex] + 1;
 
-                    if (!InReliable.ContainsKey(bunch.ChIndex))
+                    if (InReliable[bunch.ChIndex] == null)
                     {
-                        InReliable.Add(bunch.ChIndex, 0);
+                        InReliable[bunch.ChIndex] = 0;
                     }
-                    bunch.ChSequence = InReliable[bunch.ChIndex] + 1;
+
+                    bunch.ChSequence = (InReliable[bunch.ChIndex] + 1).Value;
                 }
                 else if (bunch.bPartial)
                 {
@@ -1875,7 +1877,7 @@ namespace Unreal.Core
                 bunch.ChType = chType;
                 bunch.ChName = chName;
 
-                var channel = Channels.ContainsKey(bunch.ChIndex);
+                var channel = Channels[bunch.ChIndex] != null;
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
@@ -1932,15 +1934,15 @@ namespace Unreal.Core
 
                         //FNetworkGUID ActorGUID;
                         var actorGuid = bunch.Archive.ReadIntPacked();
-                        IgnoringChannels.TryAdd(bunch.ChIndex, actorGuid);
+                        IgnoringChannels[bunch.ChIndex] = actorGuid;
                     }
 
-                    if (IgnoringChannels.ContainsKey(bunch.ChIndex))
+                    if (IgnoringChannels[bunch.ChIndex] != null)
                     {
                         if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
                         {
                             //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
-                            IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
+                            IgnoringChannels[bunch.ChIndex] = null;
                         }
 
                         continue;
@@ -1948,7 +1950,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && InReliable.TryGetValue(bunch.ChIndex, out int reliableChIndex) && bunch.ChSequence <= reliableChIndex)
+                if (bunch.bReliable && bunch.ChSequence <=  InReliable[bunch.ChIndex])
                 {
                     continue;
                 }
@@ -1972,7 +1974,7 @@ namespace Unreal.Core
                         ChannelIndex = bunch.ChIndex,
                     };
 
-                    Channels.Add(bunch.ChIndex, newChannel);
+                    Channels[bunch.ChIndex] = newChannel;
                 }
 
                 try
