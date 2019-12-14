@@ -62,13 +62,10 @@ namespace ConsoleReader
             {
                 for (int i = 0; i < 20; i++)
                 {
-
-                    //Console.WriteLine($"Reading {path}");
-
                     sw.Restart();
 
                     var reader = new ReplayReader(logger);
-                    var replay = reader.ReadReplay(replayFile);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Normal);
 
                     sw.Stop();
 

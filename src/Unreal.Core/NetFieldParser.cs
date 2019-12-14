@@ -304,6 +304,8 @@ namespace Unreal.Core
 
             if (!isGroupType)
             {
+                groupInfo = null;
+
                 if (!_primitiveTypeLayout.TryGetValue(elementType, out replayout))
                 {
                     replayout = RepLayoutCmdType.Ignore;

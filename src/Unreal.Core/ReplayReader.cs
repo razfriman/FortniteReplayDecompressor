@@ -36,6 +36,7 @@ namespace Unreal.Core
 
         protected ILogger _logger;
         protected T Replay { get; set; }
+        protected ParseType _parseType;
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
@@ -68,9 +69,9 @@ namespace Unreal.Core
         /// Tracks channels that we should ignore when handling special demo data.
         /// </summary>
 
-        public virtual T ReadReplay(FArchive archive)
+        public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
-            Directory.CreateDirectory("debugFiles");
+            _parseType = parseType;
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
@@ -258,12 +259,17 @@ namespace Unreal.Core
                 {
                     ReadEvent(archive);
                 }
-
                 else if (chunkType == ReplayChunkType.ReplayData)
                 {
-                    ReadReplayData(archive);
+                    if (_parseType >= ParseType.Minimal)
+                    {
+                        ReadReplayData(archive);
+                    }
+                    else
+                    {
+                        archive.Seek(offset + chunkSize, SeekOrigin.Begin);
+                    }
                 }
-
                 else if (chunkType == ReplayChunkType.Header)
                 {
                     ReadReplayHeader(archive);
@@ -1174,15 +1180,14 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         protected virtual void ProcessBunch(DataBunch bunch)
         {
-            /*
             UChannel channel = Channels[bunch.ChIndex];
 
-            if (channel.Broken)
+            if (channel?.IgnoreChannel == true)
             {
                 //_logger?.LogInformation($"Channel {bunch.ChIndex} broken. Ignoring bunch");
 
                 return;
-            }*/
+            }
 
             var actor = ChannelActors[bunch.ChIndex] == true;
 
@@ -1270,7 +1275,7 @@ namespace Unreal.Core
 
                 #endregion
 
-                Channels[bunch.ChIndex].Actor = inActor;
+                channel.Actor = inActor;
                 ChannelActors[bunch.ChIndex] = true;
                 //ChannelNetGuids[bunch.ChIndex] = inActor.ActorNetGUID.Value;
             }
@@ -1338,13 +1343,13 @@ namespace Unreal.Core
 
                     handle--;
 
-                    if(handle >= netFieldExport.NetFieldExportsLength)
+                    if (handle >= netFieldExport.NetFieldExportsLength)
                     {
                         break;
                     }
 
                     var numBits = testArchive.ReadIntPacked();
-                        testArchive.ReadBits(numBits);
+                    testArchive.ReadBits(numBits);
 
                     if (netFieldExport.NetFieldExports[handle] == null)
                     {
@@ -1352,9 +1357,9 @@ namespace Unreal.Core
                     }
                 }
 
-                if(testArchive.AtEnd())
+                if (testArchive.AtEnd())
                 {
-                    if(!didFail)
+                    if (!didFail)
                     {
                         possibleClasses.Add(netFieldExport);
                     }
@@ -1390,7 +1395,7 @@ namespace Unreal.Core
                 // if ENABLE_PROPERTY_CHECKSUMS
                 //var doChecksum = archive.ReadBit();
 
-                if(!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
+                if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
                 {
                     return false;
                 }
@@ -1459,7 +1464,7 @@ namespace Unreal.Core
         {
             ++TotalGroupsRead;
 
-            if(NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName))
+            if (NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName))
             {
                 return true;
             }
@@ -1468,17 +1473,6 @@ namespace Unreal.Core
             //Debug("types", $"\n{group.PathName}");
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
-
-            //List<INetFieldExportGroup> groups = new List<INetFieldExportGroup>();
-
-            /*
-            if (exportGroup != null)
-            {
-                if (!ExportGroups.TryAdd(channelIndex, groups))
-                {
-                    ExportGroups.TryGetValue(channelIndex, out groups);
-                }
-            }*/
 
             bool hasData = false;
 
@@ -1565,7 +1559,7 @@ namespace Unreal.Core
                         continue;
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
                 }
@@ -1575,7 +1569,11 @@ namespace Unreal.Core
             if (hasData)
             {
                 OnExportRead(channelIndex, exportGroup);
+            }
 
+            if (_parseType <= ParseType.Minimal && Channels[channelIndex].IgnoreChannel == null)
+            {
+                Channels[channelIndex].IgnoreChannel = !ContinueParsingChannel(exportGroup);
             }
 
             return true;
@@ -1950,7 +1948,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <=  InReliable[bunch.ChIndex])
+                if (bunch.bReliable && bunch.ChSequence <= InReliable[bunch.ChIndex])
                 {
                     continue;
                 }
@@ -2033,5 +2031,6 @@ namespace Unreal.Core
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
+        protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
     }
 }

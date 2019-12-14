@@ -26,17 +26,17 @@ namespace FortniteReplayReader
             _logger = logger;
         }
 
-        public FortniteReplay ReadReplay(string fileName)
+        public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(stream);
+            return ReadReplay(stream, parseType);
         }
 
-        public FortniteReplay ReadReplay(Stream stream)
+        public FortniteReplay ReadReplay(Stream stream, ParseType parseType = ParseType.Minimal)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
-            var replay = ReadReplay(archive);
+            var replay = ReadReplay(archive, parseType);
 
             return replay;
         }
@@ -77,6 +77,8 @@ namespace FortniteReplayReader
                 case GameStateC gameState:
                     break;
                 case FortPlayerState playerState:
+                    break;
+                case PlayerPawnC playerPawn:
                     break;
                 case FortPickup fortPickup: //Ignored by default
                     break;
@@ -173,6 +175,17 @@ namespace FortniteReplayReader
             _logger?.LogWarning($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
             // optionally throw?
             throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+        }
+
+        protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
+        {
+            switch (exportGroup)
+            {
+                case PlayerPawnC playerPawn:
+                    return false;
+                default:
+                    return true;
+            }
         }
 
         protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)

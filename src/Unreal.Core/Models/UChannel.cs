@@ -13,5 +13,6 @@ namespace Unreal.Core.Models
         public ChannelType ChannelType { get; set; }
         public bool Broken { get; set; }
         public Actor Actor { get; set; }
+        public bool? IgnoreChannel { get; set; }
     }
 }
