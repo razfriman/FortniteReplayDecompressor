@@ -3,7 +3,7 @@ using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models.Enums;
 
-namespace Unreal.Core.Models
+namespace FortniteReplayReader.Models.NetFieldExports
 {
 	[NetFieldExportGroup("/Script/FortniteGame.FortInventory")]
 	public class FortInventory : INetFieldExportGroup

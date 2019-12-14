@@ -8,5 +8,6 @@ namespace FortniteReplayReader.Models
         public IList<PlayerElimination> Eliminations { get; set; } = new List<PlayerElimination>();
         public Stats Stats { get; set; }
         public TeamStats TeamStats { get; set; }
+        public GameInformation GameInformation { get; set; } = new GameInformation();
     }
 }

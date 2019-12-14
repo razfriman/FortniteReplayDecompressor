@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace Unreal.Core.Models
+namespace FortniteReplayReader.Models.NetFieldExports
 {
 	[NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]
 	public class PlayerPawnC : INetFieldExportGroup

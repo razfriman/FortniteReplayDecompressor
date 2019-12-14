@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models

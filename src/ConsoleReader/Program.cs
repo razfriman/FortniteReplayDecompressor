@@ -79,7 +79,7 @@ namespace ConsoleReader
 
                     //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
-                    foreach (Llama llama in reader.GameInformation.Llamas)
+                    foreach (Llama llama in replay.GameInformation.Llamas)
                     {
                         //Console.WriteLine($"\t -{llama}");
                     }

@@ -32,7 +32,7 @@ namespace Unreal.Core
 
         static NetFieldParser()
         {
-            IEnumerable<Type> netFields = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
+            IEnumerable<Type> netFields = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (Type type in netFields)
             {
@@ -70,6 +70,7 @@ namespace Unreal.Core
             _primitiveTypeLayout.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
             _primitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
             _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
+            _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
 
             IEnumerable<Type> iPropertyTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
                 .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
@@ -79,42 +80,11 @@ namespace Unreal.Core
             {
                 _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
             }
-
-            _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
-
-            AddDefaultExportGroups();
         }
 
-        private static void AddDefaultExportGroups()
+        public static void AddExportGroup(Type groupType)
         {
-            //Player info
-            IncludedExportGroups.Add(typeof(FortPlayerState));
-            IncludedExportGroups.Add(typeof(PlayerPawnC));
-            //IncludedExportGroups.Add(typeof(FortInventory));
-            //IncludedExportGroups.Add(typeof(FortPickup));
-
-            //Game state
-            IncludedExportGroups.Add(typeof(GameStateC));
-            IncludedExportGroups.Add(typeof(SafeZoneIndicatorC));
-            IncludedExportGroups.Add(typeof(AircraftC));
-
-            //Supply drops / llamas
-            IncludedExportGroups.Add(typeof(SupplyDropC));
-            IncludedExportGroups.Add(typeof(SupplyDropLlamaC));
-            //IncludedExportGroups.Add(typeof(SupplyDropBalloonC));
-
-            //////Projectiles
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperC));
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperHeavyC));
-            //IncludedExportGroups.Add(typeof(BPrjLotusMustacheC));
-            //IncludedExportGroups.Add(typeof(BPrjArrowExplodeOnImpactC));
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperAutoChildC));
-
-            //All weapons
-            /*foreach(KeyValuePair<Type, NetFieldGroupInfo> type in _netFieldGroupInfo.Where(x => x.Value.Properties.Any(y => y.Key == "WeaponData")))
-            {
-                IncludedExportGroups.Add(type.Key);
-            }*/
+            IncludedExportGroups.Add(groupType);
         }
 
         public static bool WillReadType(string group)

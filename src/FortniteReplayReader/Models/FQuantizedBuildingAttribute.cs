@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Unreal.Core;
 using Unreal.Core.Contracts;
 
-namespace Unreal.Core.Models
+namespace FortniteReplayReader.Models
 {
     public class FQuantizedBuildingAttribute : IProperty
     {
