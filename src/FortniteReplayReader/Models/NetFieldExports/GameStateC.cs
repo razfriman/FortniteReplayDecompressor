@@ -91,22 +91,22 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         #endregion
 
-        [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.PropertyBool, 17, "bReplicatedHasBegunPlay", "bool", 1)]
+        [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.Ignore, 17, "bReplicatedHasBegunPlay", "bool", 1)]
         public bool? bReplicatedHasBegunPlay { get; set; } //Type: bool Bits: 1
 
         [NetFieldExport("ReplicatedWorldTimeSeconds", RepLayoutCmdType.PropertyFloat, 18, "ReplicatedWorldTimeSeconds", "float", 32)]
         public float? ReplicatedWorldTimeSeconds { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("MatchState", RepLayoutCmdType.Property, 19, "MatchState", "FName", 153)]
+        [NetFieldExport("MatchState", RepLayoutCmdType.Ignore, 19, "MatchState", "FName", 153)]
         public FName MatchState { get; set; } //Type: FName Bits: 153
 
         [NetFieldExport("ElapsedTime", RepLayoutCmdType.PropertyInt, 20, "ElapsedTime", "int32", 32)]
         public int? ElapsedTime { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("WorldLevel", RepLayoutCmdType.PropertyInt, 25, "WorldLevel", "int32", 32)]
+        [NetFieldExport("WorldLevel", RepLayoutCmdType.Ignore, 25, "WorldLevel", "int32", 32)]
         public int? WorldLevel { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("CraftingBonus", RepLayoutCmdType.PropertyInt, 26, "CraftingBonus", "int32", 32)]
+        [NetFieldExport("CraftingBonus", RepLayoutCmdType.Ignore, 26, "CraftingBonus", "int32", 32)]
         public int? CraftingBonus { get; set; } //Type: int32 Bits: 32
 
         [NetFieldExport("TeamCount", RepLayoutCmdType.PropertyInt, 28, "TeamCount", "int32", 32)]
@@ -115,55 +115,55 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("TeamSize", RepLayoutCmdType.PropertyInt, 29, "TeamSize", "int32", 32)]
         public int? TeamSize { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("GameFlagData", RepLayoutCmdType.PropertyInt, 29, "GameFlagData", "", 32)]
+        [NetFieldExport("GameFlagData", RepLayoutCmdType.Ignore, 29, "GameFlagData", "", 32)]
         public int? GameFlagData { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.DynamicArray, 32, "AdditionalPlaylistLevelsStreamed", "TArray", 393)]
+        [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.Ignore, 32, "AdditionalPlaylistLevelsStreamed", "TArray", 393)]
         public object[] AdditionalPlaylistLevelsStreamed { get; set; } //Type: TArray Bits: 393
 
-        [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.PropertyInt, 34, "WorldDaysElapsed", "int32", 32)]
+        [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.Ignore, 34, "WorldDaysElapsed", "int32", 32)]
         public int? WorldDaysElapsed { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("GameplayState", RepLayoutCmdType.Enum, 40, "GameplayState", "TEnumAsByte<EFortGameplayState::Type>", 3)]
+        [NetFieldExport("GameplayState", RepLayoutCmdType.Ignore, 40, "GameplayState", "TEnumAsByte<EFortGameplayState::Type>", 3)]
         public int? GameplayState { get; set; } //Type: TEnumAsByte<EFortGameplayState::Type> Bits: 3
 
         [NetFieldExport("GameSessionId", RepLayoutCmdType.PropertyString, 43, "GameSessionId", "FString", 296)]
         public string GameSessionId { get; set; } //Type: FString Bits: 296
 
-        [NetFieldExport("SpawnPointsCap", RepLayoutCmdType.PropertyInt, 57, "SpawnPointsCap", "int32", 32)]
+        [NetFieldExport("SpawnPointsCap", RepLayoutCmdType.Ignore, 57, "SpawnPointsCap", "int32", 32)]
         public int? SpawnPointsCap { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("SpawnPointsAllocated", RepLayoutCmdType.PropertyInt, 58, "SpawnPointsAllocated", "int32", 32)]
+        [NetFieldExport("SpawnPointsAllocated", RepLayoutCmdType.Ignore, 58, "SpawnPointsAllocated", "int32", 32)]
         public int? SpawnPointsAllocated { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("PlayerSharedMaxTrapAttributes", RepLayoutCmdType.DynamicArray, 67, "PlayerSharedMaxTrapAttributes", "TArray", 464)]
+        [NetFieldExport("PlayerSharedMaxTrapAttributes", RepLayoutCmdType.Ignore, 67, "PlayerSharedMaxTrapAttributes", "TArray", 464)]
         public object[] PlayerSharedMaxTrapAttributes { get; set; } //Type: TArray Bits: 464
 
         [NetFieldExport("TotalPlayerStructures", RepLayoutCmdType.PropertyInt, 72, "TotalPlayerStructures", "int32", 32)]
         public int? TotalPlayerStructures { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ServerGameplayTagIndexHash", RepLayoutCmdType.PropertyUInt32, 86, "ServerGameplayTagIndexHash", "int", 32)]
+        [NetFieldExport("ServerGameplayTagIndexHash", RepLayoutCmdType.Ignore, 86, "ServerGameplayTagIndexHash", "int", 32)]
         public uint? ServerGameplayTagIndexHash { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("GameDifficulty", RepLayoutCmdType.PropertyFloat, 103, "GameDifficulty", "float", 32)]
+        [NetFieldExport("GameDifficulty", RepLayoutCmdType.Ignore, 103, "GameDifficulty", "float", 32)]
         public float? GameDifficulty { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bAllowLayoutRequirementsFeature", RepLayoutCmdType.PropertyBool, 134, "bAllowLayoutRequirementsFeature", "", 1)]
+        [NetFieldExport("bAllowLayoutRequirementsFeature", RepLayoutCmdType.Ignore, 134, "bAllowLayoutRequirementsFeature", "", 1)]
         public bool? bAllowLayoutRequirementsFeature { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("ServerStability", RepLayoutCmdType.Enum, 136, "ServerStability", "", 3)]
+        [NetFieldExport("ServerStability", RepLayoutCmdType.Ignore, 136, "ServerStability", "", 3)]
         public int? ServerStability { get; set; } //Type:  Bits: 3
 
-        [NetFieldExport("RoundTimeAccumulated", RepLayoutCmdType.PropertyInt, 136, "RoundTimeAccumulated", "int32", 32)]
+        [NetFieldExport("RoundTimeAccumulated", RepLayoutCmdType.Ignore, 136, "RoundTimeAccumulated", "int32", 32)]
         public int? RoundTimeAccumulated { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("RoundTimeCriticalThreshold", RepLayoutCmdType.PropertyInt, 137, "RoundTimeCriticalThreshold", "int32", 32)]
+        [NetFieldExport("RoundTimeCriticalThreshold", RepLayoutCmdType.Ignore, 137, "RoundTimeCriticalThreshold", "int32", 32)]
         public int? RoundTimeCriticalThreshold { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.PropertyInt, 152, "ServerChangelistNumber", "int32", 32)]
+        [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.Ignore, 152, "ServerChangelistNumber", "int32", 32)]
         public int? ServerChangelistNumber { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.PropertyUInt32, 154, "CreativeRealEstatePlotManager", "", 8)]
+        [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.Ignore, 154, "CreativeRealEstatePlotManager", "", 8)]
         public uint? CreativeRealEstatePlotManager { get; set; } //Type:  Bits: 8
 
         [NetFieldExport("WarmupCountdownStartTime", RepLayoutCmdType.PropertyFloat, 156, "WarmupCountdownStartTime", "float", 32)]
@@ -172,25 +172,25 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("WarmupCountdownEndTime", RepLayoutCmdType.PropertyFloat, 157, "WarmupCountdownEndTime", "float", 32)]
         public float? WarmupCountdownEndTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bSafeZonePaused", RepLayoutCmdType.PropertyBool, 158, "bSafeZonePaused", "", 1)]
+        [NetFieldExport("bSafeZonePaused", RepLayoutCmdType.Ignore, 158, "bSafeZonePaused", "", 1)]
         public bool? bSafeZonePaused { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("AircraftStartTime", RepLayoutCmdType.PropertyFloat, 158, "AircraftStartTime", "float", 32)]
         public float? AircraftStartTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bSkyTubesShuttingDown", RepLayoutCmdType.PropertyBool, 159, "bSkyTubesShuttingDown", "", 1)]
+        [NetFieldExport("bSkyTubesShuttingDown", RepLayoutCmdType.Ignore, 159, "bSkyTubesShuttingDown", "", 1)]
         public bool? bSkyTubesShuttingDown { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("SafeZonesStartTime", RepLayoutCmdType.PropertyFloat, 159, "SafeZonesStartTime", "float", 32)]
         public float? SafeZonesStartTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bSkyTubesDisabled", RepLayoutCmdType.PropertyBool, 160, "bSkyTubesDisabled", "", 1)]
+        [NetFieldExport("bSkyTubesDisabled", RepLayoutCmdType.Ignore, 160, "bSkyTubesDisabled", "", 1)]
         public bool? bSkyTubesDisabled { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("PlayersLeft", RepLayoutCmdType.PropertyInt, 163, "PlayersLeft", "int32", 32)]
         public int? PlayersLeft { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ReplOverrideData", RepLayoutCmdType.PropertyUInt32, 163, "ReplOverrideData", "", 16)]
+        [NetFieldExport("ReplOverrideData", RepLayoutCmdType.Ignore, 163, "ReplOverrideData", "", 16)]
         public uint? ReplOverrideData { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("EndGameStartTime", RepLayoutCmdType.PropertyFloat, 170, "EndGameStartTime", "", 32)]
@@ -202,13 +202,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("EndGameKickPlayerTime", RepLayoutCmdType.PropertyFloat, 171, "EndGameKickPlayerTime", "", 32)]
         public float? EndGameKickPlayerTime { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("ServerToClientPreloadList", RepLayoutCmdType.DynamicArray, 171, "ServerToClientPreloadList", "TArray", 408)]
+        [NetFieldExport("ServerToClientPreloadList", RepLayoutCmdType.Ignore, 171, "ServerToClientPreloadList", "TArray", 408)]
         public object[] ServerToClientPreloadList { get; set; } //Type: TArray Bits: 408
 
-        [NetFieldExport("ClientVehicleClassesToLoad", RepLayoutCmdType.DynamicArray, 174, "ClientVehicleClassesToLoad", "", 72)]
+        [NetFieldExport("ClientVehicleClassesToLoad", RepLayoutCmdType.Ignore, 174, "ClientVehicleClassesToLoad", "", 72)]
         public int[] ClientVehicleClassesToLoad { get; set; } //Type:  Bits: 72
 
-        [NetFieldExport("bAllowUserPickedCosmeticBattleBus", RepLayoutCmdType.PropertyBool, 175, "bAllowUserPickedCosmeticBattleBus", "bool", 1)]
+        [NetFieldExport("bAllowUserPickedCosmeticBattleBus", RepLayoutCmdType.Ignore, 175, "bAllowUserPickedCosmeticBattleBus", "bool", 1)]
         public bool? bAllowUserPickedCosmeticBattleBus { get; set; } //Type: bool Bits: 1
 
         [NetFieldExport("TeamFlightPaths", RepLayoutCmdType.DynamicArray, 176, "TeamFlightPaths", "TArray", 403)]
@@ -253,28 +253,28 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bAircraftIsLocked", RepLayoutCmdType.PropertyBool, 210, "bAircraftIsLocked", "uint8", 1)]
         public bool? bAircraftIsLocked { get; set; } //Type: uint8 Bits: 1
 
-        [NetFieldExport("LobbyAction", RepLayoutCmdType.PropertyInt, 211, "LobbyAction", "int32", 32)]
+        [NetFieldExport("LobbyAction", RepLayoutCmdType.Ignore, 211, "LobbyAction", "int32", 32)]
         public int? LobbyAction { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.PropertyUInt32, 212, "WinningPlayerState", "", 16)]
+        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.Ignore, 212, "WinningPlayerState", "", 16)]
         public uint? WinningPlayerState { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32, 213, "WinningTeam", "", 32)]
         public uint? WinningTeam { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("CurrentHighScore", RepLayoutCmdType.PropertyUInt32, 215, "CurrentHighScore", "", 32)]
+        [NetFieldExport("CurrentHighScore", RepLayoutCmdType.Ignore, 215, "CurrentHighScore", "", 32)]
         public uint? CurrentHighScore { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("CurrentHighScoreTeam", RepLayoutCmdType.PropertyUInt32, 216, "CurrentHighScoreTeam", "", 32)]
+        [NetFieldExport("CurrentHighScoreTeam", RepLayoutCmdType.Ignore, 216, "CurrentHighScoreTeam", "", 32)]
         public uint? CurrentHighScoreTeam { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("bStormReachedFinalPosition", RepLayoutCmdType.PropertyBool, 219, "bStormReachedFinalPosition", "", 1)]
+        [NetFieldExport("bStormReachedFinalPosition", RepLayoutCmdType.Ignore, 219, "bStormReachedFinalPosition", "", 1)]
         public bool? bStormReachedFinalPosition { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("SpectateAPartyMemberAvailable", RepLayoutCmdType.PropertyBool, 220, "SpectateAPartyMemberAvailable", "", 1)]
+        [NetFieldExport("SpectateAPartyMemberAvailable", RepLayoutCmdType.Ignore, 220, "SpectateAPartyMemberAvailable", "", 1)]
         public bool? SpectateAPartyMemberAvailable { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("HopRockDuration", RepLayoutCmdType.PropertyFloat, 220, "HopRockDuration", "float", 32)]
+        [NetFieldExport("HopRockDuration", RepLayoutCmdType.Ignore, 220, "HopRockDuration", "float", 32)]
         public float? HopRockDuration { get; set; } //Type: float Bits: 32
 
         [NetFieldExport("bIsLargeTeamGame", RepLayoutCmdType.PropertyBool, 220, "bIsLargeTeamGame", "", 1)]
@@ -283,16 +283,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ActiveTeamNums", RepLayoutCmdType.DynamicArray, 227, "ActiveTeamNums", "", 2416)]
         public byte[] ActiveTeamNums { get; set; } //Type:  Bits: 2416
 
-        [NetFieldExport("AirCraftBehavior", RepLayoutCmdType.Enum, 227, "AirCraftBehavior", "", 2)]
+        [NetFieldExport("AirCraftBehavior", RepLayoutCmdType.Ignore, 227, "AirCraftBehavior", "", 2)]
         public int? AirCraftBehavior { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("DefaultGliderRedeployCanRedeploy", RepLayoutCmdType.PropertyFloat, 229, "DefaultGliderRedeployCanRedeploy", "float", 32)]
+        [NetFieldExport("DefaultGliderRedeployCanRedeploy", RepLayoutCmdType.Ignore, 229, "DefaultGliderRedeployCanRedeploy", "float", 32)]
         public float? DefaultGliderRedeployCanRedeploy { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("DefaultRedeployGliderLateralVelocityMult", RepLayoutCmdType.PropertyFloat, 230, "DefaultRedeployGliderLateralVelocityMult", "float", 32)]
+        [NetFieldExport("DefaultRedeployGliderLateralVelocityMult", RepLayoutCmdType.Ignore, 230, "DefaultRedeployGliderLateralVelocityMult", "float", 32)]
         public float? DefaultRedeployGliderLateralVelocityMult { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("DefaultRedeployGliderHeightLimit", RepLayoutCmdType.PropertyFloat, 231, "DefaultRedeployGliderHeightLimit", "float", 32)]
+        [NetFieldExport("DefaultRedeployGliderHeightLimit", RepLayoutCmdType.Ignore, 231, "DefaultRedeployGliderHeightLimit", "float", 32)]
         public float? DefaultRedeployGliderHeightLimit { get; set; } //Type: float Bits: 32
 
         [NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum, 235, "EventTournamentRound", "", 3)]
@@ -301,43 +301,43 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyInt, 244, "PlayerBotsLeft", "", 32)]
         public int? PlayerBotsLeft { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.PropertyFloat, 268, "DefaultParachuteDeployTraceForGroundDistance", "", 32)]
+        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.Ignore, 268, "DefaultParachuteDeployTraceForGroundDistance", "", 32)]
         public float? DefaultParachuteDeployTraceForGroundDistance { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.PropertyFloat, 270, "DefaultRebootMachineHotfix", "", 32)]
+        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.Ignore, 270, "DefaultRebootMachineHotfix", "", 32)]
         public float? DefaultRebootMachineHotfix { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("SignalInStormRegenSpeed", RepLayoutCmdType.PropertyFloat, 271, "SignalInStormRegenSpeed", "", 32)]
+        [NetFieldExport("SignalInStormRegenSpeed", RepLayoutCmdType.Ignore, 271, "SignalInStormRegenSpeed", "", 32)]
         public float? SignalInStormRegenSpeed { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("MutatorGenericInt", RepLayoutCmdType.PropertyUInt32, 271, "MutatorGenericInt", "", 32)]
+        [NetFieldExport("MutatorGenericInt", RepLayoutCmdType.Ignore, 271, "MutatorGenericInt", "", 32)]
         public uint? MutatorGenericInt { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("SignalInStormLostSpeed", RepLayoutCmdType.PropertyFloat, 272, "SignalInStormLostSpeed", "", 32)]
+        [NetFieldExport("SignalInStormLostSpeed", RepLayoutCmdType.Ignore, 272, "SignalInStormLostSpeed", "", 32)]
         public float? SignalInStormLostSpeed { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel0", RepLayoutCmdType.PropertyFloat, 273, "StormCNDamageVulnerabilityLevel0", "", 32)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel0", RepLayoutCmdType.Ignore, 273, "StormCNDamageVulnerabilityLevel0", "", 32)]
         public float? StormCNDamageVulnerabilityLevel0 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel1", RepLayoutCmdType.PropertyFloat, 274, "StormCNDamageVulnerabilityLevel1", "", 32)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel1", RepLayoutCmdType.Ignore, 274, "StormCNDamageVulnerabilityLevel1", "", 32)]
         public float? StormCNDamageVulnerabilityLevel1 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel2", RepLayoutCmdType.PropertyFloat, 275, "StormCNDamageVulnerabilityLevel2", "", 32)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel2", RepLayoutCmdType.Ignore, 275, "StormCNDamageVulnerabilityLevel2", "", 32)]
         public float? StormCNDamageVulnerabilityLevel2 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel3", RepLayoutCmdType.PropertyFloat, 276, "StormCNDamageVulnerabilityLevel3", "", 32)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel3", RepLayoutCmdType.Ignore, 276, "StormCNDamageVulnerabilityLevel3", "", 32)]
         public float? StormCNDamageVulnerabilityLevel3 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("bEnabled", RepLayoutCmdType.PropertyBool, 277, "bEnabled", "", 1)]
+        [NetFieldExport("bEnabled", RepLayoutCmdType.Ignore, 277, "bEnabled", "", 1)]
         public bool? bEnabled { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("bConnectedToRoot", RepLayoutCmdType.PropertyBool, 278, "bConnectedToRoot", "", 1)]
+        [NetFieldExport("bConnectedToRoot", RepLayoutCmdType.Ignore, 278, "bConnectedToRoot", "", 1)]
         public bool? bConnectedToRoot { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("GameServerNodeType", RepLayoutCmdType.Enum, 279, "GameServerNodeType", "", 3)]
+        [NetFieldExport("GameServerNodeType", RepLayoutCmdType.Ignore, 279, "GameServerNodeType", "", 3)]
         public int? GameServerNodeType { get; set; } //Type:  Bits: 3
 
-        [NetFieldExport("VolumeManager", RepLayoutCmdType.PropertyUInt32, 280, "VolumeManager", "", 16)]
+        [NetFieldExport("VolumeManager", RepLayoutCmdType.Ignore, 280, "VolumeManager", "", 16)]
         public uint? VolumeManager { get; set; } //Type:  Bits: 16
 
 

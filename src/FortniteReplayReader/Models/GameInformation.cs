@@ -94,7 +94,9 @@ namespace FortniteReplayReader.Models
             GameState.CurrentTeams = gameState.TeamsLeft ?? GameState.CurrentTeams;
             GameState.SafeZonePhase = gameState.SafeZonePhase ?? GameState.SafeZonePhase;
             GameState.RemainingBots = gameState.PlayerBotsLeft ?? GameState.RemainingBots;
-
+            GameState.ElapsedTime = gameState.ElapsedTime ?? GameState.ElapsedTime;
+            GameState.OldTeamSize = gameState.TeamSize ?? GameState.OldTeamSize;
+            GameState.TotalPlayerStructures = gameState.TotalPlayerStructures ?? GameState.TotalPlayerStructures;
 
             if (GameState.GameWorldStartTime == 0)
             {

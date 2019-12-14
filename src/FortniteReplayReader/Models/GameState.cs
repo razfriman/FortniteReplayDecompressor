@@ -22,7 +22,7 @@ namespace FortniteReplayReader.Models
                 //Older replays
                 if(TotalTeams == 0)
                 {
-                    return 0;
+                    return OldTeamSize;
                 }
 
                 return (int)Math.Round(MaxPlayers / (double)TotalTeams);
@@ -45,6 +45,8 @@ namespace FortniteReplayReader.Models
         internal int CurrentTeams { get; set; }
         internal byte SafeZonePhase { get; set; }
         internal int RemainingBots { get; set; }
-
+        internal int TotalPlayerStructures { get; set; }
+        internal float ElapsedTime { get; set; } //Time since last update?
+        internal int OldTeamSize { get; set; } //Used in older replays
     }
 }
