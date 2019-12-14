@@ -12,19 +12,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
 		public object RemoteRole { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("Owner", RepLayoutCmdType.Pointer, 12, "Owner", "AActor*", 16)]
+		[NetFieldExport("Owner", RepLayoutCmdType.Ignore, 12, "Owner", "AActor*", 16)]
 		public uint? Owner { get; set; } //Type: AActor* Bits: 16
 
 		[NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
 		public object Role { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("Instigator", RepLayoutCmdType.PropertyUInt32, 14, "Instigator", "", 8)]
+		[NetFieldExport("Instigator", RepLayoutCmdType.Ignore, 14, "Instigator", "", 8)]
 		public uint? Instigator { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("Score", RepLayoutCmdType.PropertyUInt32, 15, "Score", "", 32)]
+		[NetFieldExport("Score", RepLayoutCmdType.Ignore, 15, "Score", "", 32)]
 		public uint? Score { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt, 16, "PlayerID", "int32", 32)]
+		[NetFieldExport("PlayerID", RepLayoutCmdType.Ignore, 16, "PlayerID", "int32", 32)]
 		public int? PlayerID { get; set; } //Type: int32 Bits: 32
 
 		[NetFieldExport("Ping", RepLayoutCmdType.PropertyByte, 17, "Ping", "uint8", 8)]
@@ -54,7 +54,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bHasStartedPlaying", RepLayoutCmdType.PropertyBool, 29, "bHasStartedPlaying", "uint8", 1)]
 		public bool? bHasStartedPlaying { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("PlayerRole", RepLayoutCmdType.Enum, 35, "PlayerRole", "EFortPlayerRole", 0)]
+		[NetFieldExport("PlayerRole", RepLayoutCmdType.Ignore, 35, "PlayerRole", "EFortPlayerRole", 0)]
 		public int? PlayerRole { get; set; } //Type: EFortPlayerRole Bits: 0
 
 		[NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId, 36, "PartyOwnerUniqueId", "FUniqueNetIdRepl", 144)]
@@ -63,34 +63,34 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt, 37, "WorldPlayerId", "int32", 32)]
 		public int? WorldPlayerId { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("HeroType", RepLayoutCmdType.Pointer, 39, "HeroType", "UFortHeroType*", 16)]
+		[NetFieldExport("HeroType", RepLayoutCmdType.Ignore, 39, "HeroType", "UFortHeroType*", 16)]
 		public uint? HeroType { get; set; } //Type: UFortHeroType* Bits: 16
 
 		[NetFieldExport("Platform", RepLayoutCmdType.PropertyString, 55, "Platform", "FString", 64)]
 		public string Platform { get; set; } //Type: FString Bits: 64
 
-		[NetFieldExport("CharacterGender", RepLayoutCmdType.Enum, 56, "CharacterGender", "TEnumAsByte<EFortCustomGender::Type>", 2)]
+		[NetFieldExport("CharacterGender", RepLayoutCmdType.Ignore, 56, "CharacterGender", "TEnumAsByte<EFortCustomGender::Type>", 2)]
 		public int? CharacterGender { get; set; } //Type: TEnumAsByte<EFortCustomGender::Type> Bits: 2
 
-		[NetFieldExport("CharacterBodyType", RepLayoutCmdType.Enum, 57, "CharacterBodyType", "TEnumAsByte<EFortCustomBodyType::Type>", 4)]
+		[NetFieldExport("CharacterBodyType", RepLayoutCmdType.Ignore, 57, "CharacterBodyType", "TEnumAsByte<EFortCustomBodyType::Type>", 4)]
 		public int? CharacterBodyType { get; set; } //Type: TEnumAsByte<EFortCustomBodyType::Type> Bits: 4
 
-		[NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.PropertyByte, 58, "WasReplicatedFlags", "uint8", 8)]
+		[NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.Ignore, 58, "WasReplicatedFlags", "uint8", 8)]
 		public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
 
-		[NetFieldExport("Parts", RepLayoutCmdType.Pointer, 59, "Parts", "UCustomCharacterPart*", 16)]
+		[NetFieldExport("Parts", RepLayoutCmdType.Ignore, 59, "Parts", "UCustomCharacterPart*", 16)]
 		public uint? Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
 
-		[NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.PropertyUInt32, 59, "WasPartReplicatedFlags", "", 8)]
+		[NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.Ignore, 59, "WasPartReplicatedFlags", "", 8)]
 		public uint? WasPartReplicatedFlags { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.PropertyUInt32, 60, "RequiredVariantPartFlags", "", 32)]
+		[NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.Ignore, 60, "RequiredVariantPartFlags", "", 32)]
 		public uint? RequiredVariantPartFlags { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray, 71, "VariantRequiredCharacterParts", "", 160)]
+		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.Ignore, 71, "VariantRequiredCharacterParts", "", 160)]
 		public int[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
 
-		[NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Pointer, 75, "PlayerTeamPrivate", "AFortTeamPrivateInfo*", 8)]
+		[NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Ignore, 75, "PlayerTeamPrivate", "AFortTeamPrivateInfo*", 8)]
 		public uint? PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
 
 		[NetFieldExport("PlatformUniqueNetId", RepLayoutCmdType.PropertyNetId, 215, "PlatformUniqueNetId", "FUniqueNetIdRepl", 96)]
@@ -102,16 +102,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Place", RepLayoutCmdType.PropertyInt, 240, "Place", "int32", 32)]
 		public int? Place { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Enum, 244, "ReplicatedTeamMemberState", "EReplicatedTeamMemberState", 4)]
+		[NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Ignore, 244, "ReplicatedTeamMemberState", "EReplicatedTeamMemberState", 4)]
 		public int? ReplicatedTeamMemberState { get; set; } //Type:  Bits: 4
 
-		[NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.PropertyBool, 249, "bHasEverSkydivedFromBus", "", 1)]
+		[NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.Ignore, 249, "bHasEverSkydivedFromBus", "", 1)]
 		public bool? bHasEverSkydivedFromBus { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.PropertyBool, 250, "bHasEverSkydivedFromBusAndLanded", "", 1)]
+		[NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.Ignore, 250, "bHasEverSkydivedFromBusAndLanded", "", 1)]
 		public bool? bHasEverSkydivedFromBusAndLanded { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("SquadListUpdateValue", RepLayoutCmdType.PropertyInt, 253, "SquadListUpdateValue", "int32", 32)]
+		[NetFieldExport("SquadListUpdateValue", RepLayoutCmdType.Ignore, 253, "SquadListUpdateValue", "int32", 32)]
 		public int? SquadListUpdateValue { get; set; } //Type: int32 Bits: 32
 
 		[NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte, 254, "SquadId", "uint8", 8)]
@@ -135,25 +135,25 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("TeamScorePlacement", RepLayoutCmdType.PropertyUInt32, 259, "TeamScorePlacement", "", 32)]
 		public uint? TeamScorePlacement { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("IconId", RepLayoutCmdType.PropertyString, 259, "IconId", "FString", 144)]
+		[NetFieldExport("IconId", RepLayoutCmdType.Ignore, 259, "IconId", "FString", 144)]
 		public string IconId { get; set; } //Type: FString Bits: 144
 
 		[NetFieldExport("TeamScore", RepLayoutCmdType.PropertyUInt32, 260, "TeamScore", "", 32)]
 		public uint? TeamScore { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("ColorId", RepLayoutCmdType.PropertyString, 260, "ColorId", "FString", 152)]
+		[NetFieldExport("ColorId", RepLayoutCmdType.Ignore, 260, "ColorId", "FString", 152)]
 		public string ColorId { get; set; } //Type: FString Bits: 152
 
 		[NetFieldExport("Level", RepLayoutCmdType.PropertyInt, 261, "Level", "int32", 32)]
 		public int? Level { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("MapIndicatorPos", RepLayoutCmdType.Property, 262, "MapIndicatorPos", "FVector2D", 64)]
+		[NetFieldExport("MapIndicatorPos", RepLayoutCmdType.Ignore, 262, "MapIndicatorPos", "FVector2D", 64)]
 		public FVector2D MapIndicatorPos { get; set; } //Type: FVector2D Bits: 64
 
 		[NetFieldExport("KillScore", RepLayoutCmdType.PropertyUInt32, 263, "KillScore", "int32", 32)]
 		public uint? KillScore { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("FinisherOrDowner", RepLayoutCmdType.Pointer, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
+		[NetFieldExport("FinisherOrDowner", RepLayoutCmdType.Ignore, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
 		public uint? FinisherOrDowner { get; set; } //Type: AFortPlayerStateAthena* Bits: 16
 
 		[NetFieldExport("SeasonLevelUIDisplay", RepLayoutCmdType.PropertyUInt32, 264, "SeasonLevelUIDisplay", "", 32)]

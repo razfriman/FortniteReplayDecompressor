@@ -6,7 +6,6 @@ namespace FortniteReplayReader.Models
 {
     public class Team
     {
-        public List<Player> Players { get; set; }
-        public int MaxSize { get; set; }
+        public List<Player> Players { get; set; } = new List<Player>();
     }
 }

@@ -95,6 +95,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
+                    Replay.GameInformation.UpdatePlayerState(channel, playerState);
                     break;
                 case PlayerPawnC playerPawn:
                     break;
@@ -184,9 +185,16 @@ namespace FortniteReplayReader
         {
             switch (exportGroup)
             {
-                case PlayerPawnC playerPawn:
                 case FortPlayerState playerState:
+                    if(_parseType >= ParseType.Normal)
+                    {
+                        return true;
+                    }
+
                     return false;
+                case PlayerPawnC playerPawn:
+                    return false;
+                    break;
                 default:
                     return true;
             }

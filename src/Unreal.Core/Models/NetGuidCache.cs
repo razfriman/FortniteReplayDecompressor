@@ -106,6 +106,11 @@ namespace Unreal.Core.Models
 
             if (!_archTypeToExportGroup.ContainsKey(guid.Value))
             {
+                if(!NetGuidToPathName.ContainsKey(guid.Value))
+                {
+                    return null;
+                }
+
                 var path = NetGuidToPathName[guid.Value];
 
                 if(isActor)

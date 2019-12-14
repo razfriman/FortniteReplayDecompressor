@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Models;
@@ -17,7 +18,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>();
-        private Dictionary<uint, Team> _teams = new Dictionary<uint, Team>();
+        private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
 
         private List<SafeZone> _safeZones = new List<SafeZone>();
 
@@ -103,16 +104,18 @@ namespace FortniteReplayReader.Models
                 GameState.GameWorldStartTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.AirCraftStartTime;
             }
 
+            /*
             if(gameState.WinningPlayerList != null)
             {
-                foreach (uint playerId in gameState.WinningPlayerList)
+                //???
+                foreach (int playerId in gameState.WinningPlayerList)
                 {
                     //Intentionally adding null for unknown players
-                    _players.TryGetValue(playerId, out Player player);
+                    Player player = _players.Values.FirstOrDefault(x => x.WorldPlayerId == playerId);
 
                     GameState.WinningPlayers.Add(player);
                 }
-            }
+            }*/
 
             if(gameState.TeamFlightPaths != null)
             {
@@ -125,6 +128,50 @@ namespace FortniteReplayReader.Models
                     });
                 }
             }
+        }
+
+        public void UpdatePlayerState(uint channelId, FortPlayerState playerState)
+        {
+            if(playerState.bOnlySpectator == true)
+            {
+                return;
+            }
+
+            if (!_players.TryGetValue(channelId, out Player newPlayer))
+            {
+                newPlayer = new Player();
+
+                _players.TryAdd(channelId, newPlayer);
+            }
+
+            newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
+            newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
+            newPlayer.Teamindex = playerState.TeamIndex ?? newPlayer.Teamindex;
+            newPlayer.PartyOwnerEpicId = playerState.PartyOwnerUniqueId ?? newPlayer.PartyOwnerEpicId;
+            newPlayer.IsBot = playerState.bIsABot ?? newPlayer.IsBot;
+            newPlayer.BotId = playerState.BotUniqueId ?? newPlayer.BotId;
+            newPlayer.IsGameSessionOwner = playerState.bIsGameSessionOwner ?? newPlayer.IsGameSessionOwner;
+            newPlayer.Level = playerState.Level ?? newPlayer.Level;
+            newPlayer.FinishedLoading = playerState.bHasFinishedLoading ?? newPlayer.FinishedLoading;
+            newPlayer.StartedPlaying = playerState.bHasStartedPlaying ?? newPlayer.StartedPlaying;
+            newPlayer.IsPlayersReplay = playerState.Ping > 0 ? true : newPlayer.IsPlayersReplay;
+            newPlayer.StreamerMode = playerState.bUsingStreamerMode ?? newPlayer.StreamerMode;
+            newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
+
+            if (playerState.TeamIndex != null)
+            {
+                if(!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
+                {
+                    team = new Team();
+
+                    _teams.TryAdd(playerState.TeamIndex.Value, team);
+                }
+                
+                team.Players.Add(newPlayer);
+            }
+
+            //Internal info
+            newPlayer.WorldPlayerId = playerState.WorldPlayerId ?? newPlayer.WorldPlayerId;
         }
     }
 }

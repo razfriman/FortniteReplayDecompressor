@@ -37,7 +37,7 @@ namespace FortniteReplayReader.Models
         public bool LargeTeamGame { get; internal set; }
         public int EventTournamentRound { get; internal set; }
 
-        public List<Player> WinningPlayers { get; internal set; } = new List<Player>();
+        //public List<Player> WinningPlayers { get; internal set; } = new List<Player>();
 
         //Internal information to keep track of game state
         internal float CurrentWorldTime { get; set; }

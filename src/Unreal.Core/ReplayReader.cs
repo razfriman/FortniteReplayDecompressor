@@ -1472,7 +1472,12 @@ namespace Unreal.Core
         {
             ++TotalGroupsRead;
 
-            if (NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName))
+            if(Channels[channelIndex].IgnoreChannel == true)
+            {
+                return true;
+            }
+
+            if ((NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName)))
             {
                 return true;
             }
@@ -1579,7 +1584,7 @@ namespace Unreal.Core
                 OnExportRead(channelIndex, exportGroup);
             }
 
-            if (_parseType <= ParseType.Minimal && Channels[channelIndex].IgnoreChannel == null)
+            if (Channels[channelIndex].IgnoreChannel == null)
             {
                 Channels[channelIndex].IgnoreChannel = !ContinueParsingChannel(exportGroup);
             }
