@@ -55,7 +55,6 @@ namespace FortniteReplayReader
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
             var replay = ReadReplay(archive, parseType);
-
             return replay;
         }
 
@@ -93,6 +92,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateSupplyDrop(channel, supplyDrop);
                     break;
                 case GameStateC gameState:
+                    Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
                     break;
@@ -107,21 +107,6 @@ namespace FortniteReplayReader
                     break;
             }
         }
-
-        /*
-        private void GenerateGameInformation()
-        {
-            GameInformation = new GameInformation();
-
-            foreach (KeyValuePair<uint, List<INetFieldExportGroup>> exportKvp in ExportGroups)
-            {
-                foreach (INetFieldExportGroup exportGroup in exportKvp.Value)
-                {
-                    
-                }
-            }
-        }
-        */
 
         protected override void ReadReplayHeader(FArchive archive)
         {

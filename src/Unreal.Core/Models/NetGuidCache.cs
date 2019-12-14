@@ -18,6 +18,17 @@ namespace Unreal.Core.Models
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
 
+        public void ClearCache()
+        {
+            ObjectLookup.Clear();
+            NetFieldExportGroupMap.Clear();
+            NetFieldExportGroupIndexToGroup.Clear();
+            NetGuidToPathName.Clear();
+            _archTypeToExportGroup.Clear();
+            NetFieldExportGroupMapPathFixed.Clear();
+            _cleanedPaths.Clear();
+        }
+
         public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
         {
             if(!netGuid.IsValid())

@@ -10,10 +10,14 @@ namespace FortniteReplayReader.Models
     {
         public ICollection<Llama> Llamas => _llamas.Values;
         public ICollection<SafeZone> SafeZones => _safeZones;
-
+        public ICollection<Player> Players => _players.Values;
+        public ICollection<Team> Teams => _teams.Values;
+        public GameState GameState { get; private set; } = new GameState();
 
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
+        private Dictionary<uint, Player> _players = new Dictionary<uint, Player>();
+        private Dictionary<uint, Team> _teams = new Dictionary<uint, Team>();
 
         private List<SafeZone> _safeZones = new List<SafeZone>();
 
@@ -69,6 +73,56 @@ namespace FortniteReplayReader.Models
             newSafeZone.NextNextCenter = safeZone.NextNextCenter ?? newSafeZone.NextNextCenter;
 
             _safeZones.Add(newSafeZone);
+        }
+
+        public void UpdateGameState(GameStateC gameState)
+        {
+            GameState.AirCraftStartTime = gameState.AircraftStartTime ?? GameState.AirCraftStartTime;
+            GameState.InitialSafeZoneStartTime = gameState.SafeZonesStartTime ?? GameState.InitialSafeZoneStartTime;
+            GameState.SessionId = gameState.GameSessionId ?? GameState.SessionId;
+            GameState.MatchTime = gameState.UtcTimeStartedMatch?.Time ?? GameState.MatchTime;
+            GameState.EventTournamentRound = gameState.EventTournamentRound ?? GameState.EventTournamentRound;
+            GameState.LargeTeamGame = gameState.bIsLargeTeamGame ?? GameState.LargeTeamGame;
+            GameState.MaxPlayers = gameState.TeamCount ?? GameState.MaxPlayers;
+            GameState.MatchEndTime = gameState.EndGameStartTime ?? GameState.MatchEndTime;
+            GameState.TotalTeams = gameState.ActiveTeamNums?.Length ?? GameState.TotalTeams;
+            GameState.TotalBots = gameState.PlayerBotsLeft > GameState.TotalBots ? gameState.PlayerBotsLeft.Value : GameState.TotalBots;
+
+            //Internal information to keep track of current state of the game
+            GameState.CurrentWorldTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.CurrentWorldTime;
+            GameState.RemainingPlayers = gameState.PlayersLeft ?? GameState.RemainingPlayers;
+            GameState.CurrentTeams = gameState.TeamsLeft ?? GameState.CurrentTeams;
+            GameState.SafeZonePhase = gameState.SafeZonePhase ?? GameState.SafeZonePhase;
+            GameState.RemainingBots = gameState.PlayerBotsLeft ?? GameState.RemainingBots;
+
+
+            if (GameState.GameWorldStartTime == 0)
+            {
+                GameState.GameWorldStartTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.AirCraftStartTime;
+            }
+
+            if(gameState.WinningPlayerList != null)
+            {
+                foreach (uint playerId in gameState.WinningPlayerList)
+                {
+                    //Intentionally adding null for unknown players
+                    _players.TryGetValue(playerId, out Player player);
+
+                    GameState.WinningPlayers.Add(player);
+                }
+            }
+
+            if(gameState.TeamFlightPaths != null)
+            {
+                foreach(GameStateC flightPath in gameState.TeamFlightPaths)
+                {
+                    GameState.PlanePaths.Add(new Airplane
+                    {
+                        FlightRotation = flightPath.FlightStartRotation,
+                        FlightStartLocation = flightPath.FlightStartLocation
+                    });
+                }
+            }
         }
     }
 }

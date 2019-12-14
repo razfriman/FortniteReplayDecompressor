@@ -9,17 +9,87 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Game/Athena/Athena_GameState.Athena_GameState_C")]
     public class GameStateC : INetFieldExportGroup
     {
+        #region Ignored
+
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
         public object Role { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("GameModeClass", RepLayoutCmdType.Pointer, 15, "GameModeClass", "TSubclassOf<AGameModeBase>", 16)]
+        [NetFieldExport("GameModeClass", RepLayoutCmdType.Ignore, 15, "GameModeClass", "TSubclassOf<AGameModeBase>", 16)]
         public uint? GameModeClass { get; set; } //Type: TSubclassOf<AGameModeBase> Bits: 16
 
-        [NetFieldExport("SpectatorClass", RepLayoutCmdType.Pointer, 16, "SpectatorClass", "TSubclassOf<ASpectatorPawn>", 16)]
+        [NetFieldExport("SpectatorClass", RepLayoutCmdType.Ignore, 16, "SpectatorClass", "TSubclassOf<ASpectatorPawn>", 16)]
         public uint? SpectatorClass { get; set; } //Type: TSubclassOf<ASpectatorPawn> Bits: 16
+
+        [NetFieldExport("FortTimeOfDayManager", RepLayoutCmdType.Ignore, 21, "FortTimeOfDayManager", "AFortTimeOfDayManager*", 16)]
+        public uint? FortTimeOfDayManager { get; set; } //Type: AFortTimeOfDayManager* Bits: 16
+
+        [NetFieldExport("PoiManager", RepLayoutCmdType.Ignore, 30, "PoiManager", "AFortPoiManager*", 8)]
+        public uint? PoiManager { get; set; } //Type: AFortPoiManager* Bits: 8
+
+        [NetFieldExport("FeedbackManager", RepLayoutCmdType.Ignore, 36, "FeedbackManager", "AFortFeedbackManager*", 8)]
+        public uint? FeedbackManager { get; set; } //Type: AFortFeedbackManager* Bits: 8
+
+        [NetFieldExport("MissionManager", RepLayoutCmdType.Ignore, 37, "MissionManager", "AFortMissionManager*", 8)]
+        public uint? MissionManager { get; set; } //Type: AFortMissionManager* Bits: 8
+
+        [NetFieldExport("AnnouncementManager", RepLayoutCmdType.Ignore, 38, "AnnouncementManager", "AFortClientAnnouncementManager*", 8)]
+        public uint? AnnouncementManager { get; set; } //Type: AFortClientAnnouncementManager* Bits: 8
+
+        [NetFieldExport("WorldManager", RepLayoutCmdType.Ignore, 39, "WorldManager", "AFortWorldManager*", 16)]
+        public uint? WorldManager { get; set; } //Type: AFortWorldManager* Bits: 16
+
+        [NetFieldExport("MusicManagerSubclass", RepLayoutCmdType.Ignore, 41, "MusicManagerSubclass", "TSubclassOf<AFortMusicManager>", 16)]
+        public uint? MusicManagerSubclass { get; set; } //Type: TSubclassOf<AFortMusicManager> Bits: 16
+
+        [NetFieldExport("MusicManagerBank", RepLayoutCmdType.Ignore, 42, "MusicManagerBank", "UFortMusicManagerBank*", 16)]
+        public uint? MusicManagerBank { get; set; } //Type: UFortMusicManagerBank* Bits: 16
+
+        [NetFieldExport("PawnForReplayRelevancy", RepLayoutCmdType.Ignore, 44, "PawnForReplayRelevancy", "AFortPawn*", 16)]
+        public uint? PawnForReplayRelevancy { get; set; } //Type: AFortPawn* Bits: 16
+
+        [NetFieldExport("RecorderPlayerState", RepLayoutCmdType.Ignore, 45, "RecorderPlayerState", "AFortPlayerState*", 8)]
+        public uint? RecorderPlayerState { get; set; } //Type: AFortPlayerState* Bits: 8
+
+        [NetFieldExport("GlobalEnvironmentAbilityActor", RepLayoutCmdType.Ignore, 69, "GlobalEnvironmentAbilityActor", "AFortGlobalEnvironmentAbilityActor*", 8)]
+        public uint? GlobalEnvironmentAbilityActor { get; set; } //Type: AFortGlobalEnvironmentAbilityActor* Bits: 8
+
+        [NetFieldExport("UIMapManager", RepLayoutCmdType.Ignore, 106, "UIMapManager", "AFortInGameMapManager*", 16)]
+        public uint? UIMapManager { get; set; } //Type: AFortInGameMapManager* Bits: 16
+
+        [NetFieldExport("CreativePlotManager", RepLayoutCmdType.Ignore, 133, "CreativePlotManager", "AFortCreativePlotManager*", 8)]
+        public uint? CreativePlotManager { get; set; } //Type: AFortCreativePlotManager* Bits: 8
+
+        [NetFieldExport("PlayspaceManager", RepLayoutCmdType.Ignore, 134, "PlayspaceManager", "AFortPlayspaceManager*", 8)]
+        public uint? PlayspaceManager { get; set; } //Type: AFortPlayspaceManager* Bits: 8
+
+        [NetFieldExport("ItemCollector", RepLayoutCmdType.Ignore, 141, "ItemCollector", "ABuildingItemCollectorActor*", 16)]
+        public uint? ItemCollector { get; set; } //Type: ABuildingItemCollectorActor* Bits: 16
+
+        [NetFieldExport("SpecialActorData", RepLayoutCmdType.Ignore, 153, "SpecialActorData", "AFortSpecialActorReplicationInfo*", 8)]
+        public uint? SpecialActorData { get; set; } //Type: AFortSpecialActorReplicationInfo* Bits: 8
+
+        [NetFieldExport("SupplyDropWaveStartedSoundCue", RepLayoutCmdType.Ignore, 192, "SupplyDropWaveStartedSoundCue", "USoundCue*", 16)]
+        public uint? SupplyDropWaveStartedSoundCue { get; set; } //Type: USoundCue* Bits: 16
+
+        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Ignore, 193, "TeamXPlayersLeft", "", 160)]
+        public DebuggingObject TeamXPlayersLeft { get; set; } //Type:  Bits: 160
+
+        [NetFieldExport("SafeZoneIndicator", RepLayoutCmdType.Ignore, 197, "SafeZoneIndicator", "AFortSafeZoneIndicator*", 16)]
+        public uint? SafeZoneIndicator { get; set; } //Type: AFortSafeZoneIndicator* Bits: 16
+
+        [NetFieldExport("MapInfo", RepLayoutCmdType.Ignore, 203, "MapInfo", "AFortAthenaMapInfo*", 16)]
+        public uint? MapInfo { get; set; } //Type: AFortAthenaMapInfo* Bits: 16
+
+        [NetFieldExport("GoldenPoiLocationTags", RepLayoutCmdType.Ignore, 286, "GoldenPoiLocationTags", "", 24)]
+        public DebuggingObject GoldenPoiLocationTags { get; set; } //Type:  Bits: 24
+
+        [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Ignore, 174, "DefaultBattleBus", "UAthenaBattleBusItemDefinition*", 16)]
+        public uint? DefaultBattleBus { get; set; } //Type: UAthenaBattleBusItemDefinition* Bits: 16
+
+        #endregion
 
         [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.PropertyBool, 17, "bReplicatedHasBegunPlay", "bool", 1)]
         public bool? bReplicatedHasBegunPlay { get; set; } //Type: bool Bits: 1
@@ -32,9 +102,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("ElapsedTime", RepLayoutCmdType.PropertyInt, 20, "ElapsedTime", "int32", 32)]
         public int? ElapsedTime { get; set; } //Type: int32 Bits: 32
-
-        [NetFieldExport("FortTimeOfDayManager", RepLayoutCmdType.Pointer, 21, "FortTimeOfDayManager", "AFortTimeOfDayManager*", 16)]
-        public uint? FortTimeOfDayManager { get; set; } //Type: AFortTimeOfDayManager* Bits: 16
 
         [NetFieldExport("WorldLevel", RepLayoutCmdType.PropertyInt, 25, "WorldLevel", "int32", 32)]
         public int? WorldLevel { get; set; } //Type: int32 Bits: 32
@@ -51,44 +118,17 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GameFlagData", RepLayoutCmdType.PropertyInt, 29, "GameFlagData", "", 32)]
         public int? GameFlagData { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("PoiManager", RepLayoutCmdType.Pointer, 30, "PoiManager", "AFortPoiManager*", 8)]
-        public uint? PoiManager { get; set; } //Type: AFortPoiManager* Bits: 8
-
         [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.DynamicArray, 32, "AdditionalPlaylistLevelsStreamed", "TArray", 393)]
         public object[] AdditionalPlaylistLevelsStreamed { get; set; } //Type: TArray Bits: 393
 
         [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.PropertyInt, 34, "WorldDaysElapsed", "int32", 32)]
         public int? WorldDaysElapsed { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("FeedbackManager", RepLayoutCmdType.Pointer, 36, "FeedbackManager", "AFortFeedbackManager*", 8)]
-        public uint? FeedbackManager { get; set; } //Type: AFortFeedbackManager* Bits: 8
-
-        [NetFieldExport("MissionManager", RepLayoutCmdType.Pointer, 37, "MissionManager", "AFortMissionManager*", 8)]
-        public uint? MissionManager { get; set; } //Type: AFortMissionManager* Bits: 8
-
-        [NetFieldExport("AnnouncementManager", RepLayoutCmdType.Pointer, 38, "AnnouncementManager", "AFortClientAnnouncementManager*", 8)]
-        public uint? AnnouncementManager { get; set; } //Type: AFortClientAnnouncementManager* Bits: 8
-
-        [NetFieldExport("WorldManager", RepLayoutCmdType.Pointer, 39, "WorldManager", "AFortWorldManager*", 16)]
-        public uint? WorldManager { get; set; } //Type: AFortWorldManager* Bits: 16
-
         [NetFieldExport("GameplayState", RepLayoutCmdType.Enum, 40, "GameplayState", "TEnumAsByte<EFortGameplayState::Type>", 3)]
         public int? GameplayState { get; set; } //Type: TEnumAsByte<EFortGameplayState::Type> Bits: 3
 
-        [NetFieldExport("MusicManagerSubclass", RepLayoutCmdType.Pointer, 41, "MusicManagerSubclass", "TSubclassOf<AFortMusicManager>", 16)]
-        public uint? MusicManagerSubclass { get; set; } //Type: TSubclassOf<AFortMusicManager> Bits: 16
-
-        [NetFieldExport("MusicManagerBank", RepLayoutCmdType.Pointer, 42, "MusicManagerBank", "UFortMusicManagerBank*", 16)]
-        public uint? MusicManagerBank { get; set; } //Type: UFortMusicManagerBank* Bits: 16
-
         [NetFieldExport("GameSessionId", RepLayoutCmdType.PropertyString, 43, "GameSessionId", "FString", 296)]
         public string GameSessionId { get; set; } //Type: FString Bits: 296
-
-        [NetFieldExport("PawnForReplayRelevancy", RepLayoutCmdType.Pointer, 44, "PawnForReplayRelevancy", "AFortPawn*", 16)]
-        public uint? PawnForReplayRelevancy { get; set; } //Type: AFortPawn* Bits: 16
-
-        [NetFieldExport("RecorderPlayerState", RepLayoutCmdType.Pointer, 45, "RecorderPlayerState", "AFortPlayerState*", 8)]
-        public uint? RecorderPlayerState { get; set; } //Type: AFortPlayerState* Bits: 8
 
         [NetFieldExport("SpawnPointsCap", RepLayoutCmdType.PropertyInt, 57, "SpawnPointsCap", "int32", 32)]
         public int? SpawnPointsCap { get; set; } //Type: int32 Bits: 32
@@ -99,9 +139,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayerSharedMaxTrapAttributes", RepLayoutCmdType.DynamicArray, 67, "PlayerSharedMaxTrapAttributes", "TArray", 464)]
         public object[] PlayerSharedMaxTrapAttributes { get; set; } //Type: TArray Bits: 464
 
-        [NetFieldExport("GlobalEnvironmentAbilityActor", RepLayoutCmdType.Pointer, 69, "GlobalEnvironmentAbilityActor", "AFortGlobalEnvironmentAbilityActor*", 8)]
-        public uint? GlobalEnvironmentAbilityActor { get; set; } //Type: AFortGlobalEnvironmentAbilityActor* Bits: 8
-
         [NetFieldExport("TotalPlayerStructures", RepLayoutCmdType.PropertyInt, 72, "TotalPlayerStructures", "int32", 32)]
         public int? TotalPlayerStructures { get; set; } //Type: int32 Bits: 32
 
@@ -110,15 +147,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("GameDifficulty", RepLayoutCmdType.PropertyFloat, 103, "GameDifficulty", "float", 32)]
         public float? GameDifficulty { get; set; } //Type: float Bits: 32
-
-        [NetFieldExport("UIMapManager", RepLayoutCmdType.Pointer, 106, "UIMapManager", "AFortInGameMapManager*", 16)]
-        public uint? UIMapManager { get; set; } //Type: AFortInGameMapManager* Bits: 16
-
-        [NetFieldExport("CreativePlotManager", RepLayoutCmdType.Pointer, 133, "CreativePlotManager", "AFortCreativePlotManager*", 8)]
-        public uint? CreativePlotManager { get; set; } //Type: AFortCreativePlotManager* Bits: 8
-
-        [NetFieldExport("PlayspaceManager", RepLayoutCmdType.Pointer, 134, "PlayspaceManager", "AFortPlayspaceManager*", 8)]
-        public uint? PlayspaceManager { get; set; } //Type: AFortPlayspaceManager* Bits: 8
 
         [NetFieldExport("bAllowLayoutRequirementsFeature", RepLayoutCmdType.PropertyBool, 134, "bAllowLayoutRequirementsFeature", "", 1)]
         public bool? bAllowLayoutRequirementsFeature { get; set; } //Type:  Bits: 1
@@ -132,14 +160,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RoundTimeCriticalThreshold", RepLayoutCmdType.PropertyInt, 137, "RoundTimeCriticalThreshold", "int32", 32)]
         public int? RoundTimeCriticalThreshold { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ItemCollector", RepLayoutCmdType.Pointer, 141, "ItemCollector", "ABuildingItemCollectorActor*", 16)]
-        public uint? ItemCollector { get; set; } //Type: ABuildingItemCollectorActor* Bits: 16
-
         [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.PropertyInt, 152, "ServerChangelistNumber", "int32", 32)]
         public int? ServerChangelistNumber { get; set; } //Type: int32 Bits: 32
-
-        [NetFieldExport("SpecialActorData", RepLayoutCmdType.Pointer, 153, "SpecialActorData", "AFortSpecialActorReplicationInfo*", 8)]
-        public uint? SpecialActorData { get; set; } //Type: AFortSpecialActorReplicationInfo* Bits: 8
 
         [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.PropertyUInt32, 154, "CreativeRealEstatePlotManager", "", 8)]
         public uint? CreativeRealEstatePlotManager { get; set; } //Type:  Bits: 8
@@ -183,9 +205,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ServerToClientPreloadList", RepLayoutCmdType.DynamicArray, 171, "ServerToClientPreloadList", "TArray", 408)]
         public object[] ServerToClientPreloadList { get; set; } //Type: TArray Bits: 408
 
-        [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Pointer, 174, "DefaultBattleBus", "UAthenaBattleBusItemDefinition*", 16)]
-        public uint? DefaultBattleBus { get; set; } //Type: UAthenaBattleBusItemDefinition* Bits: 16
-
         [NetFieldExport("ClientVehicleClassesToLoad", RepLayoutCmdType.DynamicArray, 174, "ClientVehicleClassesToLoad", "", 72)]
         public int[] ClientVehicleClassesToLoad { get; set; } //Type:  Bits: 72
 
@@ -193,7 +212,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool? bAllowUserPickedCosmeticBattleBus { get; set; } //Type: bool Bits: 1
 
         [NetFieldExport("TeamFlightPaths", RepLayoutCmdType.DynamicArray, 176, "TeamFlightPaths", "TArray", 403)]
-        public object[] TeamFlightPaths { get; set; } //Type: TArray Bits: 403
+        public GameStateC[] TeamFlightPaths { get; set; } //Type: TArray Bits: 403
 
         [NetFieldExport("StormCapState", RepLayoutCmdType.Enum, 178, "StormCapState", "", 3)]
         public int? StormCapState { get; set; } //Type:  Bits: 3
@@ -222,26 +241,14 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("UtcTimeStartedMatch", RepLayoutCmdType.Property, 190, "UtcTimeStartedMatch", "FDateTime", 64)]
         public FDateTime UtcTimeStartedMatch { get; set; } //Type: FDateTime Bits: 64
 
-        [NetFieldExport("SupplyDropWaveStartedSoundCue", RepLayoutCmdType.Pointer, 192, "SupplyDropWaveStartedSoundCue", "USoundCue*", 16)]
-        public uint? SupplyDropWaveStartedSoundCue { get; set; } //Type: USoundCue* Bits: 16
-
-        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Ignore, 193, "TeamXPlayersLeft", "", 160)]
-        public DebuggingObject TeamXPlayersLeft { get; set; } //Type:  Bits: 160
-
-        [NetFieldExport("SafeZoneIndicator", RepLayoutCmdType.Pointer, 197, "SafeZoneIndicator", "AFortSafeZoneIndicator*", 16)]
-        public uint? SafeZoneIndicator { get; set; } //Type: AFortSafeZoneIndicator* Bits: 16
-
         [NetFieldExport("SafeZonePhase", RepLayoutCmdType.PropertyByte, 201, "SafeZonePhase", "uint8", 8)]
         public byte? SafeZonePhase { get; set; } //Type: uint8 Bits: 8
-
-        [NetFieldExport("MapInfo", RepLayoutCmdType.Pointer, 203, "MapInfo", "AFortAthenaMapInfo*", 16)]
-        public uint? MapInfo { get; set; } //Type: AFortAthenaMapInfo* Bits: 16
 
         [NetFieldExport("GamePhase", RepLayoutCmdType.Enum, 204, "GamePhase", "EAthenaGamePhase", 3)]
         public int? GamePhase { get; set; } //Type: EAthenaGamePhase Bits: 3
 
-        [NetFieldExport("Aircrafts", RepLayoutCmdType.DynamicArray, 207, "Aircrafts", "TArray", 64)]
-        public object[] Aircrafts { get; set; } //Type: TArray Bits: 64
+        [NetFieldExport("Aircrafts", RepLayoutCmdType.Ignore, 207, "Aircrafts", "TArray", 64)]
+        public DebuggingObject Aircrafts { get; set; } //Type: TArray Bits: 64
 
         [NetFieldExport("bAircraftIsLocked", RepLayoutCmdType.PropertyBool, 210, "bAircraftIsLocked", "uint8", 1)]
         public bool? bAircraftIsLocked { get; set; } //Type: uint8 Bits: 1
@@ -291,8 +298,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum, 235, "EventTournamentRound", "", 3)]
         public int? EventTournamentRound { get; set; } //Type:  Bits: 3
 
-        [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyUInt32, 244, "PlayerBotsLeft", "", 32)]
-        public uint? PlayerBotsLeft { get; set; } //Type:  Bits: 32
+        [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyInt, 244, "PlayerBotsLeft", "", 32)]
+        public int? PlayerBotsLeft { get; set; } //Type:  Bits: 32
 
         [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.PropertyFloat, 268, "DefaultParachuteDeployTraceForGroundDistance", "", 32)]
         public float? DefaultParachuteDeployTraceForGroundDistance { get; set; } //Type:  Bits: 32
@@ -333,8 +340,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("VolumeManager", RepLayoutCmdType.PropertyUInt32, 280, "VolumeManager", "", 16)]
         public uint? VolumeManager { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("GoldenPoiLocationTags", RepLayoutCmdType.Ignore, 286, "GoldenPoiLocationTags", "", 24)]
-        public DebuggingObject GoldenPoiLocationTags { get; set; } //Type:  Bits: 24
 
     }
 }

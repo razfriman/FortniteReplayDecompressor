@@ -61,6 +61,8 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
+        private bool isReading = false;
+
         //public Dictionary<uint, List<INetFieldExportGroup>> ExportGroups { get; private set; } = new Dictionary<uint, List<INetFieldExportGroup>>();
 
         //private List<string> UnknownFields = new List<string>();
@@ -71,26 +73,32 @@ namespace Unreal.Core
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
+            if(isReading)
+            {
+                throw new InvalidOperationException("Multithreaded reading currently isn't supported");
+            }
+
             _parseType = parseType;
+            isReading = true;
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
             Cleanup();
 
+            isReading = false;
+
             return Replay;
         }
 
         private void Cleanup()
         {
-            //InReliable.Clear();
-            //Channels.Clear();
-            //ChannelActors.Clear();
-            GuidCache.NetFieldExportGroupIndexToGroup.Clear();
-            GuidCache.NetFieldExportGroupMap.Clear();
-            GuidCache.NetGuidToPathName.Clear();
-            GuidCache.ObjectLookup.Clear();
-            GuidCache.NetFieldExportGroupMapPathFixed.Clear();
+            InReliable = new int?[DefaultMaxChannelSize];
+            Channels = new UChannel[DefaultMaxChannelSize];
+            ChannelActors = new bool?[DefaultMaxChannelSize];
+            IgnoringChannels = new uint?[DefaultMaxChannelSize];
+
+            GuidCache.ClearCache();
 
         }
 
