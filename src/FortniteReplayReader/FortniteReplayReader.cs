@@ -95,9 +95,15 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
-                    Replay.GameInformation.UpdatePlayerState(channel, playerState);
+                    Actor actor = Channels[channel].Actor;
+
+                    Replay.GameInformation.UpdatePlayerState(channel, playerState, actor);
                     break;
                 case PlayerPawnC playerPawn:
+                    if (_parseType >= ParseType.Normal)
+                    {
+                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
+                    }
                     break;
                 case FortPickup fortPickup: //Ignored by default
                     break;
@@ -153,7 +159,7 @@ namespace FortniteReplayReader
             }
             else if (info.Metadata == ReplayEventTypes.ENCRYPTION_KEY)
             {
-                ParseEncryptionKeyEvent(archive, info);
+                Replay.GameInformation.PlayerStateEncryptionKey = ParseEncryptionKeyEvent(archive, info);
                 return;
             }
             else if (info.Metadata == ReplayEventTypes.CHARACTER_SAMPLE)
@@ -185,6 +191,7 @@ namespace FortniteReplayReader
         {
             switch (exportGroup)
             {
+                case PlayerPawnC playerPawn:
                 case FortPlayerState playerState:
                     if(_parseType >= ParseType.Normal)
                     {
@@ -192,9 +199,6 @@ namespace FortniteReplayReader
                     }
 
                     return false;
-                case PlayerPawnC playerPawn:
-                    return false;
-                    break;
                 default:
                     return true;
             }

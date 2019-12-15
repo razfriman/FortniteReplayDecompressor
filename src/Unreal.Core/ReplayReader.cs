@@ -1164,7 +1164,6 @@ namespace Unreal.Core
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
                     var guid = bunch.Archive.ReadIntPacked();
-
                 }
             }
 

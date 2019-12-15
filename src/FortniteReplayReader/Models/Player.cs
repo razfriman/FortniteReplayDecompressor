@@ -5,7 +5,7 @@ using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
-    public class Player
+    public class Player : PlayerPawn
     {
         public string EpicId { get; set; }
         public string PartyOwnerEpicId { get; set; }
@@ -20,11 +20,14 @@ namespace FortniteReplayReader.Models
         public bool IsPlayersReplay { get; set; }
         public bool StreamerMode { get; set; }
         public bool ThankedBusDriver { get; set; }
+        public int Placement { get; set; }
+        public string ColorId { get; set; }
+        public string BannerId { get; set; }
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
 
-        //Internal info
+        //Internal 
         internal int WorldPlayerId { get; set; }
     }
 
@@ -32,6 +35,7 @@ namespace FortniteReplayReader.Models
     {
         public FVector Location { get; set; }
         public float? WorldTime { get; set; }
+        public float? LastUpdateTime { get; set; }
     }
 
     public class PlayerStateChange

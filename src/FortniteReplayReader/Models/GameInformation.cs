@@ -14,15 +14,20 @@ namespace FortniteReplayReader.Models
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
         public GameState GameState { get; private set; } = new GameState();
+        public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
 
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
-        private Dictionary<uint, Player> _players = new Dictionary<uint, Player>();
-        private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
 
+        private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
+        private Dictionary<uint, Player> _fortPlayerStateGuids = new Dictionary<uint, Player>(); //NetGUID to Player
+        private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
+        private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
+
+        private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
 
-        public void UpdateLlama(uint channel, SupplyDropLlamaC supplyDropLlama)
+        internal void UpdateLlama(uint channel, SupplyDropLlamaC supplyDropLlama)
         {
             Llama newLlama = new Llama();
 
@@ -37,8 +42,7 @@ namespace FortniteReplayReader.Models
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
         }
 
-
-        public void UpdateSupplyDrop(uint channel, SupplyDropC supplyDrop)
+        internal void UpdateSupplyDrop(uint channel, SupplyDropC supplyDrop)
         {
             SupplyDrop newSupplyDrop = new SupplyDrop();
 
@@ -54,7 +58,7 @@ namespace FortniteReplayReader.Models
             newSupplyDrop.BalloonPopped = supplyDrop.BalloonPopped ?? newSupplyDrop.BalloonPopped;
         }
 
-        public void UpdateSafeZone(SafeZoneIndicatorC safeZone)
+        internal void UpdateSafeZone(SafeZoneIndicatorC safeZone)
         {
             //Zone shrink updates, ignore
             if(safeZone.SafeZoneFinishShrinkTime == null)
@@ -76,7 +80,7 @@ namespace FortniteReplayReader.Models
             _safeZones.Add(newSafeZone);
         }
 
-        public void UpdateGameState(GameStateC gameState)
+        internal void UpdateGameState(GameStateC gameState)
         {
             GameState.AirCraftStartTime = gameState.AircraftStartTime ?? GameState.AirCraftStartTime;
             GameState.InitialSafeZoneStartTime = gameState.SafeZonesStartTime ?? GameState.InitialSafeZoneStartTime;
@@ -104,19 +108,6 @@ namespace FortniteReplayReader.Models
                 GameState.GameWorldStartTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.AirCraftStartTime;
             }
 
-            /*
-            if(gameState.WinningPlayerList != null)
-            {
-                //???
-                foreach (int playerId in gameState.WinningPlayerList)
-                {
-                    //Intentionally adding null for unknown players
-                    Player player = _players.Values.FirstOrDefault(x => x.WorldPlayerId == playerId);
-
-                    GameState.WinningPlayers.Add(player);
-                }
-            }*/
-
             if(gameState.TeamFlightPaths != null)
             {
                 foreach(GameStateC flightPath in gameState.TeamFlightPaths)
@@ -130,20 +121,24 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        public void UpdatePlayerState(uint channelId, FortPlayerState playerState)
+        internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor)
         {
             if(playerState.bOnlySpectator == true)
             {
                 return;
             }
 
-            if (!_players.TryGetValue(channelId, out Player newPlayer))
+            bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
+
+            if (isNewPlayer)
             {
                 newPlayer = new Player();
 
                 _players.TryAdd(channelId, newPlayer);
+                _fortPlayerStateGuids.TryAdd(actor.ActorNetGUID.Value, newPlayer);
             }
 
+            newPlayer.Actor = actor;
             newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
             newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
             newPlayer.Teamindex = playerState.TeamIndex ?? newPlayer.Teamindex;
@@ -157,6 +152,9 @@ namespace FortniteReplayReader.Models
             newPlayer.IsPlayersReplay = playerState.Ping > 0 ? true : newPlayer.IsPlayersReplay;
             newPlayer.StreamerMode = playerState.bUsingStreamerMode ?? newPlayer.StreamerMode;
             newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
+            newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
+            newPlayer.BannerId = playerState.IconId ?? newPlayer.BannerId;
+            newPlayer.ColorId = playerState.ColorId ?? newPlayer.ColorId;
 
             if (playerState.TeamIndex != null)
             {
@@ -172,6 +170,77 @@ namespace FortniteReplayReader.Models
 
             //Internal info
             newPlayer.WorldPlayerId = playerState.WorldPlayerId ?? newPlayer.WorldPlayerId;
+
+            if(isNewPlayer)
+            {
+                HandleQueuedPlayerPawns(newPlayer);
+            }
+        }
+
+        internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawn)
+        {
+            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn actor))
+            {
+                //Check for PlayerState
+                if(playerPawn.PlayerState != null)
+                {
+                    if(_fortPlayerStateGuids.TryGetValue(playerPawn.PlayerState.Value, out Player player))
+                    {
+                        _playerPawns.TryAdd(channelId, player);
+                        actor = player;
+                    }
+                    else
+                    {
+                        //Queues up player pawn to process for later
+                        if (!_queuedPlayerPawns.TryGetValue(playerPawn.PlayerState.Value, out var playerPawns))
+                        {
+                            playerPawns = new List<QueuedPlayerPawn>();
+
+                            _queuedPlayerPawns.TryAdd(playerPawn.PlayerState.Value, playerPawns);
+                        }
+
+                        playerPawns.Add(new QueuedPlayerPawn
+                        {
+                            ChannelId = channelId,
+                            PlayerPawn = playerPawn
+                        });
+
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            switch (actor)
+            {
+                case Player playerActor:
+                    if(playerPawn.ReplicatedMovement != null) //Update location
+                    {
+                        playerActor.Locations.Add(new PlayerLocation
+                        {
+                            Location = playerPawn.ReplicatedMovement.Location,
+                            WorldTime = GameState.CurrentWorldTime,
+                            LastUpdateTime = playerPawn.ReplayLastTransformUpdateTimeStamp
+                        });
+                    }
+                    break;
+            }
+
+            //Currently only updating movement
+        }
+
+        private void HandleQueuedPlayerPawns(Player player)
+        {
+            if(_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out var playerPawns))
+            {
+                foreach(var playerPawn in playerPawns)
+                {
+                    UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
+                }
+            }
         }
     }
 }

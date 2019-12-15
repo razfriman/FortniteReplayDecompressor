@@ -10,6 +10,11 @@ namespace FortniteReplayReader.Models
     {
         public byte[] EncryptedReplayData { get; private set; }
 
+        public override string ToString()
+        {
+            return BitConverter.ToString(EncryptedReplayData).Replace("-", "");
+        }
+
         public void Serialize(NetBitReader reader)
         {
             int length = reader.ReadInt32();

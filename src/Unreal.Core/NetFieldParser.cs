@@ -218,20 +218,6 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyUInt32:
                     data = netBitReader.ReadUInt32();
                     break;
-                case RepLayoutCmdType.Pointer:
-                    switch (netBitReader.GetBitsLeft())
-                    {
-                        case 8:
-                            data = (uint)netBitReader.ReadByte();
-                            break;
-                        case 16:
-                            data = (uint)netBitReader.ReadUInt16();
-                            break;
-                        case 32:
-                            data = netBitReader.ReadUInt32();
-                            break;
-                    }
-                    break;
                 case RepLayoutCmdType.PropertyVector:
                     data = new FVector(netBitReader.ReadSingle(), netBitReader.ReadSingle(), netBitReader.ReadSingle());
                     break;
@@ -438,7 +424,7 @@ namespace Unreal.Core
                         if (unknownField.Type.EndsWith("*") || unknownField.Type.StartsWith("TSubclassOf"))
                         {
                             type = "uint?";
-                            commandType = RepLayoutCmdType.Pointer;
+                            commandType = RepLayoutCmdType.PropertyObject;
                         }
                         else if (unknownField.Type.StartsWith("TEnumAsByte"))
                         {

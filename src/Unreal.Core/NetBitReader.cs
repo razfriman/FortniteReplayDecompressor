@@ -41,9 +41,28 @@ namespace Unreal.Core
             return ReadSingle();
         }
 
-        public void SerializePropertyName()
+        public string SerializePropertyName()
         {
-            // TODO StaticSerialzeName
+            var isHardcoded = ReadBoolean();
+            if (isHardcoded)
+            {
+                uint nameIndex;
+                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    nameIndex = ReadUInt32();
+                }
+                else
+                {
+                    nameIndex = ReadIntPacked();
+                }
+
+                return ((UnrealNames)nameIndex).ToString();
+            }
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+
+            return inString;
         }
 
         public string SerializePropertyString()
@@ -242,6 +261,7 @@ namespace Unreal.Core
             {
                 Value = ReadIntPacked()
             };
+
             return netGuid.Value;
 
             //if (!netGuid.IsValid())
