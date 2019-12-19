@@ -13,6 +13,8 @@ namespace FortniteReplayReader.Models
         public ICollection<SafeZone> SafeZones => _safeZones;
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
+        public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
+
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
 
@@ -222,7 +224,7 @@ namespace FortniteReplayReader.Models
                     {
                         playerActor.Locations.Add(new PlayerLocation
                         {
-                            Location = playerPawn.ReplicatedMovement.Location,
+                            RepLocation = playerPawn.ReplicatedMovement,
                             WorldTime = GameState.CurrentWorldTime,
                             LastUpdateTime = playerPawn.ReplayLastTransformUpdateTimeStamp
                         });

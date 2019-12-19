@@ -33,7 +33,9 @@ namespace FortniteReplayReader.Models
 
     public class PlayerLocation
     {
-        public FVector Location { get; set; }
+        public FVector Location => RepLocation?.Location;
+        public FRepMovement RepLocation { get; set; }
+
         public float? WorldTime { get; set; }
         public float? LastUpdateTime { get; set; }
     }
