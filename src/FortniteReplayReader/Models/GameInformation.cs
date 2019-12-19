@@ -112,7 +112,7 @@ namespace FortniteReplayReader.Models
             {
                 foreach(GameStateC flightPath in gameState.TeamFlightPaths)
                 {
-                    GameState.PlanePaths.Add(new Airplane
+                    GameState.BusPaths.Add(new Aircraft
                     {
                         FlightRotation = flightPath.FlightStartRotation,
                         FlightStartLocation = flightPath.FlightStartLocation
@@ -153,6 +153,7 @@ namespace FortniteReplayReader.Models
             newPlayer.StreamerMode = playerState.bUsingStreamerMode ?? newPlayer.StreamerMode;
             newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
             newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
+
             newPlayer.BannerId = playerState.IconId ?? newPlayer.BannerId;
             newPlayer.ColorId = playerState.ColorId ?? newPlayer.ColorId;
 

@@ -87,6 +87,7 @@ namespace ConsoleReader
 
                 totalTime += sw.ElapsedMilliseconds;
 
+                var a = replay.GameInformation.Players.OrderByDescending(x => x.Placement);
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");

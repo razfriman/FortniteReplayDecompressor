@@ -5,7 +5,7 @@ using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
-    public class Airplane
+    public class Aircraft
     {
         public FVector FlightStartLocation { get; set; }
         public FRotator FlightRotation { get; set; }

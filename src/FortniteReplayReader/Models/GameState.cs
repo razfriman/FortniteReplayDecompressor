@@ -32,7 +32,7 @@ namespace FortniteReplayReader.Models
         public int MaxPlayers { get; internal set; }
 
         public float AirCraftStartTime { get; internal set; }
-        public List<Airplane> PlanePaths { get; internal set; } = new List<Airplane>();
+        public List<Aircraft> BusPaths { get; internal set; } = new List<Aircraft>();
 
         public bool LargeTeamGame { get; internal set; }
         public int EventTournamentRound { get; internal set; }
