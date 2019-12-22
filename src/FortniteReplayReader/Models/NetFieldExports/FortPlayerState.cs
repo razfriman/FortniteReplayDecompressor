@@ -105,10 +105,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Ignore, 244, "ReplicatedTeamMemberState", "EReplicatedTeamMemberState", 4)]
 		public int? ReplicatedTeamMemberState { get; set; } //Type:  Bits: 4
 
-		[NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.Ignore, 249, "bHasEverSkydivedFromBus", "", 1)]
+		[NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.PropertyBool, 249, "bHasEverSkydivedFromBus", "", 1)]
 		public bool? bHasEverSkydivedFromBus { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.Ignore, 250, "bHasEverSkydivedFromBusAndLanded", "", 1)]
+		[NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.PropertyBool, 250, "bHasEverSkydivedFromBusAndLanded", "", 1)]
 		public bool? bHasEverSkydivedFromBusAndLanded { get; set; } //Type:  Bits: 1
 
 		[NetFieldExport("SquadListUpdateValue", RepLayoutCmdType.Ignore, 253, "SquadListUpdateValue", "int32", 32)]
@@ -153,7 +153,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("KillScore", RepLayoutCmdType.PropertyUInt32, 263, "KillScore", "int32", 32)]
 		public uint? KillScore { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("FinisherOrDowner", RepLayoutCmdType.Ignore, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
+		[NetFieldExport("FinisherOrDowner", RepLayoutCmdType.PropertyObject, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
 		public uint? FinisherOrDowner { get; set; } //Type: AFortPlayerStateAthena* Bits: 16
 
 		[NetFieldExport("SeasonLevelUIDisplay", RepLayoutCmdType.PropertyUInt32, 264, "SeasonLevelUIDisplay", "", 32)]

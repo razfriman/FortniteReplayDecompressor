@@ -158,9 +158,6 @@ namespace FortniteReplayReader.Models
             newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
             newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
 
-            newPlayer.BannerId = playerState.IconId ?? newPlayer.BannerId;
-            newPlayer.ColorId = playerState.ColorId ?? newPlayer.ColorId;
-
             if (playerState.TeamIndex != null)
             {
                 if(!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
@@ -173,7 +170,6 @@ namespace FortniteReplayReader.Models
                 team.Players.Add(newPlayer);
             }
 
-
             if (playerState.bResurrectingNow == true)
             {
                 _resurrections.Add(new PlayerReboot
@@ -182,7 +178,15 @@ namespace FortniteReplayReader.Models
                     WorldTime = GameState.CurrentWorldTime
                 });
             }
-            
+
+            if(playerState.bHasEverSkydivedFromBusAndLanded != null)
+            {
+                if(newPlayer.Locations.Count > 0)
+                {
+                    newPlayer.LandingLocation = newPlayer.Locations.Last();
+                }
+            }
+
             //Internal info
             newPlayer.WorldPlayerId = playerState.WorldPlayerId ?? newPlayer.WorldPlayerId;
 

@@ -21,11 +21,13 @@ namespace FortniteReplayReader.Models
         public bool StreamerMode { get; set; }
         public bool ThankedBusDriver { get; set; }
         public int Placement { get; set; }
-        public string ColorId { get; set; }
-        public string BannerId { get; set; }
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
+
+        /// <summary>
+        /// Last known location when player landed from bus
+        /// </summary>
         public PlayerLocation LandingLocation { get; set; }
 
         //Internal 
