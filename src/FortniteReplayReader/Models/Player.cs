@@ -26,6 +26,7 @@ namespace FortniteReplayReader.Models
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
+        public PlayerLocation LandingLocation { get; set; }
 
         //Internal 
         internal int WorldPlayerId { get; set; }
@@ -38,12 +39,5 @@ namespace FortniteReplayReader.Models
 
         public float? WorldTime { get; set; }
         public float? LastUpdateTime { get; set; }
-    }
-
-    public class PlayerStateChange
-    {
-        public bool WasDowned { get; set; }
-        public bool WasKilled { get; set; }
-        public float? WorldTime { get; set; }
     }
 }

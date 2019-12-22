@@ -14,6 +14,7 @@ namespace FortniteReplayReader.Models
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
+        public ICollection<PlayerReboot> Resurrections => _resurrections;
 
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
@@ -28,6 +29,7 @@ namespace FortniteReplayReader.Models
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
+        private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
 
         internal void UpdateLlama(uint channel, SupplyDropLlamaC supplyDropLlama)
         {
@@ -171,6 +173,16 @@ namespace FortniteReplayReader.Models
                 team.Players.Add(newPlayer);
             }
 
+
+            if (playerState.bResurrectingNow == true)
+            {
+                _resurrections.Add(new PlayerReboot
+                {
+                    Player = newPlayer,
+                    WorldTime = GameState.CurrentWorldTime
+                });
+            }
+            
             //Internal info
             newPlayer.WorldPlayerId = playerState.WorldPlayerId ?? newPlayer.WorldPlayerId;
 
@@ -229,6 +241,7 @@ namespace FortniteReplayReader.Models
                             LastUpdateTime = playerPawn.ReplayLastTransformUpdateTimeStamp
                         });
                     }
+
                     break;
             }
 

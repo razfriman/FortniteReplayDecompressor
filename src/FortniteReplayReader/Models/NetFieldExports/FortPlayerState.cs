@@ -189,8 +189,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ResurrectionExpirationTime", RepLayoutCmdType.PropertyFloat, 295, "ResurrectionExpirationTime", "float", 32)]
 		public float? ResurrectionExpirationTime { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyUInt32, 296, "ResurrectionExpirationLength", "", 32)]
-		public uint? ResurrectionExpirationLength { get; set; } //Type:  Bits: 32
+		[NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyFloat, 296, "ResurrectionExpirationLength", "", 32)]
+		public float? ResurrectionExpirationLength { get; set; } //Type:  Bits: 32
 
 		[NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore, 297, "WorldLocation", "", 96)]
 		public DebuggingObject WorldLocation { get; set; } //Type:  Bits: 96
