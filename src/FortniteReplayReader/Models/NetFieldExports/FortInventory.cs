@@ -17,7 +17,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
 		public object Role { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyUInt32, 49, "ReplayPawn", "", 16)]
+		[NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject, 49, "ReplayPawn", "", 16)]
 		public uint? ReplayPawn { get; set; } //Type:  Bits: 16
 
 	}

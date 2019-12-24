@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement, 5, "ReplicatedMovement", "FRepMovement", 102)]
         public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 102
 
-        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyUInt32, 6, "AttachParent", "", 16)]
+        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject, 6, "AttachParent", "", 16)]
         public uint? AttachParent { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100, 7, "LocationOffset", "", 35)]
@@ -30,7 +30,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator, 9, "RotationOffset", "", 51)]
         public FRotator RotationOffset { get; set; } //Type:  Bits: 51
 
-        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyUInt32, 11, "AttachComponent", "", 16)]
+        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject, 11, "AttachComponent", "", 16)]
         public uint? AttachComponent { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 0)]
@@ -90,7 +90,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray, 41, "GenericAttributeValues", "", 80)]
         public float[] GenericAttributeValues { get; set; } //Type:  Bits: 80
 
-        [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyUInt32, 73, "CombineTarget", "", 16)]
+        [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyObject, 73, "CombineTarget", "", 16)]
         public uint? CombineTarget { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("PickupTarget", RepLayoutCmdType.PropertyObject, 80, "PickupTarget", "AFortPawn*", 16)]

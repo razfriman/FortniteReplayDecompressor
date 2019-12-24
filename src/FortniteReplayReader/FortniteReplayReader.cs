@@ -16,7 +16,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader
 {
-    public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
+    public class ReplayReader : ReplayReader<FortniteReplay>
     {
         public int TotalPropertiesRead { get; private set; }
 
@@ -33,6 +33,9 @@ namespace FortniteReplayReader
             //Player info
             NetFieldParser.AddExportGroup(typeof(FortPlayerState));
             NetFieldParser.AddExportGroup(typeof(PlayerPawnC));
+            NetFieldParser.AddExportGroup(typeof(AIPlayerPawn));
+            NetFieldParser.AddExportGroup(typeof(FortPickup));
+            NetFieldParser.AddExportGroup(typeof(FortPickupCreative));
 
             //Game state
             NetFieldParser.AddExportGroup(typeof(GameStateC));
@@ -55,6 +58,7 @@ namespace FortniteReplayReader
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
             var replay = ReadReplay(archive, parseType);
+
             return replay;
         }
 
@@ -79,14 +83,27 @@ namespace FortniteReplayReader
 
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
+#if DEBUG
+            if(Replay.GameInformation.Channels == null)
+            {
+                Replay.GameInformation.Channels = Channels;
+            }
+#endif
+            //Used for weapon data and possibly other things
+            if (Replay.GameInformation.NetGUIDToPathName == null)
+            {
+                Replay.GameInformation.NetGUIDToPathName = GuidCache.NetGuidToPathName;
+            }
+
             ++TotalPropertiesRead;
+            Actor actor = Channels[channel].Actor;
+
+            Replay.GameInformation.AddActor(channel, actor);
 
             switch (exportGroup)
             {
                 case SupplyDropLlamaC llama:
                     Replay.GameInformation.UpdateLlama(channel, llama);
-                    break;
-                case SupplyDropBalloonC supplyDropBalloon: //Ignored by default
                     break;
                 case SupplyDropC supplyDrop:
                     Replay.GameInformation.UpdateSupplyDrop(channel, supplyDrop);
@@ -95,8 +112,6 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
-                    Actor actor = Channels[channel].Actor;
-
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, actor);
                     break;
                 case PlayerPawnC playerPawn:
@@ -105,9 +120,11 @@ namespace FortniteReplayReader
                         Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
                     }
                     break;
-                case FortPickup fortPickup: //Ignored by default
-                    break;
-                case FortInventory fortInventory: //No useful information
+                case FortPickup fortPickup:
+                    if(_parseType >= ParseType.Normal)
+                    {
+                        Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
+                    }
                     break;
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
@@ -190,9 +207,10 @@ namespace FortniteReplayReader
         protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
         {
             switch (exportGroup)
-            {
+            { 
                 case PlayerPawnC playerPawn:
                 case FortPlayerState playerState:
+                case FortPickup fortPickup:
                     if(_parseType >= ParseType.Normal)
                     {
                         return true;

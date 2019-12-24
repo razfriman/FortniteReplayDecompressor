@@ -14,5 +14,10 @@ namespace Unreal.Core.Models
         {
             Name = reader.SerializePropertyName();
         }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

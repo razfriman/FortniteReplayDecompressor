@@ -14,5 +14,6 @@ namespace Unreal.Core.Models
         public bool Broken { get; set; }
         public Actor Actor { get; set; }
         public bool? IgnoreChannel { get; set; }
+        public string Group { get; set; }
     }
 }

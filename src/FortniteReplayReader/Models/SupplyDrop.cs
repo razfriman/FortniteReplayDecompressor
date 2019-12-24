@@ -6,6 +6,6 @@ namespace FortniteReplayReader.Models
 {
     public class SupplyDrop : SearchableItem
     {
-        public bool BalloonPopped { get; set; }
+        public bool BalloonPopped { get; internal set; }
     }
 }

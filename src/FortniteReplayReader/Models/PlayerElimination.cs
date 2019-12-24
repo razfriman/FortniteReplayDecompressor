@@ -4,11 +4,11 @@ namespace FortniteReplayReader.Models
 {
     public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     {
-        public string Eliminated { get; set; }
-        public string Eliminator { get; set; }
-        public byte GunType { get; set; }
-        public string Time { get; set; }
-        public bool Knocked { get; set; }
+        public string Eliminated { get; internal set; }
+        public string Eliminator { get; internal set; }
+        public byte GunType { get; internal set; }
+        public string Time { get; internal set; }
+        public bool Knocked { get; internal set; }
 
         public bool Equals(PlayerElimination other)
         {

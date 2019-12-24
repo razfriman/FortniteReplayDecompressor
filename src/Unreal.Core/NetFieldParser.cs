@@ -161,7 +161,7 @@ namespace Unreal.Core
                     data = netBitReader.SerializePropertyBool();
                     break;
                 case RepLayoutCmdType.PropertyName:
-                    netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
+                    data = netBitReader.SerializePropertyName();
                     break;
                 case RepLayoutCmdType.PropertyFloat:
                     data = netBitReader.SerializePropertyFloat();
@@ -219,7 +219,7 @@ namespace Unreal.Core
                     data = netBitReader.ReadUInt32();
                     break;
                 case RepLayoutCmdType.PropertyVector:
-                    data = new FVector(netBitReader.ReadSingle(), netBitReader.ReadSingle(), netBitReader.ReadSingle());
+                    data = netBitReader.SerializePropertyVector();
                     break;
                 case RepLayoutCmdType.Ignore:
                     netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
@@ -647,6 +647,11 @@ namespace Unreal.Core
         public string Type { get; set; }
         public int BitCount { get; set; }
         public uint Handle { get; set; }
+
+        public override string ToString()
+        {
+            return PropertyName;
+        }
 
         public UnknownFieldInfo(string propertyname, string type, int bitCount, uint handle)
         {

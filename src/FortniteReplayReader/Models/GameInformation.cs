@@ -9,27 +9,41 @@ namespace FortniteReplayReader.Models
 {
     public class GameInformation
     {
+#if DEBUG
+        public UChannel[] Channels { get; internal set; }
+#endif
+
         public ICollection<Llama> Llamas => _llamas.Values;
         public ICollection<SafeZone> SafeZones => _safeZones;
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
         public ICollection<PlayerReboot> Resurrections => _resurrections;
+        public ICollection<InventoryItem> Items => _items.Values;
 
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
 
+        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
+        private Dictionary<uint, InventoryItem> _items = new Dictionary<uint, InventoryItem>();
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
-        private Dictionary<uint, Player> _fortPlayerStateGuids = new Dictionary<uint, Player>(); //NetGUID to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
+
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
         private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
+
+        internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
+
+        internal void AddActor(uint channel, Actor actor)
+        {
+            _actorToChannel.TryAdd(actor.ActorNetGUID.Value, channel);
+        }
 
         internal void UpdateLlama(uint channel, SupplyDropLlamaC supplyDropLlama)
         {
@@ -139,7 +153,6 @@ namespace FortniteReplayReader.Models
                 newPlayer = new Player();
 
                 _players.TryAdd(channelId, newPlayer);
-                _fortPlayerStateGuids.TryAdd(actor.ActorNetGUID.Value, newPlayer);
             }
 
             newPlayer.Actor = actor;
@@ -168,6 +181,7 @@ namespace FortniteReplayReader.Models
                 }
                 
                 team.Players.Add(newPlayer);
+                newPlayer.Team = team;
             }
 
             if (playerState.bResurrectingNow == true)
@@ -203,8 +217,10 @@ namespace FortniteReplayReader.Models
                 //Check for PlayerState
                 if(playerPawn.PlayerState != null)
                 {
-                    if(_fortPlayerStateGuids.TryGetValue(playerPawn.PlayerState.Value, out Player player))
+                    if (_actorToChannel.TryGetValue(playerPawn.PlayerState.Value, out uint playerStateChannel) && _players.TryGetValue(playerStateChannel, out Player player))
                     {
+                        _players.TryGetValue(playerStateChannel, out Player p);
+
                         _playerPawns.TryAdd(channelId, player);
                         actor = player;
                     }
@@ -250,6 +266,104 @@ namespace FortniteReplayReader.Models
             }
 
             //Currently only updating movement
+        }
+
+        private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();
+
+        internal void UpdateFortPickup(uint channelId, FortPickup pickup)
+        {
+            if(!_pickups.TryGetValue(channelId, out var asdfasd))
+            {
+                asdfasd = new List<FortPickup>();
+
+                _pickups.TryAdd(channelId, asdfasd);
+            }
+
+            asdfasd.Add(pickup);
+
+            bool isNewItem = !_items.TryGetValue(channelId, out InventoryItem newItem);
+
+            //Create a new item. Same channel seems to be used for multiple items. Dropped items can be on a different channel
+            if(pickup.ItemDefinition != null)
+            {
+                if (isNewItem || pickup.PickupTarget == null)
+                {
+                    newItem = new InventoryItem();
+                    _items[channelId] = newItem;
+                }
+            }
+
+            if (pickup.ItemDefinition != null)
+            {
+                if (NetGUIDToPathName.TryGetValue(pickup.ItemDefinition.Value, out string weaponPathName))
+                {
+                    newItem.ItemIdName = weaponPathName;
+                }
+            }
+
+            newItem.Channel = channelId;
+            newItem.ItemDefinition = pickup.ItemDefinition ?? newItem.ItemDefinition;
+            newItem.InitialPosition = pickup.LootInitialPosition ?? newItem.InitialPosition;
+            newItem.Count = pickup.Count ?? newItem.Count;
+            newItem.Level = pickup.Level ?? newItem.Level;
+            newItem.Ammo = pickup.LoadedAmmo ?? newItem.Ammo;
+
+            //Need to test if it's correct
+            if (pickup.CombineTarget != null)
+            {
+                if (_actorToChannel.TryGetValue(pickup.CombineTarget.Value, out uint actorChannel))
+                {
+                    if(_items.TryGetValue(actorChannel, out InventoryItem combinedItem))
+                    {
+                        newItem.CombineTarget = combinedItem;
+                    }
+                }
+            }
+
+            //Only handle weapons
+            if (newItem.ItemIdName.StartsWith("WID"))
+            {
+                //Item picked up
+                if (pickup.PickupTarget != null)
+                {
+                    if (_actorToChannel.TryGetValue(pickup.PickupTarget.Value, out uint actorChannel))
+                    {
+                        if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn playerPawn))
+                        {
+                            Player player = (Player)playerPawn;
+
+                            player.InventoryChanges.Add(new InventoryItemChange
+                            {
+                                Item = newItem,
+                                State = ItemChangeState.PickedUp,
+                                WorldTime = GameState.CurrentWorldTime,
+                            });
+
+                            newItem.CurrentOwner = player;
+                        }
+                    }
+                }
+                else if (pickup.PawnWhoDroppedPickup != null) //Item dropped
+                {
+                    if (_actorToChannel.TryGetValue(pickup.PawnWhoDroppedPickup.Value, out uint actorChannel))
+                    {
+                        if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn playerPawn))
+                        {
+                            Player player = (Player)playerPawn;
+
+                            player.InventoryChanges.Add(new InventoryItemChange
+                            {
+                                Item = newItem,
+                                State = ItemChangeState.Dropped,
+                                WorldTime = GameState.CurrentWorldTime,
+                            });
+
+                            newItem.CurrentOwner = null;
+                            newItem.LastDroppedBy = player;
+                        }
+                    }
+                }
+            }
         }
 
         private void HandleQueuedPlayerPawns(Player player)

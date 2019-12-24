@@ -4,6 +4,6 @@ namespace FortniteReplayReader.Models
 {
     public abstract class BaseEvent
     {
-        public EventInfo Info { get; set; }
+        public EventInfo Info { get; internal set; }
     }
 }

@@ -22,6 +22,8 @@ namespace Unreal.Core.Models
         public long? LongValue => Bytes.Length == 8 ? BitConverter.ToInt64(Bytes, 0) : new long?();
         public int? ByteValue => Bytes.Length == 1 ? Bytes[0] : new byte?();
         public string NetId => AsNetId();
+        public uint? PropertyObject => AsPropertyObject();
+
         public List<IProperty> PotentialProperties => AsPotentialPropeties();
         public List<DebuggingHandle> PossibleExport => AsExportHandle();
 
@@ -340,6 +342,20 @@ namespace Unreal.Core.Models
             }
 
             return possibleProperties;
+        }
+
+        private uint? AsPropertyObject()
+        {
+            _reader.Reset();
+
+            uint obj = _reader.SerializePropertyObject();
+
+            if (_reader.IsError || !_reader.AtEnd())
+            {
+                return null;
+            }
+
+            return obj;
         }
     }
 

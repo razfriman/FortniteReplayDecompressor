@@ -2,8 +2,8 @@
 {
     public class TeamStats : BaseEvent
     {
-        public uint Unknown { get; set; }
-        public uint Position { get; set; }
-        public uint TotalPlayers { get; set; }
+        public uint Unknown { get; internal set; }
+        public uint Position { get; internal set; }
+        public uint TotalPlayers { get; internal set; }
     }
 }

@@ -109,6 +109,11 @@ namespace Unreal.Core
             return new FVector2D(x, y);
         }
 
+        public FVector SerializePropertyVector()
+        {
+            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+        }
+
         /// <summary>
         /// NetSerialization.cpp 1858
         /// </summary>

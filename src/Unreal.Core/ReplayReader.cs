@@ -1476,6 +1476,8 @@ namespace Unreal.Core
                 return true;
             }
 
+            Channels[channelIndex].Group = group.PathName;
+
             if ((NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName)))
             {
                 return true;

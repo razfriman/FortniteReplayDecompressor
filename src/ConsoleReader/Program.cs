@@ -41,7 +41,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
             //var replayFile = "Replays/12-5.replay";
-            var replayFile = "Replays/season11.11.replay";
+           // var replayFile = "Replays/season11.11.replay";
+            //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
             //var replayFile = "Replays/creative.replay";
             //var replayFile = "Replays/season11.replay";
@@ -53,14 +54,16 @@ namespace ConsoleReader
             //var replayFile = "Replays/UnsavedReplay-2019.09.12-21.39.37.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.12.11-02.43.14.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.12.10-17.47.46.replay";
-           // var replayFile = "Replays/123.replay";
+            // var replayFile = "Replays/123.replay";
             //var replayFile = "Replays/WCReplay.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
-            //var replayFile = "Replays/creative.replay";
+            var replayFile = "Replays/creative3.replay";
 
             Stopwatch sw = new Stopwatch();
 
             long totalTime = 0;
+
+            NetFieldParser.IncludeOnlyMode = false;
 
             foreach (string path in Directory.GetFiles("Replays"))
             {
@@ -89,6 +92,12 @@ namespace ConsoleReader
                 totalTime += sw.ElapsedMilliseconds;
 
                 var a = replay.GameInformation.Players.OrderByDescending(x => x.Placement);
+
+
+                var asdf = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
+
+                var b = NetFieldParser.UnknownNetFields;
+                var c = b.Where(x => x.Key.ToLower().Contains("shield"));
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");
