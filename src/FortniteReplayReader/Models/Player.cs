@@ -23,6 +23,7 @@ namespace FortniteReplayReader.Models
         public bool ThankedBusDriver { get; internal set; }
         public int Placement { get; internal set; }
         public Team Team { get; internal set; }
+        public float LastDeathTime { get; internal set; }
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
@@ -36,6 +37,12 @@ namespace FortniteReplayReader.Models
 
                 foreach (InventoryItemChange itemChange in InventoryChanges)
                 {
+                    //Keeps the last inventory before death
+                    if(itemChange.WorldTime >= LastDeathTime)
+                    {
+                        continue;
+                    }
+
                     //Only care about weapon ids
                     if(!itemChange.Item.ItemIdName.StartsWith("WID"))
                     {

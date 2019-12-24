@@ -171,6 +171,11 @@ namespace FortniteReplayReader.Models
             newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
             newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
 
+            if(playerState.DeathCause != null)
+            {
+                newPlayer.LastDeathTime = GameState.CurrentWorldTime;
+            }
+
             if (playerState.TeamIndex != null)
             {
                 if(!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))

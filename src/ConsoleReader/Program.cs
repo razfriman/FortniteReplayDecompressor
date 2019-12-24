@@ -41,8 +41,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
             //var replayFile = "Replays/12-5.replay";
-           // var replayFile = "Replays/season11.11.replay";
-            //var replayFile = "Replays/tournament2.replay";
+            //var replayFile = "Replays/season11.11.replay";
+            var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
             //var replayFile = "Replays/creative.replay";
             //var replayFile = "Replays/season11.replay";
@@ -57,7 +57,7 @@ namespace ConsoleReader
             // var replayFile = "Replays/123.replay";
             //var replayFile = "Replays/WCReplay.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
-            var replayFile = "Replays/creative3.replay";
+            //var replayFile = "Replays/creative3.replay";
 
             Stopwatch sw = new Stopwatch();
 
