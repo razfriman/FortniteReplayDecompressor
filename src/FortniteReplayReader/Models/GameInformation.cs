@@ -275,7 +275,57 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateBatchedDamage(uint channelId, FortPlayerPawnBatchedDamage batchedDamage)
         {
-            _playerPawns.TryGetValue(channelId, out var pawn);
+            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn playerPawn))
+            {
+                //Shouldn't happen
+                return;
+            }
+
+            if(!(playerPawn is Player))
+            {
+                //Nothing else currently
+                return;
+            }
+
+            Player player = playerPawn as Player;
+
+            WeaponShot shot = new WeaponShot
+            {
+                ShotByPlayerPawn = player,
+                CriticalHitNonPlayer = batchedDamage.NonPlayerbIsCritical,
+                IsCritical = batchedDamage.bIsCritical,
+                FatalHitNonPlayer = batchedDamage.NonPlayerbIsFatal,
+                IsFatal = batchedDamage.bIsFatal,
+                WeaponActivate = batchedDamage.bWeaponActivate,
+                IsBallistic = batchedDamage.bIsBallistic,
+                IsShield = batchedDamage.bIsShield,
+                Location = batchedDamage.Location,
+                Magnitude = batchedDamage.Magnitude,
+                Normal = batchedDamage.Normal,
+                IsShieldDestroyed = batchedDamage.bIsShieldDestroyed,
+                WorldTime = GameState.CurrentWorldTime
+            };
+
+            if(batchedDamage.HitActor > 0)
+            {
+                if (_actorToChannel.TryGetValue(batchedDamage.HitActor, out uint actorChannel))
+                {
+
+                    if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn hitPlayerPawn))
+                    {
+                        shot.HitPlayerPawn = hitPlayerPawn;
+
+                        Player hitPlayer = hitPlayerPawn as Player;
+                        hitPlayer.DamageTaken.Add(shot);
+                    }
+                    else
+                    {
+                        //These are non player actors and other objects
+                    }
+                }
+            }
+
+            player.Shots.Add(shot);
         }
 
         private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();

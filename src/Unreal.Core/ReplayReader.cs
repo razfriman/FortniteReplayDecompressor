@@ -1444,14 +1444,12 @@ namespace Unreal.Core
                     continue;
                 }
 
-                var property = false;
-
                 //Find export group
                 bool function = GuidCache.GetNetFunctionGroup(fieldCache.Name, classNetCache.PathName, out NetFieldExportGroup exportGroup);
 
                 if (function)
                 {
-                    if(exportGroup == null)
+                    if (exportGroup == null)
                     {
                         _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
@@ -1465,15 +1463,14 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    if (property)
+                    continue; //Not implemented
+
+                    if (!ReceiveCustomDeltaProperty(reader))
                     {
-                        if (!ReceiveCustomDeltaProperty(reader))
-                        {
-                            //FieldCache->bIncompatible = true;
-                            continue;
-                        }
-                        // Successfully received it.
+                        //FieldCache->bIncompatible = true;
+                        continue;
                     }
+                    // Successfully received it.
                 }
 
                 /*

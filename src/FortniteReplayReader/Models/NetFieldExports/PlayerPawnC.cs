@@ -23,37 +23,37 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FVector Normal { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("Magnitude", RepLayoutCmdType.PropertyFloat, 0, "Magnitude", "", 1)]
-        public float? Magnitude { get; set; } //Type:  Bits: 1
+        public float Magnitude { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bWeaponActivate", RepLayoutCmdType.PropertyBool, 0, "bWeaponActivate", "", 1)]
-        public bool? bWeaponActivate { get; set; } //Type:  Bits: 1
+        public bool bWeaponActivate { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bIsFatal", RepLayoutCmdType.PropertyBool, 0, "bIsFatal", "", 1)]
-        public bool? bIsFatal { get; set; } //Type:  Bits: 1
+        public bool bIsFatal { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bIsCritical", RepLayoutCmdType.PropertyBool, 0, "bIsCritical", "", 1)]
-        public bool? bIsCritical { get; set; } //Type:  Bits: 1
+        public bool bIsCritical { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bIsShield", RepLayoutCmdType.PropertyBool, 0, "bIsShield", "", 1)]
-        public bool? bIsShield { get; set; } //Type:  Bits: 1
+        public bool bIsShield { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bIsShieldDestroyed", RepLayoutCmdType.PropertyBool, 0, "bIsShieldDestroyed", "", 1)]
-        public bool? bIsShieldDestroyed { get; set; } //Type:  Bits: 1
+        public bool bIsShieldDestroyed { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("bIsBallistic", RepLayoutCmdType.PropertyBool, 0, "bIsBallistic", "", 1)]
-        public bool? bIsBallistic { get; set; } //Type:  Bits: 1
+        public bool bIsBallistic { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("NonPlayerbIsFatal", RepLayoutCmdType.PropertyBool, 0, "NonPlayerbIsFatal", "", 1)]
-        public bool? NonPlayerbIsFatal { get; set; } //Type:  Bits: 1
+        public bool NonPlayerbIsFatal { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("NonPlayerbIsCritical", RepLayoutCmdType.PropertyBool, 0, "NonPlayerbIsCritical", "", 1)]
-        public bool? NonPlayerbIsCritical { get; set; } //Type:  Bits: 1
+        public bool NonPlayerbIsCritical { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("HitActor", RepLayoutCmdType.PropertyObject, 0, "HitActor", "", 1)]
-        public uint? HitActor { get; set; } //Type:  Bits: 1
+        public uint HitActor { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("NonPlayerHitActor", RepLayoutCmdType.PropertyObject, 0, "NonPlayerHitActor", "", 1)]
-        public uint? NonPlayerHitActor { get; set; } //Type:  Bits: 1
+        public uint NonPlayerHitActor { get; set; } //Type:  Bits: 1
     }
 
     [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]

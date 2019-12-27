@@ -24,6 +24,8 @@ namespace FortniteReplayReader.Models
         public int Placement { get; internal set; }
         public Team Team { get; internal set; }
         public float LastDeathTime { get; internal set; }
+        public List<WeaponShot> Shots { get; internal set; } = new List<WeaponShot>();
+        public List<WeaponShot> DamageTaken { get; internal set; } = new List<WeaponShot>();
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
@@ -80,7 +82,27 @@ namespace FortniteReplayReader.Models
         public FVector Location => RepLocation?.Location;
         public FRepMovement RepLocation { get; set; }
 
-        public float? WorldTime { get; set; }
+        public float WorldTime { get; set; }
         public float? LastUpdateTime { get; set; }
+    }
+
+    public class WeaponShot
+    {
+        public PlayerPawn ShotByPlayerPawn { get; set; }
+        public PlayerPawn HitPlayerPawn { get; set; }
+        public InventoryItem Weapon { get; set;}
+        public float WorldTime { get; set; }
+        public FVector Location { get; set; } 
+        public FVector Normal { get; set; }
+        public float Magnitude { get; set; }
+        public bool WeaponActivate { get; set; }
+        public bool IsFatal { get; set; }
+        public bool IsCritical { get; set; }
+        public bool IsShield { get; set; }
+        public bool IsShieldDestroyed { get; set; }
+        public bool IsBallistic { get; set; } 
+        public bool FatalHitNonPlayer { get; set; }
+        public bool CriticalHitNonPlayer { get; set; }
+        public bool HitPlayer => HitPlayerPawn != null;
     }
 }
