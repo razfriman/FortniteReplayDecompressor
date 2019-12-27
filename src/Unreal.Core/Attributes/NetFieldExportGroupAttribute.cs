@@ -6,10 +6,12 @@ namespace Unreal.Core.Attributes
     public sealed class NetFieldExportGroupAttribute : Attribute
     {
         public string Path { get; private set; }
+        public bool PartialGroup { get; private set; }
 
-        public NetFieldExportGroupAttribute(string path)
+        public NetFieldExportGroupAttribute(string path, bool partialGroup = false)
         {
             Path = path;
+            PartialGroup = partialGroup;
         }
     }
 }

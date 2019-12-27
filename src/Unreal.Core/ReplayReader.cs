@@ -1408,57 +1408,141 @@ namespace Unreal.Core
                 }
             }
 
-            //Disabled
-            /*
-            FBitArchive reader;
-            while (ReadFieldHeaderAndPayload(archive, netFieldExportGroup, out reader))
+            if (archive.AtEnd())
             {
-                _logger?.LogDebug($"RPCs to read for group {netFieldExportGroup.PathName} and numbits: {reader.GetBitsLeft()}");
+                return true;
+            }
 
-                //if (FieldCache == nullptr)
-                //{
-                //    UE_LOG(LogNet, Warning, TEXT("ReceivedBunch: FieldCache == nullptr: %s"), *Object->GetFullName());
-                //    continue;
-                //}
+            NetFieldExportGroup classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup.PathName);
 
-                //if (FieldCache->bIncompatible)
-                //{
-                //    // We've already warned about this property once, so no need to continue to do so
-                //    UE_LOG(LogNet, Verbose, TEXT("ReceivedBunch: FieldCache->bIncompatible == true. Object: %s, Field: %s"), *Object->GetFullName(), *FieldCache->Field->GetFName().ToString());
-                //    continue;
-                //}
+            if (classNetCache == null)
+            {
+                return false;
+            }
 
+            FBitArchive reader;
+            NetFieldExport fieldCache;
 
-                // Handle property
-                // if (UProperty * ReplicatedProp = Cast<UProperty>(FieldCache->Field))
-                // {
-                // We should only be receiving custom delta properties (since RepLayout handles the rest)
-                //if (!Retirement[ReplicatedProp->RepIndex].CustomDelta)
+            while (ReadFieldHeaderAndPayload(archive, classNetCache, out fieldCache, out reader))
+            {
+                if (fieldCache == null)
+                {
+                    _logger?.LogInformation($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
+                    continue;
+                }
 
-                //// Call PreNetReceive if we haven't yet
-                //if (!bHasReplicatedProperties)
-                //{
-                //    bHasReplicatedProperties = true;        // Persistent, not reset until PostNetReceive is called
-                //    PreNetReceive();
-                //}
+                if (fieldCache.Incompatible)
+                {
+                    // We've already warned about this property once, so no need to continue to do so
+                    _logger?.LogInformation($"ReceivedBunch: FieldCache->bIncompatible == true: {fieldCache.Name}");
+                    continue;
+                }
 
-                // // Receive array index (static sized array, i.e. MemberVariable[4])
-                // bunch.Archive.ReadIntPacked();
+                if (reader == null || reader.IsError)
+                {
+                    _logger?.LogInformation($"ReceivedBunch: reader == nullptr or IsError: {classNetCache.PathName}");
+                    continue;
+                }
 
-                // Call the custom delta serialize function to handle it
-                //CppStructOps->NetDeltaSerialize(Parms, Data);
+                var property = false;
 
-                // Successfully received it.
-                // }
-                //else
-                //{
-                // Handle function call
-                //Cast<UFunction>(FieldCache->Field)
-                //}
-            }*/
+                //Find export group
+                bool function = GuidCache.GetNetFunctionGroup(fieldCache.Name, classNetCache.PathName, out NetFieldExportGroup exportGroup);
 
+                if (function)
+                {
+                    if(exportGroup == null)
+                    {
+                        _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+
+                        return false;
+                    }
+
+                    if (!ReceivedRPC(reader, exportGroup, bunch.ChIndex))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (property)
+                    {
+                        if (!ReceiveCustomDeltaProperty(reader))
+                        {
+                            //FieldCache->bIncompatible = true;
+                            continue;
+                        }
+                        // Successfully received it.
+                    }
+                }
+
+                /*
+                else
+                {
+                    _logger?.LogWarning($"ReceivedBunch: Invalid replicated field {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                    return false;
+                }*/
+            }
 
             return true;
+        }
+
+        protected virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup netFieldExportGroup, uint channelIndex)
+        {
+            ReceiveProperties(reader, netFieldExportGroup, channelIndex);
+
+            if (reader.IsError)
+            {
+                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true");
+                return false;
+            }
+
+            if (!reader.AtEnd())
+            {
+                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read.");
+                return false;
+            }
+
+            return true;
+        }
+
+        protected virtual bool ReceiveCustomDeltaProperty(FBitArchive reader)
+        {
+            if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
+            {
+                // bSupportsFastArrayDeltaStructSerialization
+                reader.ReadBit();
+            }
+
+            // Receive array index (static sized array, i.e. MemberVariable[4])
+            //if (Property->ArrayDim != 1)
+
+            // We should only be receiving custom delta properties (since RepLayout handles the rest)
+            //if (!EnumHasAnyFlags(Parent.Flags, ERepParentFlags::IsCustomDelta))
+
+            if (NetDeltaSerialize(reader))
+            {
+                //if (UNLIKELY(Params.Reader->IsError()))
+                //{
+                //    UE_LOG(LogNet, Error, TEXT("FRepLayout::ReceiveCustomDeltaProperty: NetDeltaSerialize - Reader.IsError() == true. Property: %s, Object: %s"), *Params.DebugName, *Params.Object->GetFullName());
+                //    return false;
+                //}
+                //if (UNLIKELY(Params.Reader->GetBitsLeft() != 0))
+                //{
+                //    UE_LOG(LogNet, Error, TEXT("FRepLayout::ReceiveCustomDeltaProperty: NetDeltaSerialize - Mismatch read. Property: %s, Object: %s"), *Params.DebugName, *Params.Object->GetFullName());
+                //    return false;
+                //}
+
+                // Successfully received it.
+                return true;
+            }
+
+            return false;
+        }
+
+        protected virtual bool NetDeltaSerialize(FBitArchive reader)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -1600,13 +1684,6 @@ namespace Unreal.Core
         /// <returns></returns>
         protected virtual bool ReadFieldHeaderAndPayload(FBitArchive bunch, NetFieldExportGroup group, out NetFieldExport outField, out FBitArchive reader)
         {
-            if (bunch.AtEnd())
-            {
-                reader = null;
-                outField = null;
-                return false;
-            }
-
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
             var netFieldExportHandle = bunch.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
             if (bunch.IsError)

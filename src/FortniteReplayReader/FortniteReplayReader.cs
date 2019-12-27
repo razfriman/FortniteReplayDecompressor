@@ -36,6 +36,7 @@ namespace FortniteReplayReader
             NetFieldParser.AddExportGroup(typeof(AIPlayerPawn));
             NetFieldParser.AddExportGroup(typeof(FortPickup));
             NetFieldParser.AddExportGroup(typeof(FortPickupCreative));
+            NetFieldParser.AddExportGroup(typeof(Weapon));
 
             //Game state
             NetFieldParser.AddExportGroup(typeof(GameStateC));
@@ -129,6 +130,31 @@ namespace FortniteReplayReader
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
                     break;
+                case Weapon weapon:
+
+                    break;
+                case FortPlayerPawnBatchedDamage batchedDamage:
+                    Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
+                    break;
+            }
+        }
+
+        protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
+        {
+            switch (exportGroup)
+            { 
+                case PlayerPawnC playerPawn:
+                case FortPlayerState playerState:
+                case FortPickup fortPickup:
+                case Weapon weapon:
+                    if(_parseType >= ParseType.Normal)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                default:
+                    return true;
             }
         }
 
@@ -204,23 +230,6 @@ namespace FortniteReplayReader
             throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
         }
 
-        protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
-        {
-            switch (exportGroup)
-            { 
-                case PlayerPawnC playerPawn:
-                case FortPlayerState playerState:
-                case FortPickup fortPickup:
-                    if(_parseType >= ParseType.Normal)
-                    {
-                        return true;
-                    }
-
-                    return false;
-                default:
-                    return true;
-            }
-        }
 
         protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
         {

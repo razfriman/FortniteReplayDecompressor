@@ -17,6 +17,8 @@ namespace Unreal.Core.Models
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
+        private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
+        private Dictionary<string, List<NetFieldExportGroup>> _classNetFunctionProperties = new Dictionary<string, List<NetFieldExportGroup>>();
 
         public void ClearCache()
         {
@@ -90,6 +92,47 @@ namespace Unreal.Core.Models
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
             NetFieldExportGroupMap[group] = exportGroup;
+
+            int index = group.LastIndexOf(':');
+
+            if (index > -1)
+            {
+                string property = group.Substring(index + 1);
+
+                if (!_classNetFunctionProperties.TryGetValue(property, out List<NetFieldExportGroup> groups))
+                {
+                    groups = new List<NetFieldExportGroup>();
+
+                    _classNetFunctionProperties.TryAdd(property, groups);
+                }
+
+                groups.Add(exportGroup);
+            }
+        }
+
+        //Returns whether or not it's a function
+        public bool GetNetFunctionGroup(string property, string path, out NetFieldExportGroup export)
+        {
+            export = null;
+
+            //Not a function
+            if(!_classNetFunctionProperties.TryGetValue(property, out List<NetFieldExportGroup> groups))
+            {
+                return false;
+            }
+
+            //Easy enough
+            if(groups.Count == 1)
+            {
+                export = groups.First();
+
+                return true;
+            }
+            else //Attempt to guess the corrent export group
+            {
+                //TODO
+                return true;
+            }
         }
 
         public NetFieldExportGroup GetNetFieldExportGroup(Actor actor, out string testPath)
@@ -115,6 +158,7 @@ namespace Unreal.Core.Models
 
                 if(isActor)
                 {
+
                     //The default types never end up here.
                     return null;
 
@@ -163,6 +207,22 @@ namespace Unreal.Core.Models
             {
                 return _archTypeToExportGroup[guid.Value];
             }
+        }
+
+        public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
+        {
+            if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
+            {
+                classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                _cleanedClassNetCache[group] = classNetCachePath;
+            }
+
+            if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
+            {
+                return default;
+            }
+
+            return NetFieldExportGroupMap[classNetCachePath];
         }
 
         public string RemoveAllPathPrefixes(string path)

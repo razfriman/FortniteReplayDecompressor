@@ -273,6 +273,11 @@ namespace FortniteReplayReader.Models
             //Currently only updating movement
         }
 
+        internal void UpdateBatchedDamage(uint channelId, FortPlayerPawnBatchedDamage batchedDamage)
+        {
+            _playerPawns.TryGetValue(channelId, out var pawn);
+        }
+
         private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();
 
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
