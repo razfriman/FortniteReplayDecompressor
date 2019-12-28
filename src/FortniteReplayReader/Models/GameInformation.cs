@@ -347,7 +347,7 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePoiManager(FortPoiManager poiManager, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(networkGameplayTagNode == null)
+            if(networkGameplayTagNode == null || poiManager.PoiTagContainerTable == null)
             {
                 return;
             }

@@ -1425,7 +1425,7 @@ namespace Unreal.Core
                 // if ENABLE_PROPERTY_CHECKSUMS
                 //var doChecksum = archive.ReadBit();
 
-                if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
+                if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex, out INetFieldExportGroup export))
                 {
                     return false;
                 }
@@ -1443,10 +1443,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            FBitArchive reader;
-            NetFieldExport fieldCache;
-
-            while (ReadFieldHeaderAndPayload(archive, classNetCache, out fieldCache, out reader))
+            while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport fieldCache, out FBitArchive reader))
             {
                 if (fieldCache == null)
                 {
@@ -1464,6 +1461,11 @@ namespace Unreal.Core
                 if (reader == null || reader.IsError)
                 {
                     _logger?.LogInformation($"ReceivedBunch: reader == nullptr or IsError: {classNetCache.PathName}");
+                    continue;
+                }
+
+                if (reader.AtEnd())
+                {
                     continue;
                 }
 
@@ -1486,19 +1488,12 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    if(classNetCache.PathName.Contains("FortInventory"))
-                    {
-                        var a = Channels[bunch.ChIndex];
-                    }
-
-                    //Requires custom struct parsing?
-                    //continue;
-
-                    if (!ReceiveCustomDeltaProperty(reader))
+                    if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
                     {
                         //FieldCache->bIncompatible = true;
                         continue;
                     }
+
                     // Successfully received it.
                 }
             }
@@ -1508,7 +1503,7 @@ namespace Unreal.Core
 
         protected virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup netFieldExportGroup, uint channelIndex)
         {
-            ReceiveProperties(reader, netFieldExportGroup, channelIndex);
+            ReceiveProperties(reader, netFieldExportGroup, channelIndex, out INetFieldExportGroup export);
 
             if (reader.IsError)
             {
@@ -1525,37 +1520,21 @@ namespace Unreal.Core
             return true;
         }
 
-        protected virtual bool ReceiveCustomDeltaProperty(FBitArchive reader)
+        protected virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
         {
+            bool bSupportsFastArrayDeltaStructSerialization = false;
+
             if (Replay.Header.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
             {
                 // bSupportsFastArrayDeltaStructSerialization
-                reader.ReadBit();
+                bSupportsFastArrayDeltaStructSerialization = reader.ReadBit();
             }
 
-            // Receive array index (static sized array, i.e. MemberVariable[4])
-            //if (Property->ArrayDim != 1)
+            //Need to figure out which properties require this
+            //var staticArrayIndex = reader.ReadIntPacked();
 
-            // We should only be receiving custom delta properties (since RepLayout handles the rest)
-            //if (!EnumHasAnyFlags(Parent.Flags, ERepParentFlags::IsCustomDelta))
-
-            //if (Property->ArrayDim != 1) ?
-
-            var staticArrayIndex = reader.ReadIntPacked();
-
-            if (NetDeltaSerialize(reader))
+            if (NetDeltaSerialize(reader, bSupportsFastArrayDeltaStructSerialization, netFieldExportGroup, handle, channelIndex))
             {
-                //if (UNLIKELY(Params.Reader->IsError()))
-                //{
-                //    UE_LOG(LogNet, Error, TEXT("FRepLayout::ReceiveCustomDeltaProperty: NetDeltaSerialize - Reader.IsError() == true. Property: %s, Object: %s"), *Params.DebugName, *Params.Object->GetFullName());
-                //    return false;
-                //}
-                //if (UNLIKELY(Params.Reader->GetBitsLeft() != 0))
-                //{
-                //    UE_LOG(LogNet, Error, TEXT("FRepLayout::ReceiveCustomDeltaProperty: NetDeltaSerialize - Mismatch read. Property: %s, Object: %s"), *Params.DebugName, *Params.Object->GetFullName());
-                //    return false;
-                //}
-
                 // Successfully received it.
                 return true;
             }
@@ -1563,10 +1542,70 @@ namespace Unreal.Core
             return false;
         }
 
-        protected virtual bool NetDeltaSerialize(FBitArchive reader)
+        protected virtual bool NetDeltaSerialize(FBitArchive reader, bool bSupportsFastArrayDeltaStructSerialization, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
         {
-            return false;
-            //throw new NotImplementedException();
+            if(!bSupportsFastArrayDeltaStructSerialization)
+            {
+                //No support for now
+                return false;
+            }
+
+            FFastArraySerializerHeader header = ReadDeltaHeader(reader);
+
+            for (int i = 0; i < header.NumDeleted; i++)
+            {
+                int elementIndex = reader.ReadInt32();
+
+                OnNetDeltaRead(new NetDeltaUpdate
+                {
+                    Deleted = true,
+                    ChannelIndex = channelIndex,
+                    ElementIndex = elementIndex,
+                    ExportGroup = netFieldExportGroup,
+                    Handle = handle,
+                    Header = header
+                });
+            }
+
+            for (int i = 0; i < header.NumChanged; i++)
+            {
+                int elementIndex = reader.ReadInt32();
+
+                //Need to convert the field cache (netFieldExportGroup[handle]) to appropriate exportGroup
+                if (ReceiveProperties(reader, netFieldExportGroup, channelIndex, out INetFieldExportGroup export, false))
+                {
+                    OnNetDeltaRead(new NetDeltaUpdate
+                    {
+                        ChannelIndex = channelIndex,
+                        ElementIndex = elementIndex,
+                        Export = export,
+                        ExportGroup = netFieldExportGroup,
+                        Handle = handle,
+                        Header = header
+                    });
+                }
+            }
+
+            if(reader.IsError || !reader.AtEnd())
+            {
+                _logger?.LogWarning($"Failed to read DeltaSerialize {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private FFastArraySerializerHeader ReadDeltaHeader(FBitArchive reader)
+        {
+            FFastArraySerializerHeader header = new FFastArraySerializerHeader();
+
+            header.ArrayReplicationKey = reader.ReadInt32();
+            header.BaseReplicationKey = reader.ReadInt32();
+            header.NumDeleted = reader.ReadInt32();
+            header.NumChanged = reader.ReadInt32();
+
+            return header;
         }
 
         /// <summary>
@@ -1575,8 +1614,10 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
+        protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup outExport, bool readChecksumBit = true)
         {
+            outExport = null;
+
             ++TotalGroupsRead;
 
             if(Channels[channelIndex].IgnoreChannel == true)
@@ -1585,16 +1626,21 @@ namespace Unreal.Core
             }
 
             Channels[channelIndex].Group = group.PathName;
-
+            
             if ((NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName)))
             {
                 return true;
             }
 
-            var doChecksum = archive.ReadBit();
+            if (readChecksumBit)
+            {
+                var doChecksum = archive.ReadBit();
+            }
+
             //Debug("types", $"\n{group.PathName}");
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
+            outExport = exportGroup;
 
             bool hasData = false;
 
@@ -1688,7 +1734,8 @@ namespace Unreal.Core
 
             }
 
-            if (hasData)
+            //Delta updates skips the function that reads the checksum bits. Those will be updated differently
+            if (hasData && readChecksumBit)
             {
                 OnExportRead(channelIndex, exportGroup);
             }
@@ -2147,6 +2194,7 @@ namespace Unreal.Core
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
+        protected abstract void OnNetDeltaRead(NetDeltaUpdate deltaUpdate);
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);
     }

@@ -9,133 +9,133 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Script/FortniteGame.FortPickupAthena")]
     public class FortPickup : INetFieldExportGroup
     {
-        [NetFieldExport("bReplicateMovement", RepLayoutCmdType.PropertyBool, 1, "bReplicateMovement", "uint8", 1)]
+        [NetFieldExport("bReplicateMovement", RepLayoutCmdType.PropertyBool)]
         public bool? bReplicateMovement { get; set; } //Type: uint8 Bits: 1
 
-        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
+        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement, 5, "ReplicatedMovement", "FRepMovement", 102)]
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
         public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 102
 
-        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject, 6, "AttachParent", "", 16)]
+        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject)]
         public uint? AttachParent { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100, 7, "LocationOffset", "", 35)]
+        [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
         public FVector LocationOffset { get; set; } //Type:  Bits: 35
 
-        [NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100, 8, "RelativeScale3D", "", 23)]
+        [NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100)]
         public FVector RelativeScale3D { get; set; } //Type:  Bits: 23
 
-        [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator, 9, "RotationOffset", "", 51)]
+        [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator)]
         public FRotator RotationOffset { get; set; } //Type:  Bits: 51
 
-        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject, 11, "AttachComponent", "", 16)]
+        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject)]
         public uint? AttachComponent { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 0)]
+        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]
         public uint? Owner { get; set; } //Type: AActor* Bits: 0
 
-        [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
+        [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public object Role { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("bRandomRotation", RepLayoutCmdType.PropertyBool, 15, "bRandomRotation", "bool", 1)]
+        [NetFieldExport("bRandomRotation", RepLayoutCmdType.PropertyBool)]
         public bool? bRandomRotation { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("Count", RepLayoutCmdType.PropertyInt, 16, "Count", "int32", 32)]
+        [NetFieldExport("Count", RepLayoutCmdType.PropertyInt)]
         public int? Count { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject, 17, "ItemDefinition", "UFortItemDefinition*", 16)]
+        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject)]
         public uint? ItemDefinition { get; set; } //Type: UFortItemDefinition* Bits: 16
 
-        [NetFieldExport("Durability", RepLayoutCmdType.PropertyFloat, 18, "Durability", "float", 32)]
+        [NetFieldExport("Durability", RepLayoutCmdType.PropertyFloat)]
         public float? Durability { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("Level", RepLayoutCmdType.PropertyInt, 19, "Level", "int32", 32)]
+        [NetFieldExport("Level", RepLayoutCmdType.PropertyInt)]
         public int? Level { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("LoadedAmmo", RepLayoutCmdType.PropertyInt, 20, "LoadedAmmo", "int32", 32)]
+        [NetFieldExport("LoadedAmmo", RepLayoutCmdType.PropertyInt)]
         public int? LoadedAmmo { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("A", RepLayoutCmdType.PropertyInt, 25, "A", "int32", 32)]
+        [NetFieldExport("A", RepLayoutCmdType.PropertyInt)]
         public int? A { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("B", RepLayoutCmdType.PropertyInt, 26, "B", "int32", 32)]
+        [NetFieldExport("B", RepLayoutCmdType.PropertyInt)]
         public int? B { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("C", RepLayoutCmdType.PropertyInt, 27, "C", "int32", 32)]
+        [NetFieldExport("C", RepLayoutCmdType.PropertyInt)]
         public int? C { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("D", RepLayoutCmdType.PropertyInt, 28, "D", "int32", 32)]
+        [NetFieldExport("D", RepLayoutCmdType.PropertyInt)]
         public int? D { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("bUpdateStatsOnCollection", RepLayoutCmdType.PropertyBool, 29, "bUpdateStatsOnCollection", "", 1)]
+        [NetFieldExport("bUpdateStatsOnCollection", RepLayoutCmdType.PropertyBool)]
         public bool? bUpdateStatsOnCollection { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("bIsDirty", RepLayoutCmdType.PropertyBool, 31, "bIsDirty", "bool", 1)]
+        [NetFieldExport("bIsDirty", RepLayoutCmdType.PropertyBool)]
         public bool? bIsDirty { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray, 34, "StateValues", "TArray", 343)]
+        [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray)]
         public FortPickup[] StateValues { get; set; } //Type: TArray Bits: 343
 
-        [NetFieldExport("StateType", RepLayoutCmdType.Ignore, 34, "StateType", "", 0)]
+        [NetFieldExport("StateType", RepLayoutCmdType.Ignore)]
         public DebuggingObject StateType { get; set; } //Type:  Bits: 0
 
-        [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt, 35, "IntValue", "int32", 0)]
+        [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt)]
         public int? IntValue { get; set; } //Type: int32 Bits: 0
 
-        [NetFieldExport("NameValue", RepLayoutCmdType.Property, 36, "NameValue", "FName", 0)]
+        [NetFieldExport("NameValue", RepLayoutCmdType.Property)]
         public FName NameValue { get; set; } //Type: FName Bits: 0
 
-        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray, 41, "GenericAttributeValues", "", 80)]
+        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray)]
         public float[] GenericAttributeValues { get; set; } //Type:  Bits: 80
 
-        [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyObject, 73, "CombineTarget", "", 16)]
+        [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyObject)]
         public uint? CombineTarget { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("PickupTarget", RepLayoutCmdType.PropertyObject, 80, "PickupTarget", "AFortPawn*", 16)]
+        [NetFieldExport("PickupTarget", RepLayoutCmdType.PropertyObject)]
         public uint? PickupTarget { get; set; } //Type: AFortPawn* Bits: 16
 
-        [NetFieldExport("ItemOwner", RepLayoutCmdType.PropertyObject, 82, "ItemOwner", "AFortPawn*", 8)]
+        [NetFieldExport("ItemOwner", RepLayoutCmdType.PropertyObject)]
         public uint? ItemOwner { get; set; } //Type: AFortPawn* Bits: 8
 
-        [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10, 83, "LootInitialPosition", "FVector_NetQuantize10", 71)]
+        [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10)]
         public FVector LootInitialPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
-        [NetFieldExport("LootFinalPosition", RepLayoutCmdType.PropertyVector10, 84, "LootFinalPosition", "FVector_NetQuantize10", 71)]
+        [NetFieldExport("LootFinalPosition", RepLayoutCmdType.PropertyVector10)]
         public FVector LootFinalPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
-        [NetFieldExport("FlyTime", RepLayoutCmdType.PropertyFloat, 85, "FlyTime", "float", 32)]
+        [NetFieldExport("FlyTime", RepLayoutCmdType.PropertyFloat)]
         public float? FlyTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("StartDirection", RepLayoutCmdType.PropertyVectorNormal, 86, "StartDirection", "FVector_NetQuantizeNormal", 48)]
+        [NetFieldExport("StartDirection", RepLayoutCmdType.PropertyVectorNormal)]
         public FVector StartDirection { get; set; } //Type: FVector_NetQuantizeNormal Bits: 48
 
-        [NetFieldExport("FinalTossRestLocation", RepLayoutCmdType.PropertyVector10, 87, "FinalTossRestLocation", "FVector_NetQuantize10", 71)]
+        [NetFieldExport("FinalTossRestLocation", RepLayoutCmdType.PropertyVector10)]
         public FVector FinalTossRestLocation { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
-        [NetFieldExport("TossState", RepLayoutCmdType.Enum, 88, "TossState", "EFortPickupTossState", 2)]
+        [NetFieldExport("TossState", RepLayoutCmdType.Enum)]
         public int? TossState { get; set; } //Type: EFortPickupTossState Bits: 2
 
-        [NetFieldExport("bCombinePickupsWhenTossCompletes", RepLayoutCmdType.PropertyBool, 88, "bCombinePickupsWhenTossCompletes", "", 1)]
+        [NetFieldExport("bCombinePickupsWhenTossCompletes", RepLayoutCmdType.PropertyBool)]
         public bool? bCombinePickupsWhenTossCompletes { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("OptionalOwnerID", RepLayoutCmdType.PropertyInt, 90, "OptionalOwnerID", "int32", 32)]
+        [NetFieldExport("OptionalOwnerID", RepLayoutCmdType.PropertyInt)]
         public int? OptionalOwnerID { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("bPickedUp", RepLayoutCmdType.PropertyBool, 91, "bPickedUp", "bool", 1)]
+        [NetFieldExport("bPickedUp", RepLayoutCmdType.PropertyBool)]
         public bool? bPickedUp { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("bTossedFromContainer", RepLayoutCmdType.PropertyBool, 92, "bTossedFromContainer", "bool", 1)]
+        [NetFieldExport("bTossedFromContainer", RepLayoutCmdType.PropertyBool)]
         public bool? bTossedFromContainer { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("bServerStoppedSimulation", RepLayoutCmdType.PropertyBool, 94, "bServerStoppedSimulation", "bool", 1)]
+        [NetFieldExport("bServerStoppedSimulation", RepLayoutCmdType.PropertyBool)]
         public bool? bServerStoppedSimulation { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("ServerImpactSoundFlash", RepLayoutCmdType.PropertyByte, 95, "ServerImpactSoundFlash", "uint8", 8)]
+        [NetFieldExport("ServerImpactSoundFlash", RepLayoutCmdType.PropertyByte)]
         public byte? ServerImpactSoundFlash { get; set; } //Type: uint8 Bits: 8
 
-        [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.PropertyObject, 96, "PawnWhoDroppedPickup", "AFortPawn*", 8)]
+        [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.PropertyObject)]
         public uint? PawnWhoDroppedPickup { get; set; } //Type: AFortPawn* Bits: 8
     }
 }

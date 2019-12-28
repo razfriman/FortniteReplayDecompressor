@@ -89,9 +89,15 @@ namespace FortniteReplayReader
             Replay.GameInformation.AddActor(channel, actor);
         }
 
+        protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
+        {
+
+        }
+
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
 #if DEBUG
+            ++TotalPropertiesRead;
             if(Replay.GameInformation.Channels == null)
             {
                 Replay.GameInformation.Channels = Channels;
@@ -104,8 +110,6 @@ namespace FortniteReplayReader
             }
 
             Actor actor = Channels[channel].Actor;
-
-            ++TotalPropertiesRead;
 
             switch (exportGroup)
             {

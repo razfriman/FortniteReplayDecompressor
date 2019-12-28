@@ -22,17 +22,21 @@ namespace Unreal.Core
         public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
 
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        //private static Dictionary<Type, NetFieldGroupInfo> _netFieldGroupInfo = new Dictionary<Type, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
+        private static Dictionary<string, NetCacheFieldGroupInfo> _netCacheTypes = new Dictionary<string, NetCacheFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
+        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+
+#if DEBUG
         public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
 
         public static bool HasNewNetFields => UnknownNetFields.Count > 0;
-
-        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+#endif
 
         static NetFieldParser()
         {
-            IEnumerable<Type> netFields = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
+            Assembly[] currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            IEnumerable<Type> netFields = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (Type type in netFields)
             {
@@ -61,6 +65,24 @@ namespace Unreal.Core
                 }
             }
 
+            //Class net cache
+            IEnumerable<Type> netCache = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<ClassNetCacheAttribute>() != null);
+
+            foreach (Type type in netCache)
+            {
+                ClassNetCacheAttribute attribute = type.GetCustomAttribute<ClassNetCacheAttribute>();
+                NetCacheFieldGroupInfo info = new NetCacheFieldGroupInfo();
+
+                _netCacheTypes[attribute.PathName] = info;
+
+                foreach (PropertyInfo property in type.GetProperties())
+                {
+                    ClassNetCachePropertyAttribute propertyAttribute = property.GetCustomAttribute<ClassNetCachePropertyAttribute>();
+
+                    info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute.TypePathName);
+                }
+            }
+
             //Type layout for dynamic arrays
             _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
             _primitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
@@ -72,7 +94,7 @@ namespace Unreal.Core
             _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
             _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
 
-            IEnumerable<Type> iPropertyTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+            IEnumerable<Type> iPropertyTypes = currentAssemblies.SelectMany(x => x.GetTypes())
                 .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
 
             //Allows deserializing IProperty type arrays
@@ -112,8 +134,9 @@ namespace Unreal.Core
 
             if (!_netFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
             {
+#if DEBUG
                 AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-
+#endif
                 return;
             }
 
@@ -121,28 +144,13 @@ namespace Unreal.Core
 
             if (!netGroupInfo.Properties.ContainsKey(fixedExportName))
             {
+#if DEBUG
                 AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-
+#endif
                 return;
             }
 
             NetFieldInfo netFieldInfo = netGroupInfo.Properties[fixedExportName];
-
-            //Update if it finds a higher bit count or an actual type
-            if (!String.IsNullOrEmpty(export.Type))
-            {
-                if (String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
-            }
-            /*else if(netFieldInfo.Attribute.Info.BitCount < netBitReader.GetBitsLeft())
-            {
-                if(String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
-            }*/
 
             SetType(obj, netType, netFieldInfo, netGroupInfo, exportGroup, netBitReader);
         }
@@ -201,19 +209,17 @@ namespace Unreal.Core
                 case RepLayoutCmdType.Enum:
                     data = netBitReader.SerializeEnum();
                     break;
-                //Auto generation fix to handle 1-8 bits
                 case RepLayoutCmdType.PropertyByte:
                     data = (byte)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
                     break;
-                //Auto generation fix to handle 1-32 bits. 
                 case RepLayoutCmdType.PropertyInt:
-                    data = netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadInt32();
                     break;
                 case RepLayoutCmdType.PropertyUInt64:
                     data = netBitReader.ReadUInt64();
                     break;
                 case RepLayoutCmdType.PropertyUInt16:
-                    data = (ushort)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadUInt16();
                     break;
                 case RepLayoutCmdType.PropertyUInt32:
                     data = netBitReader.ReadUInt32();
@@ -222,7 +228,7 @@ namespace Unreal.Core
                     data = netBitReader.SerializePropertyVector();
                     break;
                 case RepLayoutCmdType.Ignore:
-                    netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
+                    netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
             }
 
@@ -367,10 +373,9 @@ namespace Unreal.Core
             }
 
             return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
-
-            //return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
         }
 
+#if DEBUG
         public static void GenerateFiles(string directory)
         {
             if (Directory.Exists(directory))
@@ -578,6 +583,7 @@ namespace Unreal.Core
                 File.WriteAllText(Path.Combine(directory, fileName) + ".cs", cSharpFile);
             }
         }
+#endif
 
         private static unsafe string FixInvalidNames(string str)
         {
@@ -603,6 +609,7 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
+#if DEBUG
         private static void AddUnknownField(string group, UnknownFieldInfo fieldInfo)
         {
             HashSet<UnknownFieldInfo> fields = new HashSet<UnknownFieldInfo>();
@@ -627,6 +634,7 @@ namespace Unreal.Core
             fields.Add(new UnknownFieldInfo(exportName, exportType, netBitReader.GetBitsLeft(), handle));
 
         }
+#endif
 
         private class NetFieldGroupInfo
         {
@@ -638,6 +646,11 @@ namespace Unreal.Core
         {
             public NetFieldExportAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
+        }
+
+        private class NetCacheFieldGroupInfo
+        {
+            public Dictionary<string, string> PathNames { get; set; } = new Dictionary<string, string>();
         }
     }
 

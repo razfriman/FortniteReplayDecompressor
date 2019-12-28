@@ -8,16 +8,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
 	[NetFieldExportGroup("/Script/FortniteGame.FortInventory")]
 	public class FortInventory : INetFieldExportGroup
 	{
-		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
+		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
 		public object RemoteRole { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 8)]
+		[NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]
 		public uint? Owner { get; set; } //Type: AActor* Bits: 8
 
-		[NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
+		[NetFieldExport("Role", RepLayoutCmdType.Ignore)]
 		public object Role { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject, 49, "ReplayPawn", "", 16)]
+		[NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject)]
 		public uint? ReplayPawn { get; set; } //Type:  Bits: 16
 
 	}
