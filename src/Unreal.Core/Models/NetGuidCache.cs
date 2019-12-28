@@ -13,6 +13,7 @@ namespace Unreal.Core.Models
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<uint, string> NetGuidToPathName{ get; private set; } = new Dictionary<uint, string>();
+        public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
@@ -91,6 +92,11 @@ namespace Unreal.Core.Models
 
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
+            if (group == "NetworkGameplayTagNodeIndex")
+            {
+                NetworkGameplayTagNodeIndex = exportGroup;
+            }
+
             NetFieldExportGroupMap[group] = exportGroup;
 
             int index = group.LastIndexOf(':');
@@ -135,50 +141,32 @@ namespace Unreal.Core.Models
             }
         }
 
-        public NetFieldExportGroup GetNetFieldExportGroup(Actor actor, out string testPath)
+        public NetFieldExportGroup GetNetFieldExportGroup(uint guid, out string testPath)
         {
-            var guid = actor.Archetype;
+            //var guid = actor.Archetype;
             var isActor = false;
             testPath = string.Empty;
 
-            if(guid == null)
+            /*if(guid == null)
             {
                 guid = actor.ActorNetGUID;
                 isActor = true;
-            }
+            }*/
 
-            if (!_archTypeToExportGroup.ContainsKey(guid.Value))
+            if (!_archTypeToExportGroup.ContainsKey(guid))
             {
-                if(!NetGuidToPathName.ContainsKey(guid.Value))
+                if(!NetGuidToPathName.ContainsKey(guid))
                 {
                     return null;
                 }
 
-                var path = NetGuidToPathName[guid.Value];
+                var path = NetGuidToPathName[guid];
 
-                if(isActor)
+                if (NetFieldExportGroupMapPathFixed.ContainsKey(guid))
                 {
+                    _archTypeToExportGroup[guid] = NetFieldExportGroupMapPathFixed[guid];
 
-                    //The default types never end up here.
-                    return null;
-
-                    var tempPath = CoreRedirects.GetRedirect(path);
-
-                    if (!String.IsNullOrEmpty(tempPath))
-                    {
-                        path = tempPath;
-                    }
-                    else
-                    {
-                        testPath = path;
-                    }
-                }
-
-                if (NetFieldExportGroupMapPathFixed.ContainsKey(guid.Value))
-                {
-                    _archTypeToExportGroup[guid.Value] = NetFieldExportGroupMapPathFixed[guid.Value];
-
-                    return NetFieldExportGroupMapPathFixed[guid.Value];
+                    return NetFieldExportGroupMapPathFixed[guid];
                 }
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
@@ -194,8 +182,8 @@ namespace Unreal.Core.Models
 
                     if (path.Contains(groupPathFixed, StringComparison.Ordinal))
                     {
-                        NetFieldExportGroupMapPathFixed[guid.Value] = NetFieldExportGroupMap[groupPath];
-                        _archTypeToExportGroup[guid.Value] = NetFieldExportGroupMap[groupPath];
+                        NetFieldExportGroupMapPathFixed[guid] = NetFieldExportGroupMap[groupPath];
+                        _archTypeToExportGroup[guid] = NetFieldExportGroupMap[groupPath];
 
                         return NetFieldExportGroupMap[groupPath];
                     }
@@ -205,7 +193,7 @@ namespace Unreal.Core.Models
             }
             else
             {
-                return _archTypeToExportGroup[guid.Value];
+                return _archTypeToExportGroup[guid];
             }
         }
 

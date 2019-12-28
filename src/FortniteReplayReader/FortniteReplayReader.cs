@@ -37,11 +37,13 @@ namespace FortniteReplayReader
             NetFieldParser.AddExportGroup(typeof(FortPickup));
             NetFieldParser.AddExportGroup(typeof(FortPickupCreative));
             NetFieldParser.AddExportGroup(typeof(Weapon));
+            NetFieldParser.AddExportGroup(typeof(FortPoiManager));
 
             //Game state
             NetFieldParser.AddExportGroup(typeof(GameStateC));
             NetFieldParser.AddExportGroup(typeof(SafeZoneIndicatorC));
             NetFieldParser.AddExportGroup(typeof(AircraftC));
+            NetFieldParser.AddExportGroup(typeof(Explosion));
 
             //Supply drops / llamas
             NetFieldParser.AddExportGroup(typeof(SupplyDropC));
@@ -82,6 +84,11 @@ namespace FortniteReplayReader
             }
         }
 
+        protected override void OnChannelActorRead(uint channel, Actor actor)
+        {
+            Replay.GameInformation.AddActor(channel, actor);
+        }
+
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
 #if DEBUG
@@ -96,10 +103,9 @@ namespace FortniteReplayReader
                 Replay.GameInformation.NetGUIDToPathName = GuidCache.NetGuidToPathName;
             }
 
-            ++TotalPropertiesRead;
             Actor actor = Channels[channel].Actor;
 
-            Replay.GameInformation.AddActor(channel, actor);
+            ++TotalPropertiesRead;
 
             switch (exportGroup)
             {
@@ -116,13 +122,13 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, actor);
                     break;
                 case PlayerPawnC playerPawn:
-                    if (_parseType >= ParseType.Normal)
+                    if (ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
                     }
                     break;
                 case FortPickup fortPickup:
-                    if(_parseType >= ParseType.Normal)
+                    if(ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
                     }
@@ -130,11 +136,13 @@ namespace FortniteReplayReader
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
                     break;
-                case Weapon weapon:
-
-                    break;
                 case FortPlayerPawnBatchedDamage batchedDamage:
                     Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
+                    break;
+                case Explosion explosion:
+                    break;
+                case FortPoiManager poiManager:
+                    Replay.GameInformation.UpdatePoiManager(poiManager, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
             }
         }
@@ -142,12 +150,14 @@ namespace FortniteReplayReader
         protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
         {
             switch (exportGroup)
-            { 
+            {
                 case PlayerPawnC playerPawn:
                 case FortPlayerState playerState:
                 case FortPickup fortPickup:
                 case Weapon weapon:
-                    if(_parseType >= ParseType.Normal)
+                case Explosion explosion:
+                case FortPlayerPawnBatchedDamage damage:
+                    if (ParseType >= ParseType.Normal)
                     {
                         return true;
                     }

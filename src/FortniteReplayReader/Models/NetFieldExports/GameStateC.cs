@@ -342,4 +342,15 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 
     }
+
+
+    [NetFieldExportGroup("/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion")]
+    public class Explosion : INetFieldExportGroup
+    {
+        [NetFieldExport("HitActors", RepLayoutCmdType.DynamicArray, 0, "HitActors", "", 1)]
+        public ActorId[] HitActors { get; set; } //Type: bool Bits: 1
+
+        [NetFieldExport("HitResults", RepLayoutCmdType.DynamicArray, 0, "HitResults", "", 1)]
+        public FHitResult[] HitResults { get; set; } //Type: bool Bits: 1
+    }
 }

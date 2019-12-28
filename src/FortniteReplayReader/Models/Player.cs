@@ -75,6 +75,7 @@ namespace FortniteReplayReader.Models
 
         //Internal 
         internal int WorldPlayerId { get; set; }
+        internal InventoryItem CurrentWeapon { get; set; }
     }
 
     public class PlayerLocation

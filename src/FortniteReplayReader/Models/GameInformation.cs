@@ -27,7 +27,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
-        private Dictionary<uint, InventoryItem> _items = new Dictionary<uint, InventoryItem>();
+        private Dictionary<uint, InventoryItem> _items = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
@@ -267,6 +267,19 @@ namespace FortniteReplayReader.Models
                         });
                     }
 
+                    //Update current weapon
+                    if(playerPawn.CurrentWeapon != null)
+                    {
+                        if(_actorToChannel.TryGetValue(playerPawn.CurrentWeapon.Value, out uint weaponChannel))
+                        {
+                            //Can't do this until Weapon parsing is done
+                        }
+                        else
+                        {
+                            //?
+                        }
+                    }
+
                     break;
             }
 
@@ -303,14 +316,14 @@ namespace FortniteReplayReader.Models
                 Magnitude = batchedDamage.Magnitude,
                 Normal = batchedDamage.Normal,
                 IsShieldDestroyed = batchedDamage.bIsShieldDestroyed,
-                WorldTime = GameState.CurrentWorldTime
+                WorldTime = GameState.CurrentWorldTime,
+                Weapon = player.CurrentWeapon
             };
 
             if(batchedDamage.HitActor > 0)
             {
                 if (_actorToChannel.TryGetValue(batchedDamage.HitActor, out uint actorChannel))
                 {
-
                     if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn hitPlayerPawn))
                     {
                         shot.HitPlayerPawn = hitPlayerPawn;
@@ -323,9 +336,31 @@ namespace FortniteReplayReader.Models
                         //These are non player actors and other objects
                     }
                 }
+                else
+                {
+                    //Miss?
+                }
             }
 
             player.Shots.Add(shot);
+        }
+
+        internal void UpdatePoiManager(FortPoiManager poiManager, NetFieldExportGroup networkGameplayTagNode)
+        {
+            if(networkGameplayTagNode == null)
+            {
+                return;
+            }
+
+            foreach (FGameplayTagContainer tagContainer in poiManager.PoiTagContainerTable)
+            {
+                for (int i = 0; i < tagContainer.Tags.Length; i++)
+                {
+                    tagContainer.TagNames[i] = networkGameplayTagNode.NetFieldExports[(int)tagContainer.Tags[i]]?.Name;
+                }
+            }
+
+            GameState.PoiManager = poiManager;
         }
 
         private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();
