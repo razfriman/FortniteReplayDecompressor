@@ -1,6 +1,7 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.ClassNetCaches;
 using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.Logging;
 using System;
@@ -148,6 +149,11 @@ namespace FortniteReplayReader
                 case FortPoiManager poiManager:
                     Replay.GameInformation.UpdatePoiManager(poiManager, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
+                case FortInventory inventory:
+                    Replay.GameInformation.UpdateFortInventory(channel, inventory);
+                    break;
+                case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
+                    break;
             }
         }
 
@@ -168,7 +174,12 @@ namespace FortniteReplayReader
 
                     return false;
                 default:
-                    return true;
+                    if(ParseType == ParseType.Debug)
+                    {
+                        return true;
+                    }
+
+                    return false;
             }
         }
 

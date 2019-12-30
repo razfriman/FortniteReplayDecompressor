@@ -17,13 +17,11 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        public static bool IncludeOnlyMode { get; set; } = true;
-
         public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
 
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private static Dictionary<string, NetCacheFieldGroupInfo> _netCacheTypes = new Dictionary<string, NetCacheFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
+        private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
         private static CompiledLinqCache _linqCache = new CompiledLinqCache();
 
 #if DEBUG
@@ -66,20 +64,20 @@ namespace Unreal.Core
             }
 
             //Class net cache
-            IEnumerable<Type> netCache = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<ClassNetCacheAttribute>() != null);
+            IEnumerable<Type> netCache = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null);
 
             foreach (Type type in netCache)
             {
-                ClassNetCacheAttribute attribute = type.GetCustomAttribute<ClassNetCacheAttribute>();
-                NetCacheFieldGroupInfo info = new NetCacheFieldGroupInfo();
+                NetFieldExportRPCAttribute attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
+                NetRPCFieldGroupInfo info = new NetRPCFieldGroupInfo();
 
-                _netCacheTypes[attribute.PathName] = info;
+                _netRPCTypes[attribute.PathName] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
-                    ClassNetCachePropertyAttribute propertyAttribute = property.GetCustomAttribute<ClassNetCachePropertyAttribute>();
+                    NetFieldExportRPCPropertyAttribute propertyAttribute = property.GetCustomAttribute<NetFieldExportRPCPropertyAttribute>();
 
-                    info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute.TypePathName);
+                    info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute);
                 }
             }
 
@@ -102,6 +100,31 @@ namespace Unreal.Core
             {
                 _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
             }
+        }
+
+        public static string GetClassNetPropertyPathname(string netCache, string property, out bool deltaSerialize)
+        {
+            deltaSerialize = false;
+
+            if(_netRPCTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
+            {
+                if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetFieldExportRPCPropertyAttribute rpcAttribute))
+                {
+                    deltaSerialize = rpcAttribute.NetDeltaSerialization;
+
+                    return rpcAttribute.TypePathName;
+                }
+                else
+                {
+                    //Debugging
+                }
+            }
+            else
+            {
+                //Debugging
+            }
+
+            return null;
         }
 
         public static void AddExportGroup(Type groupType)
@@ -132,27 +155,56 @@ namespace Unreal.Core
 
             string fixedExportName = FixInvalidNames(export.Name);
 
+            bool isDebug = obj is DebuggingExportGroup;
+
+            if (isDebug)
+            {
+                group = "DebuggingExportGroup";
+                fixedExportName = "Handles";
+            }
+
             if (!_netFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
             {
-#if DEBUG
-                AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-#endif
                 return;
             }
 
-            Type netType = netGroupInfo.Type;
-
             if (!netGroupInfo.Properties.ContainsKey(fixedExportName))
             {
-#if DEBUG
-                AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-#endif
                 return;
             }
 
             NetFieldInfo netFieldInfo = netGroupInfo.Properties[fixedExportName];
 
-            SetType(obj, netType, netFieldInfo, netGroupInfo, exportGroup, netBitReader);
+            SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
+        }
+
+        private static void SetType(object obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        {
+            object data;
+
+            switch (netFieldInfo.Attribute.Type)
+            {
+                case RepLayoutCmdType.DynamicArray:
+                    data = ReadArrayField(exportGroup, netFieldInfo, groupInfo, netBitReader);
+                    break;
+                default:
+                    data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
+                    break;
+            }
+
+
+            if (obj is DebuggingExportGroup debugGroup)
+            {
+                debugGroup.Handles.Add(handle, data as DebuggingObject);
+
+                return;
+            }
+
+            if (data != null)
+            {
+                TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
+                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
+            }
         }
 
         private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
@@ -230,33 +282,16 @@ namespace Unreal.Core
                 case RepLayoutCmdType.Ignore:
                     netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
+                case RepLayoutCmdType.Debug:
+                    data = _linqCache.CreateObject(typeof(DebuggingObject));
+                    (data as IProperty).Serialize(netBitReader);
+                    break;
             }
 
             return data;
         }
 
-        private static void SetType(object obj, Type netType, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
-        {
-            object data;
-
-            switch (netFieldInfo.Attribute.Type)
-            {
-                case RepLayoutCmdType.DynamicArray:
-                    data = ReadArrayField(obj, exportGroup, netFieldInfo, groupInfo, netBitReader);
-                    break;
-                default:
-                    data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
-                    break;
-            }
-
-            if (data != null)
-            {
-                TypeAccessor typeAccessor = TypeAccessor.Create(netType);
-                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
-            }
-        }
-
-        private static Array ReadArrayField(object obj, NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
+        private static Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
 
@@ -648,9 +683,9 @@ namespace Unreal.Core
             public PropertyInfo PropertyInfo { get; set; }
         }
 
-        private class NetCacheFieldGroupInfo
+        private class NetRPCFieldGroupInfo
         {
-            public Dictionary<string, string> PathNames { get; set; } = new Dictionary<string, string>();
+            public Dictionary<string, NetFieldExportRPCPropertyAttribute> PathNames { get; set; } = new Dictionary<string, NetFieldExportRPCPropertyAttribute>();
         }
     }
 

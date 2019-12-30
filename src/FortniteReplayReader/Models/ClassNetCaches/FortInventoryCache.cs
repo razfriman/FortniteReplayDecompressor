@@ -5,10 +5,10 @@ using Unreal.Core.Attributes;
 
 namespace FortniteReplayReader.Models.ClassNetCaches
 {
-    [ClassNetCache("FortInventory_ClassNetCache")]
+    [NetFieldExportRPC("FortInventory_ClassNetCache")]
     public class FortInventoryCache
     {
-        [ClassNetCacheProperty("Inventory", "/Script/FortniteGame.FortInventory")]
+        [NetFieldExportRPCProperty("Inventory", "/Script/FortniteGame.FortInventory")]
         public object Inventory { get; set; }
     }
 }

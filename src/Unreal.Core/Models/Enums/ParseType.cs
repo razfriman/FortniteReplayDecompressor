@@ -17,6 +17,14 @@ namespace Unreal.Core.Models.Enums
         /// <summary>
         /// Parses events and all useful data.
         /// </summary>
-        Normal
+        Normal,
+        /// <summary>
+        /// Not implemented
+        /// </summary>
+        Full,
+        /// <summary>
+        /// Contains debugging information
+        /// </summary>
+        Debug
     }
 }

@@ -23,6 +23,7 @@ namespace Unreal.Core.Models
         public int? ByteValue => Bytes.Length == 1 ? Bytes[0] : new byte?();
         public string NetId => AsNetId();
         public uint? PropertyObject => AsPropertyObject();
+        public int? Enum => AsEnum();
 
         public List<IProperty> PotentialProperties => AsPotentialPropeties();
         public List<DebuggingHandle> PossibleExport => AsExportHandle();
@@ -60,7 +61,7 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            return _reader.ReadBytes((int)Math.Ceiling(_reader.GetBitsLeft() / 8.0));
+            return _reader.ReadBytes((int)Math.Floor(_reader.GetBitsLeft() / 8.0));
         }
 
         private string AsFString()
@@ -331,14 +332,21 @@ namespace Unreal.Core.Models
 
                 IProperty iProperty = (IProperty)Activator.CreateInstance(type);
 
-                iProperty.Serialize(_reader);
-
-                if(_reader.IsError || !_reader.AtEnd())
+                try
                 {
-                    continue;
-                }
+                    iProperty.Serialize(_reader);
 
-                possibleProperties.Add(iProperty);
+                    if (_reader.IsError || !_reader.AtEnd())
+                    {
+                        continue;
+                    }
+
+                    possibleProperties.Add(iProperty);
+                }
+                catch
+                {
+                    //Ignore
+                }
             }
 
             return possibleProperties;
@@ -356,6 +364,13 @@ namespace Unreal.Core.Models
             }
 
             return obj;
+        }
+
+        private int? AsEnum()
+        {
+            _reader.Reset();
+
+            return _reader.SerializePropertyEnum(_reader.GetBitsLeft());
         }
     }
 

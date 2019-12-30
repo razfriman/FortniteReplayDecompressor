@@ -1256,10 +1256,9 @@ namespace Unreal.Core
                     FVector ConditionallySerializeQuantizedVector(FVector defaultValue)
                     {
                         bool bWasSerialized = bunch.Archive.ReadBit();
-                        bool bShouldQuantize = false;
-
                         if (bWasSerialized)
                         {
+                            bool bShouldQuantize;
                             if (bunch.Archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO)
                             {
                                 bShouldQuantize = true;
@@ -1470,7 +1469,7 @@ namespace Unreal.Core
                 }
 
                 //Find export group
-                bool function = GuidCache.GetNetFunctionGroup(fieldCache.Name, classNetCache.PathName, out NetFieldExportGroup exportGroup);
+                bool function = GuidCache.GetRPCNetFunctionGroup(fieldCache.Name, classNetCache.PathName, out NetFieldExportGroup exportGroup);
 
                 if (function)
                 {
@@ -1490,8 +1489,9 @@ namespace Unreal.Core
                 {
                     if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
                     {
-                        //FieldCache->bIncompatible = true;
-                        continue;
+                        _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+
+                        return false;
                     }
 
                     // Successfully received it.
@@ -1550,21 +1550,43 @@ namespace Unreal.Core
                 return false;
             }
 
+            string pathName = NetFieldParser.GetClassNetPropertyPathname(netFieldExportGroup.PathName, netFieldExportGroup.NetFieldExports[handle].Name, out bool deltaSerialize);
+
+            NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
+
+            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName) || ParseType == ParseType.Debug) : false;
+
+            if (!readProperties)
+            {
+                return false;
+            }
+
             FFastArraySerializerHeader header = ReadDeltaHeader(reader);
+
+            if (reader.IsError)
+            {
+                _logger?.LogWarning($"Failed to read DeltaSerialize header {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
+
+                return false;
+            }
 
             for (int i = 0; i < header.NumDeleted; i++)
             {
                 int elementIndex = reader.ReadInt32();
 
-                OnNetDeltaRead(new NetDeltaUpdate
+                if (propertyExportGroup != null)
                 {
-                    Deleted = true,
-                    ChannelIndex = channelIndex,
-                    ElementIndex = elementIndex,
-                    ExportGroup = netFieldExportGroup,
-                    Handle = handle,
-                    Header = header
-                });
+                    OnNetDeltaRead(new NetDeltaUpdate
+                    {
+                        Deleted = true,
+                        ChannelIndex = channelIndex,
+                        ElementIndex = elementIndex,
+                        ExportGroup = netFieldExportGroup,
+                        PropertyExport = propertyExportGroup,
+                        Handle = handle,
+                        Header = header
+                    });
+                }
             }
 
             for (int i = 0; i < header.NumChanged; i++)
@@ -1572,21 +1594,25 @@ namespace Unreal.Core
                 int elementIndex = reader.ReadInt32();
 
                 //Need to convert the field cache (netFieldExportGroup[handle]) to appropriate exportGroup
-                if (ReceiveProperties(reader, netFieldExportGroup, channelIndex, out INetFieldExportGroup export, false))
+                if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !deltaSerialize))
                 {
-                    OnNetDeltaRead(new NetDeltaUpdate
+                    if (deltaSerialize)
                     {
-                        ChannelIndex = channelIndex,
-                        ElementIndex = elementIndex,
-                        Export = export,
-                        ExportGroup = netFieldExportGroup,
-                        Handle = handle,
-                        Header = header
-                    });
+                        OnNetDeltaRead(new NetDeltaUpdate
+                        {
+                            ChannelIndex = channelIndex,
+                            ElementIndex = elementIndex,
+                            Export = export,
+                            ExportGroup = netFieldExportGroup,
+                            PropertyExport = propertyExportGroup,
+                            Handle = handle,
+                            Header = header
+                        });
+                    }
                 }
             }
 
-            if(reader.IsError || !reader.AtEnd())
+            if (reader.IsError || !reader.AtEnd())
             {
                 _logger?.LogWarning($"Failed to read DeltaSerialize {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
 
@@ -1627,7 +1653,7 @@ namespace Unreal.Core
 
             Channels[channelIndex].Group = group.PathName;
             
-            if ((NetFieldParser.IncludeOnlyMode && !NetFieldParser.WillReadType(group.PathName)))
+            if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName))
             {
                 return true;
             }
@@ -1640,6 +1666,23 @@ namespace Unreal.Core
             //Debug("types", $"\n{group.PathName}");
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
+
+            if(exportGroup == null)
+            {
+                //Something went wrong ...
+                if(ParseType != ParseType.Debug)
+                {
+                    _logger.LogError($"Null export group in non-debug mode");
+
+                    return false;
+                }
+
+                exportGroup = new DebuggingExportGroup
+                {
+                    ExportGroup = group
+                };
+            }
+
             outExport = exportGroup;
 
             bool hasData = false;
@@ -1762,6 +1805,16 @@ namespace Unreal.Core
                 reader = null;
                 outField = null;
                 _logger?.LogError("ReadFieldHeaderAndPayload: Error reading NetFieldExportHandle.");
+                return false;
+            }
+
+            if(netFieldExportHandle >= group.NetFieldExportsLength)
+            {
+                reader = null;
+                outField = null;
+
+                _logger?.LogError("ReadFieldHeaderAndPayload: netFieldExportHandle > NetFieldExportsLength.");
+
                 return false;
             }
 

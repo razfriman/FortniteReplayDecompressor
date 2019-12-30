@@ -32,7 +32,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
-
+        private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
@@ -361,6 +361,31 @@ namespace FortniteReplayReader.Models
             }
 
             GameState.PoiManager = poiManager;
+        }
+
+        HashSet<uint> blah = new HashSet<uint>();
+
+
+        internal void UpdateFortInventory(uint channelId, FortInventory inventory)
+        {
+
+        }
+
+        internal void UpdateNetDeltaFortInventory(NetDeltaUpdate deltaUpdate)
+        {
+            FortInventory inventory = deltaUpdate.Export as FortInventory;
+
+
+            if (NetGUIDToPathName.TryGetValue(inventory.ItemDefinition.Value, out string weaponPathName))
+            {
+
+            }
+
+                //Console.WriteLine($"Parent - {inventory.ParentInventory.Value} - {deltaUpdate.ChannelIndex} - Order: {inventory.OrderIndex} - {weaponPathName} - {inventory.LoadedAmmo} - {GameState.CurrentWorldTime}");
+
+                if (_actorToChannel.TryGetValue(inventory.ParentInventory.Value, out var a))
+            {
+            }
         }
 
         private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();

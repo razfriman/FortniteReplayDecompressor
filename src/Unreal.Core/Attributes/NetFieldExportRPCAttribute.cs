@@ -4,11 +4,11 @@ using System.Text;
 
 namespace Unreal.Core.Attributes
 {
-    public class ClassNetCacheAttribute : Attribute
+    public class NetFieldExportRPCAttribute : Attribute
     {
         public string PathName { get; private set; }
 
-        public ClassNetCacheAttribute(string typePathname)
+        public NetFieldExportRPCAttribute(string typePathname)
         {
             PathName = typePathname;
         }
