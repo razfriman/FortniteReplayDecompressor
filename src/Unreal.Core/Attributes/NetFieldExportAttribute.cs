@@ -10,7 +10,6 @@ namespace Unreal.Core.Attributes
         public RepLayoutCmdType Type { get; set; }
         public UnknownFieldInfo Info { get; set; }
 
-
         public NetFieldExportAttribute(string name, RepLayoutCmdType type)
         {
             Name = name;

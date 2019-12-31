@@ -17,8 +17,6 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
-
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
         private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
@@ -43,6 +41,7 @@ namespace Unreal.Core
                 NetFieldGroupInfo info = new NetFieldGroupInfo();
 
                 info.Type = type;
+                info.Attribute = attribute;
 
                 _netFieldGroups[attribute.Path] = info;
 
@@ -127,22 +126,19 @@ namespace Unreal.Core
             return null;
         }
 
-        public static void AddExportGroup(Type groupType)
+        public static bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
-            IncludedExportGroups.Add(groupType);
-        }
+            ignoreChannel = false;
 
-        public static bool WillReadType(string group)
-        {
             if (_netFieldGroups.ContainsKey(group))
             {
-                Type type = _netFieldGroups[group].Type;
-
-                if (IncludedExportGroups.Contains(type))
+                if (parseType >= _netFieldGroups[group].Attribute.MinimumParseType)
                 {
                     return true;
                 }
 
+                //We know about this type and don't want to parse it, so ignore the channel entirely
+                ignoreChannel = true;
                 return false;
             }
 
@@ -673,6 +669,7 @@ namespace Unreal.Core
 
         private class NetFieldGroupInfo
         {
+            public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
         }

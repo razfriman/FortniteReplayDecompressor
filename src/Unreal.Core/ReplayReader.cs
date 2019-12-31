@@ -1554,7 +1554,7 @@ namespace Unreal.Core
 
             NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
-            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName) || ParseType == ParseType.Debug) : false;
+            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool ignoreChannel) || ParseType == ParseType.Debug) : false;
 
             if (!readProperties)
             {
@@ -1593,7 +1593,6 @@ namespace Unreal.Core
             {
                 int elementIndex = reader.ReadInt32();
 
-                //Need to convert the field cache (netFieldExportGroup[handle]) to appropriate exportGroup
                 if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !deltaSerialize))
                 {
                     if (deltaSerialize)
@@ -1653,8 +1652,10 @@ namespace Unreal.Core
 
             Channels[channelIndex].Group = group.PathName;
             
-            if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName))
+            if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
             {
+                Channels[channelIndex].IgnoreChannel = ignoreChannel;
+
                 return true;
             }
 

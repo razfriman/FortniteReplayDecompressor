@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPropertyOverrideReplShared")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPropertyOverrideReplShared", ParseType.Debug)]
     public class FortPropertyOverrideReplShared : INetFieldExportGroup
     {
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]

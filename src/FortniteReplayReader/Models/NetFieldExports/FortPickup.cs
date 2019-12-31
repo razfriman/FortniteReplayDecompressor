@@ -6,7 +6,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPickupAthena")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPickupAthena", ParseType.Normal)]
     public class FortPickup : INetFieldExportGroup
     {
         [NetFieldExport("bReplicateMovement", RepLayoutCmdType.PropertyBool)]

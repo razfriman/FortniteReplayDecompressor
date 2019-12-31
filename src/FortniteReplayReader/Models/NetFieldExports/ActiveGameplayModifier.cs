@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.ActiveGameplayModifier")]
+    [NetFieldExportGroup("/Script/FortniteGame.ActiveGameplayModifier", ParseType.Debug)]
     public class ActiveGameplayModifier : INetFieldExportGroup
     {
         [NetFieldExport("ModifierDef", RepLayoutCmdType.Property)]

@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FRepMovement SharedRepMovement { get; set; }
     }*/
 
-    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", ParseType.Full)]
     public class FortPlayerPawnBatchedDamage : INetFieldExportGroup
     {
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
@@ -57,7 +57,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint NonPlayerHitActor { get; set; } //Type:  Bits: 1
     }
 
-    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]
+    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Normal)]
 	public class PlayerPawnC : INetFieldExportGroup
 	{
 		[NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]

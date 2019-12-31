@@ -27,30 +27,6 @@ namespace FortniteReplayReader
             _logger = logger;
         }
 
-        static ReplayReader()
-        {
-            //Adds default export groups to parser
-
-            //Player info
-            NetFieldParser.AddExportGroup(typeof(FortPlayerState));
-            NetFieldParser.AddExportGroup(typeof(PlayerPawnC));
-            NetFieldParser.AddExportGroup(typeof(AIPlayerPawn));
-            NetFieldParser.AddExportGroup(typeof(FortPickup));
-            NetFieldParser.AddExportGroup(typeof(FortPickupCreative));
-            NetFieldParser.AddExportGroup(typeof(Weapon));
-            NetFieldParser.AddExportGroup(typeof(FortPoiManager));
-
-            //Game state
-            NetFieldParser.AddExportGroup(typeof(GameStateC));
-            NetFieldParser.AddExportGroup(typeof(SafeZoneIndicatorC));
-            NetFieldParser.AddExportGroup(typeof(AircraftC));
-            NetFieldParser.AddExportGroup(typeof(Explosion));
-
-            //Supply drops / llamas
-            NetFieldParser.AddExportGroup(typeof(SupplyDropC));
-            NetFieldParser.AddExportGroup(typeof(SupplyDropLlamaC));
-        }
-
         public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -97,8 +73,8 @@ namespace FortniteReplayReader
 
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
-#if DEBUG
             ++TotalPropertiesRead;
+#if DEBUG
             if(Replay.GameInformation.Channels == null)
             {
                 Replay.GameInformation.Channels = Channels;
