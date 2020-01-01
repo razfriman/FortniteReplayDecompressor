@@ -6,7 +6,7 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
 {
     [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo", ParseType.Debug)]
     public class GameMemberInfo : INetFieldExportGroup

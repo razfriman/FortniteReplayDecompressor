@@ -19,7 +19,6 @@ namespace Unreal.Core.Models
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
-        private Dictionary<string, List<NetFieldExportGroup>> _rpcNetFunctionProperties = new Dictionary<string, List<NetFieldExportGroup>>();
 
         public void ClearCache()
         {
@@ -92,53 +91,12 @@ namespace Unreal.Core.Models
 
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
-            if (group == "NetworkGameplayTagNodeIndex")
+            if (NetworkGameplayTagNodeIndex == null && group == "NetworkGameplayTagNodeIndex")
             {
                 NetworkGameplayTagNodeIndex = exportGroup;
             }
 
             NetFieldExportGroupMap[group] = exportGroup;
-
-            int index = group.LastIndexOf(':');
-
-            if (index > -1)
-            {
-                string property = group.Substring(index + 1);
-
-                if (!_rpcNetFunctionProperties.TryGetValue(property, out List<NetFieldExportGroup> groups))
-                {
-                    groups = new List<NetFieldExportGroup>();
-
-                    _rpcNetFunctionProperties.TryAdd(property, groups);
-                }
-
-                groups.Add(exportGroup);
-            }
-        }
-
-        //Returns whether or not it's a function
-        public bool GetRPCNetFunctionGroup(string property, string path, out NetFieldExportGroup export)
-        {
-            export = null;
-
-            //Not a function
-            if(!_rpcNetFunctionProperties.TryGetValue(property, out List<NetFieldExportGroup> groups))
-            {
-                return false;
-            }
-
-            //Easy enough
-            if(groups.Count == 1)
-            {
-                export = groups.First();
-
-                return true;
-            }
-            else //Attempt to guess the corrent export group
-            {
-                //TODO
-                return true;
-            }
         }
 
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
@@ -156,11 +114,8 @@ namespace Unreal.Core.Models
             return null;
         }
 
-        public NetFieldExportGroup GetNetFieldExportGroup(uint guid, out string testPath)
+        public NetFieldExportGroup GetNetFieldExportGroup(uint guid)
         {
-            //var guid = actor.Archetype;
-            testPath = string.Empty;
-
             if (!_archTypeToExportGroup.ContainsKey(guid))
             {
                 if(!NetGuidToPathName.ContainsKey(guid))

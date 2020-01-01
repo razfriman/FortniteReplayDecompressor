@@ -339,18 +339,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("VolumeManager", RepLayoutCmdType.Ignore)]
         public uint? VolumeManager { get; set; } //Type:  Bits: 16
-
-
-    }
-
-
-    [NetFieldExportGroup("/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion", ParseType.Full)]
-    public class Explosion : INetFieldExportGroup
-    {
-        [NetFieldExport("HitActors", RepLayoutCmdType.DynamicArray)]
-        public ActorId[] HitActors { get; set; } //Type: bool Bits: 1
-
-        [NetFieldExport("HitResults", RepLayoutCmdType.DynamicArray)]
-        public FHitResult[] HitResults { get; set; } //Type: bool Bits: 1
     }
 }

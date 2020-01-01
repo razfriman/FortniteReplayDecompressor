@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
 
-namespace FortniteReplayReader.Models.ClassNetCaches
+namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 {
     [NetFieldExportRPC("Athena_GameState_C_ClassNetCache")]
     public class GameStateCache

@@ -1,8 +1,8 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
-using FortniteReplayReader.Models.ClassNetCaches;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -117,7 +117,7 @@ namespace FortniteReplayReader
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
                     break;
-                case FortPlayerPawnBatchedDamage batchedDamage:
+                case BatchedDamage batchedDamage:
                     Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
                     break;
                 case Explosion explosion:
@@ -137,25 +137,21 @@ namespace FortniteReplayReader
         {
             switch (exportGroup)
             {
-                case PlayerPawnC playerPawn:
-                case FortPlayerState playerState:
-                case FortPickup fortPickup:
-                case Weapon weapon:
-                case Explosion explosion:
-                case FortPlayerPawnBatchedDamage damage:
-                    if (ParseType >= ParseType.Normal)
-                    {
-                        return true;
-                    }
+                //Always fully parse these
+                case SupplyDropLlamaC _:
+                case SupplyDropC _:
+                case SafeZoneIndicatorC _:
+                case FortPoiManager _:
+                case GameStateC _:
+                    return true;
+            }
 
+            switch (ParseType)
+            {
+                case ParseType.Minimal:
                     return false;
                 default:
-                    if(ParseType == ParseType.Debug)
-                    {
-                        return true;
-                    }
-
-                    return false;
+                    return true;
             }
         }
 

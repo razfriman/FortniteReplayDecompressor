@@ -19,7 +19,7 @@ namespace Unreal.Core
     {
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
+        private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCStructureTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
         private static CompiledLinqCache _linqCache = new CompiledLinqCache();
 
 #if DEBUG
@@ -69,8 +69,9 @@ namespace Unreal.Core
             {
                 NetFieldExportRPCAttribute attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
                 NetRPCFieldGroupInfo info = new NetRPCFieldGroupInfo();
+                info.ParseType = attribute.MinimumParseType;
 
-                _netRPCTypes[attribute.PathName] = info;
+                _netRPCStructureTypes[attribute.PathName] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
@@ -105,7 +106,7 @@ namespace Unreal.Core
         {
             deltaSerialize = false;
 
-            if(_netRPCTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
+            if(_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
                 if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetFieldExportRPCPropertyAttribute rpcAttribute))
                 {
@@ -126,6 +127,34 @@ namespace Unreal.Core
             return null;
         }
 
+        public static bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out string pathName, out bool isFunction, out bool willParse)
+        {
+            pathName = null;
+            isFunction = false;
+            willParse = false;
+
+            if (_netRPCStructureTypes.TryGetValue(classNetPathName, out NetRPCFieldGroupInfo groups))
+            {
+                willParse = parseType >= groups.ParseType;
+
+                if(!willParse)
+                {
+                    return true;
+                }
+
+                if(groups.PathNames.TryGetValue(property, out NetFieldExportRPCPropertyAttribute netFieldExportRPCPropertyAttribute))
+                {
+                    pathName = netFieldExportRPCPropertyAttribute.TypePathName;
+                    isFunction = netFieldExportRPCPropertyAttribute.IsFunction;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+
         public static bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
             ignoreChannel = false;
@@ -137,8 +166,9 @@ namespace Unreal.Core
                     return true;
                 }
 
-                //We know about this type and don't want to parse it, so ignore the channel entirely
+                //Ignore channels where we know the type and outside the parse mode
                 ignoreChannel = true;
+
                 return false;
             }
 
@@ -682,6 +712,7 @@ namespace Unreal.Core
 
         private class NetRPCFieldGroupInfo
         {
+            public ParseType ParseType { get; set; }
             public Dictionary<string, NetFieldExportRPCPropertyAttribute> PathNames { get; set; } = new Dictionary<string, NetFieldExportRPCPropertyAttribute>();
         }
     }

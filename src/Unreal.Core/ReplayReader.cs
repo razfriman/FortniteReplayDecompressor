@@ -1338,66 +1338,10 @@ namespace Unreal.Core
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
                 if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout))
                 {
-                    ++TotalFailedReplicatorReceives;
-                    // Don't consider this catastrophic in replays
-                    _logger?.LogWarning("UActorChannel::ProcessBunch: Replicator.ReceivedBunch returned false");
                     continue;
                 }
             }
             // PostReceivedBunch, not interesting?
-        }
-
-        private List<NetFieldExportGroup> GeneratePossibleClasses(FBitArchive archive, uint channelIndex)
-        {
-            var testArchive = new NetBitReader(archive.ReadBits(archive.GetBitsLeft()));
-
-            List<NetFieldExportGroup> possibleClasses = new List<NetFieldExportGroup>();
-
-            foreach (var netFieldExport in GuidCache.NetFieldExportGroupMap.Values)
-            {
-                bool didFail = false;
-                testArchive.Reset();
-                testArchive.Mark();
-
-                var doChecksum = testArchive.ReadBit();
-
-                while (true)
-                {
-                    var handle = testArchive.ReadIntPacked();
-
-                    if (handle == 0)
-                    {
-                        break;
-                    }
-
-                    handle--;
-
-                    if (handle >= netFieldExport.NetFieldExportsLength)
-                    {
-                        break;
-                    }
-
-                    var numBits = testArchive.ReadIntPacked();
-                    testArchive.ReadBits(numBits);
-
-                    if (netFieldExport.NetFieldExports[handle] == null)
-                    {
-                        didFail = true;
-                    }
-                }
-
-                if (testArchive.AtEnd())
-                {
-                    if (!didFail)
-                    {
-                        possibleClasses.Add(netFieldExport);
-                    }
-                }
-
-                testArchive.Pop();
-            }
-
-            return possibleClasses;
         }
 
         /// <summary>
@@ -1408,7 +1352,7 @@ namespace Unreal.Core
         {
             // outer is used to get path name
             // coreredirects.cpp ...
-            NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject, out string testPath);
+            NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
 
             //Mainly props. If needed, add them in
             if (netFieldExportGroup == null)
@@ -1426,6 +1370,7 @@ namespace Unreal.Core
 
                 if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex, out INetFieldExportGroup export))
                 {
+                    //Either failed to read properties or ignoring the channel
                     return false;
                 }
             }
@@ -1467,34 +1412,46 @@ namespace Unreal.Core
                 {
                     continue;
                 }
-
+                
                 //Find export group
-                bool function = GuidCache.GetRPCNetFunctionGroup(fieldCache.Name, classNetCache.PathName, out NetFieldExportGroup exportGroup);
+                bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out string pathName, out bool isFunction, out bool willParse);
 
-                if (function)
+                if (rpcGroupFound)
                 {
-                    if (exportGroup == null)
+                    if(!willParse)
                     {
-                        _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
-
-                        return false;
+                        return true;
                     }
 
-                    if (!ReceivedRPC(reader, exportGroup, bunch.ChIndex))
+                    NetFieldExportGroup exportGroup = GuidCache.GetNetFieldExportGroup(pathName);
+
+                    if (isFunction)
                     {
-                        return false;
+                        if (exportGroup == null)
+                        {
+                            _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+
+                            return false;
+                        }
+
+                        if (!ReceivedRPC(reader, exportGroup, bunch.ChIndex))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
+                        {
+                            _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+
+                            return false;
+                        }
                     }
                 }
                 else
                 {
-                    if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
-                    {
-                        _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
-
-                        return false;
-                    }
-
-                    // Successfully received it.
+                    return true;
                 }
             }
 
@@ -1554,7 +1511,7 @@ namespace Unreal.Core
 
             NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
-            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool ignoreChannel) || ParseType == ParseType.Debug) : false;
+            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool _) || ParseType == ParseType.Debug) : false;
 
             if (!readProperties)
             {
@@ -1647,16 +1604,19 @@ namespace Unreal.Core
 
             if(Channels[channelIndex].IgnoreChannel == true)
             {
-                return true;
+                return false;
             }
 
             Channels[channelIndex].Group = group.PathName;
-            
+
             if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
             {
-                Channels[channelIndex].IgnoreChannel = ignoreChannel;
+                if (ignoreChannel)
+                {
+                    Channels[channelIndex].IgnoreChannel = ignoreChannel;
+                }
 
-                return true;
+                return false;
             }
 
             if (readChecksumBit)
@@ -1784,7 +1744,7 @@ namespace Unreal.Core
                 OnExportRead(channelIndex, exportGroup);
             }
 
-            if (Channels[channelIndex].IgnoreChannel == null)
+            if (Channels[channelIndex].IgnoreChannel == null && ParseType != ParseType.Debug)
             {
                 Channels[channelIndex].IgnoreChannel = !ContinueParsingChannel(exportGroup);
             }

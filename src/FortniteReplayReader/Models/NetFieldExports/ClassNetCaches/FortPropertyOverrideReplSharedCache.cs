@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
 
-namespace FortniteReplayReader.Models.ClassNetCaches
+namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 {
     [NetFieldExportRPC("FortPropertyOverrideReplShared_ClassNetCache")]
     public class FortPropertyOverrideReplSharedCache
