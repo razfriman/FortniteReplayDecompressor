@@ -68,7 +68,7 @@ namespace ConsoleReader
                 sw.Restart();
 
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Minimal);
+                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                 sw.Stop();
 

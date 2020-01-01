@@ -140,7 +140,7 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor)
+        internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor, NetFieldExportGroup networkGameplayTagNode)
         {
             if(playerState.bOnlySpectator == true)
             {
@@ -154,6 +154,12 @@ namespace FortniteReplayReader.Models
                 newPlayer = new Player();
 
                 _players.TryAdd(channelId, newPlayer);
+            }
+
+            if(playerState.DeathTags != null && networkGameplayTagNode != null)
+            {
+                playerState.DeathTags.UpdateTags(networkGameplayTagNode);
+                newPlayer.DeathTags = playerState.DeathTags.TagNames;
             }
 
             newPlayer.Actor = actor;
@@ -355,10 +361,7 @@ namespace FortniteReplayReader.Models
 
             foreach (FGameplayTagContainer tagContainer in poiManager.PoiTagContainerTable)
             {
-                for (int i = 0; i < tagContainer.Tags.Length; i++)
-                {
-                    tagContainer.TagNames[i] = networkGameplayTagNode.NetFieldExports[(int)tagContainer.Tags[i]]?.Name;
-                }
+                tagContainer.UpdateTags(networkGameplayTagNode);
             }
 
             GameState.PoiManager = poiManager;

@@ -180,8 +180,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
 		public float? Distance { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("DeathTags", RepLayoutCmdType.Ignore)]
-		public DebuggingObject DeathTags { get; set; } //Type:  Bits: 40
+		[NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
+		public FGameplayTagContainer DeathTags { get; set; } //Type:  Bits: 40
 
 		[NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool)]
 		public bool? bResurrectionChipAvailable { get; set; } //Type:  Bits: 1

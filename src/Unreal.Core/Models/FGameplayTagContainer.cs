@@ -7,8 +7,8 @@ namespace Unreal.Core.Models
 {
     public class FGameplayTagContainer : IProperty
     {
-        public uint?[] Tags { get; private set; }
         public string[] TagNames { get; private set; }
+        private uint?[] Tags { get; set; }
 
         public void Serialize(NetBitReader reader)
         {
@@ -22,11 +22,19 @@ namespace Unreal.Core.Models
             int numTags = reader.ReadBitsToInt(7);
 
             Tags = new uint?[numTags];
-            TagNames = new string?[numTags];
+            TagNames = new string[numTags];
 
             for (int i = 0; i < numTags; i++)
             {
                 Tags[i] = reader.ReadIntPacked();
+            }
+        }
+
+        public void UpdateTags(NetFieldExportGroup networkGameplayTagNode)
+        {
+            for (int i = 0; i < Tags.Length; i++)
+            {
+                TagNames[i] = networkGameplayTagNode.NetFieldExports[(int)Tags[i]]?.Name;
             }
         }
     }
