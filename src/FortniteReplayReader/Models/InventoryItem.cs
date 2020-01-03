@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FortniteReplayReader.Models.Enums;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -31,8 +32,6 @@ namespace FortniteReplayReader.Models
             return ItemIdName;
         }
     }
-
-    public enum ItemRarity { Common, Uncommon, Rare, Epic, Legendary };
 
     public class ItemInfo
     {

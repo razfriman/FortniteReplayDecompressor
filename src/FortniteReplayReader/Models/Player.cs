@@ -26,7 +26,7 @@ namespace FortniteReplayReader.Models
         public float LastDeathTime { get; internal set; }
         public List<WeaponShot> Shots { get; internal set; } = new List<WeaponShot>();
         public List<WeaponShot> DamageTaken { get; internal set; } = new List<WeaponShot>();
-        public string[] DeathTags { get; internal set; }
+        public FGameplayTag[] DeathTags { get; internal set; }
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
         public List<InventoryItemChange> InventoryChanges { get; private set; } = new List<InventoryItemChange>();

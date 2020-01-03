@@ -120,6 +120,9 @@ namespace FortniteReplayReader
                 case BatchedDamage batchedDamage:
                     Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
                     break;
+                case GameplayCue gameplayCue:
+                    gameplayCue.GameplayCueTag.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
+                    break;
                 case Explosion explosion:
                     break;
                 case FortPoiManager poiManager:

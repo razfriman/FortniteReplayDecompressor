@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
+using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 {
-    [NetFieldExportRPC("PlayerPawn_Athena_C_ClassNetCache")]
+    [NetFieldExportRPC("PlayerPawn_Athena_C_ClassNetCache", ParseType.Normal)]
     public class PlayerPawnCache
     {
         [NetFieldExportRPCProperty("FastSharedReplication", "/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
@@ -16,9 +17,12 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 
         [NetFieldExportRPCProperty("NetMulticast_Athena_BatchedDamageCues", "/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
         public object BatchedDamage { get; set; }
+
+        [NetFieldExportRPCProperty("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams")]
+        public object NetMulticastInvokeGameplayCueAddedWithParams { get; set; }
     }
 
-    [NetFieldExportRPC("BP_PlayerPawn_Athena_Phoebe_C_ClassNetCache")]
+    [NetFieldExportRPC("BP_PlayerPawn_Athena_Phoebe_C_ClassNetCache", ParseType.Normal)]
     public class AIPlayerPawnCache : PlayerPawnCache
     {
     }

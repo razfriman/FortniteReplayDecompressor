@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", ParseType.Full)]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
     public class BatchedDamage : INetFieldExportGroup
     {
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
@@ -37,6 +37,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 
         [NetFieldExport("bIsBallistic", RepLayoutCmdType.PropertyBool)]
         public bool bIsBallistic { get; set; } //Type:  Bits: 1
+
+        [NetFieldExport("bIsShieldApplied", RepLayoutCmdType.PropertyBool)]
+        public bool bIsShieldApplied { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("NonPlayerbIsFatal", RepLayoutCmdType.PropertyBool)]
         public bool NonPlayerbIsFatal { get; set; } //Type:  Bits: 1

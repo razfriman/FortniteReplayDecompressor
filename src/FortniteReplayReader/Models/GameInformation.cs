@@ -38,6 +38,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
         private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
+        private List<dynamic> _killFeed = new List<dynamic>();
 
         internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
 
@@ -140,6 +141,11 @@ namespace FortniteReplayReader.Models
             }
         }
 
+        internal void UpdateKillFeed(uint channelId, FortPlayerState playerState)
+        {
+
+        }
+
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor, NetFieldExportGroup networkGameplayTagNode)
         {
             if(playerState.bOnlySpectator == true)
@@ -156,10 +162,11 @@ namespace FortniteReplayReader.Models
                 _players.TryAdd(channelId, newPlayer);
             }
 
-            if(playerState.DeathTags != null && networkGameplayTagNode != null)
+            if (playerState.DeathTags != null && networkGameplayTagNode != null)
             {
                 playerState.DeathTags.UpdateTags(networkGameplayTagNode);
-                newPlayer.DeathTags = playerState.DeathTags.TagNames;
+
+                UpdateKillFeed(channelId, playerState);
             }
 
             newPlayer.Actor = actor;
@@ -198,6 +205,8 @@ namespace FortniteReplayReader.Models
 
             if (playerState.bResurrectingNow == true)
             {
+                UpdateKillFeed(channelId, playerState);
+
                 _resurrections.Add(new PlayerReboot
                 {
                     Player = newPlayer,

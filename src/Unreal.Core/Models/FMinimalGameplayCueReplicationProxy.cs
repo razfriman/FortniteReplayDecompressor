@@ -5,24 +5,22 @@ using Unreal.Core.Contracts;
 
 namespace Unreal.Core.Models
 {
-    public class FGameplayTagContainer : IProperty
+    public class FMinimalGameplayCueReplicationProxy : IProperty
     {
         public FGameplayTag[] Tags { get; private set; } = new FGameplayTag[0];
 
         public void Serialize(NetBitReader reader)
         {
-            bool isEmpty = reader.ReadBit();
+            int numElements = reader.ReadBitsToInt(5);
 
-            if (isEmpty)
+            if(numElements == 0)
             {
                 return;
             }
 
-            int numTags = reader.ReadBitsToInt(7);
+            Tags = new FGameplayTag[numElements];
 
-            Tags = new FGameplayTag[numTags];
-
-            for (int i = 0; i < numTags; i++)
+            for (int i = 0; i < numElements; i++)
             {
                 FGameplayTag tag = new FGameplayTag();
                 tag.Serialize(reader);
@@ -35,7 +33,7 @@ namespace Unreal.Core.Models
         {
             for (int i = 0; i < Tags.Length; i++)
             {
-                Tags[i].UpdateTagName(networkGameplayTagNode);
+                Tags[i].TagName = networkGameplayTagNode.NetFieldExports[(int)Tags[i].TagIndex]?.Name;
             }
         }
     }

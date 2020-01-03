@@ -1314,15 +1314,20 @@ namespace Unreal.Core
             //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
             //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
 
+
             //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
             {
                 //FNetBitReader Reader(Bunch.PackageMap, 0 );
-                var repObject = ReadContentBlockPayload(bunch, out var bHasRepLayout, out var reader);
+                var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var reader);
+
+                if(bObjectDeleted)
+                {
+                    continue;
+                }
 
                 if (bunch.Archive.IsError)
                 {
-                    //channel.Broken = true;
                     ++TotalFailedBunches;
 
                     _logger?.LogError($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. Bunch Info: {bunch}");
@@ -1412,7 +1417,7 @@ namespace Unreal.Core
                 {
                     continue;
                 }
-                
+
                 //Find export group
                 bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out string pathName, out bool isFunction, out bool willParse);
 
@@ -1759,8 +1764,16 @@ namespace Unreal.Core
         /// <returns></returns>
         protected virtual bool ReadFieldHeaderAndPayload(FBitArchive bunch, NetFieldExportGroup group, out NetFieldExport outField, out FBitArchive reader)
         {
+            if(bunch.AtEnd())
+            {
+                reader = null;
+                outField = null;
+                return false; //We're done
+            }
+
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
             var netFieldExportHandle = bunch.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
+
             if (bunch.IsError)
             {
                 reader = null;
@@ -1805,9 +1818,15 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        protected virtual uint ReadContentBlockPayload(DataBunch bunch, out bool bOutHasRepLayout, out FBitArchive reader)
+        protected virtual uint ReadContentBlockPayload(DataBunch bunch, out bool bObjectDeleted, out bool bOutHasRepLayout, out FBitArchive reader)
         {
-            var repObject = ReadContentBlockHeader(bunch, out bOutHasRepLayout);
+            reader = null;
+            var repObject = ReadContentBlockHeader(bunch, out bObjectDeleted, out bOutHasRepLayout);
+
+            if(bObjectDeleted)
+            {
+                return repObject;
+            }
 
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits));
@@ -1818,10 +1837,11 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        protected virtual uint ReadContentBlockHeader(DataBunch bunch, out bool bOutHasRepLayout)
+        protected virtual uint ReadContentBlockHeader(DataBunch bunch, out bool bObjectDeleted, out bool bOutHasRepLayout)
         {
             //  bool& bObjectDeleted, bool& bOutHasRepLayout 
             //var bObjectDeleted = false;
+            bObjectDeleted = false;
             bOutHasRepLayout = bunch.Archive.ReadBit();
             var bIsActor = bunch.Archive.ReadBit();
             if (bIsActor)
@@ -1843,13 +1863,12 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
-
             var classNetGUID = InternalLoadObject(bunch.Archive, false);
 
-            //Object deleteed
+            //Object deleted
             if (!classNetGUID.IsValid())
             {
-                // bObjectDeleted = true;
+                bObjectDeleted = true;
             }
 
             return classNetGUID.Value;

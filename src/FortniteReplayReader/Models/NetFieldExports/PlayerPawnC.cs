@@ -161,11 +161,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("SpawnImmunityTime", RepLayoutCmdType.PropertyFloat)]
 		public float? SpawnImmunityTime { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("JumpFlashCountPacked", RepLayoutCmdType.PropertyUInt32)]
-		public uint? JumpFlashCountPacked { get; set; } //Type:  Bits: 8
+		[NetFieldExport("JumpFlashCountPacked", RepLayoutCmdType.Property)]
+		public DebuggingObject JumpFlashCountPacked { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("LandingFlashCountPacked", RepLayoutCmdType.PropertyUInt32)]
-		public uint? LandingFlashCountPacked { get; set; } //Type:  Bits: 8
+		[NetFieldExport("LandingFlashCountPacked", RepLayoutCmdType.Property)]
+		public DebuggingObject LandingFlashCountPacked { get; set; } //Type:  Bits: 8
 
 		[NetFieldExport("bInterruptCurrentLine", RepLayoutCmdType.PropertyBool)]
 		public bool? bInterruptCurrentLine { get; set; } //Type: bool Bits: 33
@@ -368,8 +368,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("RepAnimMontageStartSection", RepLayoutCmdType.PropertyInt)]
 		public int? RepAnimMontageStartSection { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("SimulatedProxyGameplayCues", RepLayoutCmdType.Enum)]
-		public int? SimulatedProxyGameplayCues { get; set; } //Type: FMinimalGameplayCueReplicationProxy Bits: 5
+		[NetFieldExport("SimulatedProxyGameplayCues", RepLayoutCmdType.Property)]
+		public FMinimalGameplayCueReplicationProxy SimulatedProxyGameplayCues { get; set; } //Type: FMinimalGameplayCueReplicationProxy Bits: 5
 
 		[NetFieldExport("ItemWraps", RepLayoutCmdType.Ignore)]
 		public object ItemWraps { get; set; } //Type:  Bits: 408
@@ -404,8 +404,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.DynamicArray)]
 		public object[] CharacterVariantChannels { get; set; } //Type: TArray Bits: 280
 
-		[NetFieldExport("DBNOHoister", RepLayoutCmdType.PropertyUInt32)]
-		public uint? DBNOHoister { get; set; } //Type:  Bits: 16
+		[NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
+		public DebuggingObject DBNOHoister { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore)]
 		public object DBNOCarryEvent { get; set; } //Type:  Bits: 2
@@ -437,11 +437,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("GravityFloorGravityScalar", RepLayoutCmdType.PropertyUInt32)]
 		public uint? GravityFloorGravityScalar { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.PropertyUInt32)]
-		public uint? ReplicatedWaterBody { get; set; } //Type:  Bits: 16
+		[NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.Property)]
+		public DebuggingObject ReplicatedWaterBody { get; set; } //Type:  Bits: 16
 
-		[NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyUInt32)]
-		public uint? DBNORevivalStacking { get; set; } //Type:  Bits: 8
+		[NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.Property)]
+		public DebuggingObject DBNORevivalStacking { get; set; } //Type:  Bits: 8
 
 		[NetFieldExport("ServerWorldTimeRevivalTime", RepLayoutCmdType.PropertyUInt32)]
 		public uint? ServerWorldTimeRevivalTime { get; set; } //Type:  Bits: 32
@@ -452,11 +452,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("FlySpeed", RepLayoutCmdType.PropertyFloat)]
 		public float? FlySpeed { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("NextSectionID", RepLayoutCmdType.PropertyUInt32)]
-		public uint? NextSectionID { get; set; } //Type:  Bits: 8
+		[NetFieldExport("NextSectionID", RepLayoutCmdType.Property)]
+		public DebuggingObject NextSectionID { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("FastReplicationMinimalReplicationTags", RepLayoutCmdType.Ignore)]
-		public object FastReplicationMinimalReplicationTags { get; set; } //Type:  Bits: 37
+		[NetFieldExport("FastReplicationMinimalReplicationTags", RepLayoutCmdType.Property)]
+		public FMinimalGameplayCueReplicationProxy FastReplicationMinimalReplicationTags { get; set; } //Type:  Bits: 37
 
 		[NetFieldExport("bIsCreativeGhostModeActivated", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsCreativeGhostModeActivated { get; set; } //Type:  Bits: 1
