@@ -15,6 +15,8 @@ namespace FortniteReplayReader.Models
         public string BotId { get; internal set; }
         public bool IsBot { get; internal set; }
         public int Level { get; internal set; }
+        public uint TotalKills { get; internal set; }
+        public uint TeamKills { get; internal set; }
         public bool IsGameSessionOwner { get; internal set; }
         public bool FinishedLoading { get; internal set; }
         public bool StartedPlaying { get; internal set; }
@@ -30,6 +32,7 @@ namespace FortniteReplayReader.Models
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
         public List<InventoryItemChange> InventoryChanges { get; private set; } = new List<InventoryItemChange>();
+        public List<KillFeedEntry> StatusChanges { get; private set; } = new List<KillFeedEntry>();
 
         public HashSet<InventoryItem> CurrentInventory
         {
@@ -76,6 +79,7 @@ namespace FortniteReplayReader.Models
         //Internal 
         internal int WorldPlayerId { get; set; }
         internal InventoryItem CurrentWeapon { get; set; }
+        internal KillFeedEntry LastKnockedEntry { get; set; }
     }
 
     public class PlayerLocation

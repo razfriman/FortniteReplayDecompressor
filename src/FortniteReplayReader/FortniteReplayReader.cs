@@ -100,6 +100,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
+
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, actor, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case PlayerPawnC playerPawn:
@@ -122,6 +123,8 @@ namespace FortniteReplayReader
                     break;
                 case GameplayCue gameplayCue:
                     gameplayCue.GameplayCueTag.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
+
+                    Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
                     break;
                 case Explosion explosion:
                     break;

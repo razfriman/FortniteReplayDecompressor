@@ -21,6 +21,7 @@ namespace FortniteReplayReader.Models
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
         public ICollection<PlayerReboot> Resurrections => _resurrections;
         public ICollection<InventoryItem> Items => _items.Values;
+        public ICollection<KillFeedEntry> KillFeed => _killFeed;
 
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
@@ -38,7 +39,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
         private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
-        private List<dynamic> _killFeed = new List<dynamic>();
+        private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
         internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
 
@@ -143,7 +144,109 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateKillFeed(uint channelId, FortPlayerState playerState)
         {
+            KillFeedEntry entry = new KillFeedEntry();
+            entry.GameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime;
+            entry.DeathTags = playerState.DeathTags?.Tags.Select(x => x.TagName).ToArray();
 
+            if(!_players.TryGetValue(channelId, out Player channelPlayer))
+            {
+                //Shouldn't happen
+                entry.HasError = true;
+
+                _killFeed.Add(entry);
+
+                return;
+            }
+
+            if (playerState.bResurrectingNow != null)
+            {
+                //Rebooted?
+                return;
+            }
+            else
+            {
+                Player eliminator = channelPlayer.LastKnockedEntry?.FinisherOrDowner;
+
+                if(playerState.FinisherOrDowner != null)
+                {
+                    if (playerState.FinisherOrDowner == 0)
+                    {
+                        //DBNO revives?
+                        if(playerState.DeathCause != null)
+                        {
+                            entry.Player = channelPlayer;
+                            entry.CurrentPlayerState = PlayerState.Alive;
+                            channelPlayer.LastKnockedEntry = null;
+                            channelPlayer.StatusChanges.Add(entry);
+                            _killFeed.Add(entry);
+                        }
+
+                        return;
+                    }
+
+                    if (!_actorToChannel.TryGetValue(playerState.FinisherOrDowner.Value, out uint channel) || !_players.TryGetValue(channel, out eliminator))
+                    {
+                        entry.HasError = true;
+
+                        _killFeed.Add(entry);
+
+                        return;
+                    }
+                }
+
+                if (playerState.bDBNO != null)
+                {
+                    if (playerState.bDBNO == true)
+                    {
+                        channelPlayer.LastKnockedEntry = entry;
+                    }
+
+                    entry.Player = channelPlayer;
+                    entry.FinisherOrDowner = eliminator;
+                    entry.CurrentPlayerState = playerState.bDBNO == true ? PlayerState.Knocked : PlayerState.Killed;
+                    entry.ItemId = playerState.DeathCause ?? channelPlayer.LastKnockedEntry?.ItemId ?? 0; //0 would technically be unknown. Occurs with grenades, but we can pull that information through tags
+
+
+                    if (entry.DeathTags == null)
+                    {
+                        entry.DeathTags = channelPlayer.LastKnockedEntry?.DeathTags ?? null;
+                    }
+                }
+                else //Full kill
+                {
+                    entry.Player = channelPlayer;
+                    entry.FinisherOrDowner = eliminator;
+                    entry.CurrentPlayerState = PlayerState.Killed;
+                    entry.ItemId = playerState.DeathCause ?? 0;
+                }
+            }
+
+            channelPlayer.StatusChanges.Add(entry);
+            _killFeed.Add(entry);
+        }
+
+        internal void HandleGameplayCue(uint channelId, GameplayCue cue)
+        {
+            /*
+	            GameplayCue.Abilities.Activation.DBNOResurrect.Athena -  - 7862
+	            GameplayCue.Abilities.Activation.Traps.ActivateTrap -  - 7911
+	            GameplayCue.Abilities.Activation.Traps.DelayBegin -  - 7912
+	            GameplayCue.Abilities.Activation.Traps.Placed -  - 7917
+	            GameplayCue.Abilities.Activation.Traps.ReloadBegin -  - 7918
+	            GameplayCue.Athena.DBNOBleed -  - 8224
+	            GameplayCue.Athena.EnvCampfire.Doused -  - 8235
+	            GameplayCue.Athena.EnvCampfire.Fire -  - 8236
+	            GameplayCue.Athena.EnvItem.Slurp -  - 8240
+	            GameplayCue.Athena.Equipping -  - 8241
+	            GameplayCue.Athena.Item.FloppingRabbit.Cast -  - 8353
+	            GameplayCue.Athena.OutsideSafeZoneDamage -  - 8448
+	            GameplayCue.Athena.Player.BeingRevivedFromDBNO -  - 8454
+	            GameplayCue.Athena.Player.BigBushMovement -  - 8455
+	            GameplayCue.Athena.Player.CornFieldMovement -  - 8458
+	            GameplayCue.Damage.Physical -  - 8610
+	            GameplayCue.Shield.PotionConsumed -  - 9012
+	            GameplayCue.Weapons.Activation -  - 9080
+            */
         }
 
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor, NetFieldExportGroup networkGameplayTagNode)
@@ -165,8 +268,6 @@ namespace FortniteReplayReader.Models
             if (playerState.DeathTags != null && networkGameplayTagNode != null)
             {
                 playerState.DeathTags.UpdateTags(networkGameplayTagNode);
-
-                UpdateKillFeed(channelId, playerState);
             }
 
             newPlayer.Actor = actor;
@@ -184,6 +285,8 @@ namespace FortniteReplayReader.Models
             newPlayer.StreamerMode = playerState.bUsingStreamerMode ?? newPlayer.StreamerMode;
             newPlayer.ThankedBusDriver = playerState.bThankedBusDriver ?? newPlayer.ThankedBusDriver;
             newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
+            newPlayer.TotalKills = playerState.KillScore ?? newPlayer.TotalKills;
+            newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
 
             if(playerState.DeathCause != null)
             {
@@ -202,16 +305,11 @@ namespace FortniteReplayReader.Models
                 team.Players.Add(newPlayer);
                 newPlayer.Team = team;
             }
-
-            if (playerState.bResurrectingNow == true)
+            
+            //Add to killfeed
+            if (playerState.bResurrectingNow != null || playerState.bDBNO != null || playerState.FinisherOrDowner != null)
             {
                 UpdateKillFeed(channelId, playerState);
-
-                _resurrections.Add(new PlayerReboot
-                {
-                    Player = newPlayer,
-                    WorldTime = GameState.CurrentWorldTime
-                });
             }
 
             if(playerState.bHasEverSkydivedFromBusAndLanded != null)
@@ -493,5 +591,6 @@ namespace FortniteReplayReader.Models
                 }
             }
         }
+
     }
 }

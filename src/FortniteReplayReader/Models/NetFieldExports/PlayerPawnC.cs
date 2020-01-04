@@ -440,8 +440,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.Property)]
 		public DebuggingObject ReplicatedWaterBody { get; set; } //Type:  Bits: 16
 
-		[NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.Property)]
-		public DebuggingObject DBNORevivalStacking { get; set; } //Type:  Bits: 8
+		[NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyByte)]
+		public byte? DBNORevivalStacking { get; set; } //Type:  Bits: 8
 
 		[NetFieldExport("ServerWorldTimeRevivalTime", RepLayoutCmdType.PropertyUInt32)]
 		public uint? ServerWorldTimeRevivalTime { get; set; } //Type:  Bits: 32

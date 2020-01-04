@@ -23,6 +23,11 @@ namespace Unreal.Core.Models
 
         public void UpdateTagName(NetFieldExportGroup networkGameplayTagNode)
         {
+            if(TagIndex > networkGameplayTagNode.NetFieldExportsLength)
+            {
+                return;
+            }
+
             TagName = networkGameplayTagNode.NetFieldExports[(int)TagIndex]?.Name;
         }
     }

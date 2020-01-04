@@ -174,7 +174,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bDBNO", RepLayoutCmdType.PropertyBool)]
 		public bool? bDBNO { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
+        [NetFieldExport("bWasDBNOOnDeath", RepLayoutCmdType.PropertyBool)]
+        public bool? bWasDBNOOnDeath { get; set; } //Type:  Bits: 1
+
+        [NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
 		public int? DeathCause { get; set; } //Type:  Bits: 6
 
 		[NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
