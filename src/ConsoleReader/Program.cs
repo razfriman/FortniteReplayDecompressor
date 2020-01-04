@@ -92,7 +92,7 @@ namespace ConsoleReader
 
                 //var a = NetFieldParser.UnknownNetFields;
 
-                var a = String.Join("\n", replay.GameInformation.KillFeed.Select(x => $"[{((uint)(x.GameTimeSeconds * 1000)).MillisecondsToTimeStamp()}] {x.FinisherOrDowner?.EpicId ?? x.FinisherOrDowner?.BotId} {x.CurrentPlayerState} {x.Player?.EpicId ?? x.Player?.BotId} with {x.ItemRarity} {x.ItemType} {x.ItemId}"));
+                var a = String.Join("\n", replay.GameInformation.KillFeed.Select(x => $"[{((uint)(x.DeltaGameTimeSeconds * 1000)).MillisecondsToTimeStamp()}] {x.FinisherOrDowner?.EpicId ?? x.FinisherOrDowner?.BotId} {x.CurrentPlayerState} {x.Player?.EpicId ?? x.Player?.BotId} with {x.ItemRarity} {x.ItemType} {x.ItemId}"));
                 var b = String.Join("\n", replay.Eliminations.Select(x => $"[{x.Time}] {x.Eliminator} {x.Knocked} {x.Eliminated} with {x.GunType}"));
             }
 

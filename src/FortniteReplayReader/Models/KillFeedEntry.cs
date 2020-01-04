@@ -13,7 +13,8 @@ namespace FortniteReplayReader.Models
         public ItemRarity ItemRarity { get; internal set; }
         public ItemType ItemType { get; internal set; }
         public int ItemId { get; internal set; }
-        public float GameTimeSeconds { get; internal set; }
+        public float DeltaGameTimeSeconds { get; internal set; }
+        public float Distance { get; internal set; }
         public string[] DeathTags
         {
             get

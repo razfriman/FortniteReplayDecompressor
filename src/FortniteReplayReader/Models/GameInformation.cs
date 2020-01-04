@@ -145,8 +145,9 @@ namespace FortniteReplayReader.Models
         internal void UpdateKillFeed(uint channelId, FortPlayerState playerState)
         {
             KillFeedEntry entry = new KillFeedEntry();
-            entry.GameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime;
+            entry.DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime;
             entry.DeathTags = playerState.DeathTags?.Tags.Select(x => x.TagName).ToArray();
+            entry.Distance = playerState.Distance ?? 0;
 
             if(!_players.TryGetValue(channelId, out Player channelPlayer))
             {
