@@ -233,7 +233,6 @@ namespace FortniteReplayReader
             throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
         }
 
-
         protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
         {
             return new CharacterSample()
