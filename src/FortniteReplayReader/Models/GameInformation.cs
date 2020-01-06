@@ -559,7 +559,7 @@ namespace FortniteReplayReader.Models
                     {
                         Count = fortInventory.Count ?? 0,
                         ItemDefinition = fortInventory.ItemDefinition ?? 0,
-                        ItemIdName = itemName,
+                        Item = new ItemName(itemName),
                         LoadedAmmo = fortInventory.LoadedAmmo ?? 0,
                         UniqueWeaponId = new UniqueItemId
                         {
@@ -696,6 +696,7 @@ namespace FortniteReplayReader.Models
                 NetGUIDToPathName.TryGetValue(weapon.WeaponData.Value, out string itemName);
 
                 newWeapon.Item = new ItemName(itemName);
+                newWeapon.ItemId = weapon.WeaponData.Value;
             }
 
             if (weapon.Owner != null)

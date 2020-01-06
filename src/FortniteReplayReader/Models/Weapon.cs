@@ -11,6 +11,7 @@ namespace FortniteReplayReader.Models
         public uint WeaponLevel { get; internal set; }
         public bool IsEquipping { get; internal set; }
         public bool IsReloading { get; internal set; }
+        public uint ItemId { get; internal set; }
         public ItemName Item { get; internal set; }
         public InventoryItem InventoryItem { get; internal set; }
 

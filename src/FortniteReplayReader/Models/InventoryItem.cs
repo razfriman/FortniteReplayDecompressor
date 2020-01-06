@@ -11,7 +11,7 @@ namespace FortniteReplayReader.Models
     {
         public Weapon Weapon { get; internal set; }
 
-        public string ItemIdName { get; internal set; }
+        public ItemName Item { get; internal set; }
         public uint ItemDefinition { get; internal set; }
         public int Count { get; internal set; }
         public int LoadedAmmo { get; internal set; }
@@ -28,7 +28,7 @@ namespace FortniteReplayReader.Models
 
         public override string ToString()
         {
-            return Weapon?.ToString() ?? ItemIdName;
+            return Item?.ToString();
         }
     }
 }
