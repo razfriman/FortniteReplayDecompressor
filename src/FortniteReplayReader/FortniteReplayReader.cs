@@ -100,10 +100,17 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
-
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, actor, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case PlayerPawnC playerPawn:
+                    if(playerPawn.VocalChords != null)
+                    {
+                        foreach(var a in playerPawn.VocalChords)
+                        {
+                            //GuidCache.NetGuidToPathName.TryGetValue(a.Id.Value, out string v);
+                        }
+                    }
+
                     if (ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn, actor);

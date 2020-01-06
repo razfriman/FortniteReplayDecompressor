@@ -77,7 +77,10 @@ namespace Unreal.Core
                 {
                     NetFieldExportRPCPropertyAttribute propertyAttribute = property.GetCustomAttribute<NetFieldExportRPCPropertyAttribute>();
 
-                    info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute);
+                    if (propertyAttribute != null)
+                    {
+                        info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute);
+                    }
                 }
             }
 
@@ -323,7 +326,7 @@ namespace Unreal.Core
 
             Type elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
             RepLayoutCmdType replayout = RepLayoutCmdType.Ignore;
-            bool isGroupType = elementType == groupInfo.Type;
+            bool isGroupType = elementType == groupInfo.Type || elementType == groupInfo.Type.BaseType;
 
             if (!isGroupType)
             {

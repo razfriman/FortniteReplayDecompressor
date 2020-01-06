@@ -1393,6 +1393,7 @@ namespace Unreal.Core
 
             while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport fieldCache, out FBitArchive reader))
             {
+
                 if (fieldCache == null)
                 {
                     _logger?.LogInformation($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
@@ -1672,6 +1673,11 @@ namespace Unreal.Core
 
                 var export = group.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
+
+                if(export.Name == "VocalChords")
+                {
+
+                }
 
                 if (numBits == 0)
                 {
