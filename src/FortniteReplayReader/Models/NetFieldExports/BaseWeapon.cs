@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -53,5 +54,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("AppliedAlterations", RepLayoutCmdType.Ignore)]
         public object AppliedAlterations { get; set; } //Type:  Bits: 64
+
+        [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.PropertyFloat)]
+        public float? LastFireTimeVerified { get; set; }
     }
 }

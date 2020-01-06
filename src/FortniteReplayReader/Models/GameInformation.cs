@@ -679,6 +679,7 @@ namespace FortniteReplayReader.Models
             newWeapon.IsReloading = weapon.bIsReloadingWeapon ?? newWeapon.IsReloading;
             newWeapon.WeaponLevel = weapon.WeaponLevel ?? newWeapon.WeaponLevel;
             newWeapon.Ammo = weapon.AmmoCount ?? newWeapon.Ammo;
+            newWeapon.LastFireTime = weapon.LastFireTimeVerified ?? newWeapon.LastFireTime;
 
             if (weapon.A != null)
             {
