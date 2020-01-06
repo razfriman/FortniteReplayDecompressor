@@ -372,7 +372,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public FMinimalGameplayCueReplicationProxy SimulatedProxyGameplayCues { get; set; } //Type: FMinimalGameplayCueReplicationProxy Bits: 5
 
 		[NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
-		public ActorId[] ItemWraps { get; set; } //Type:  Bits: 408
+		public NetworkGUID[] ItemWraps { get; set; } //Type:  Bits: 408
 
 		[NetFieldExport("WeaponActivated", RepLayoutCmdType.PropertyBool)]
 		public bool? WeaponActivated { get; set; } //Type: bool Bits: 1
@@ -402,7 +402,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public uint? Character { get; set; } //Type: UAthenaCharacterItemDefinition* Bits: 16
 
 		[NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.DynamicArray)]
-		public ActorId[] CharacterVariantChannels { get; set; } //Type: TArray Bits: 280
+		public NetworkGUID[] CharacterVariantChannels { get; set; } //Type: TArray Bits: 280
 
 		[NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
 		public DebuggingObject DBNOHoister { get; set; } //Type:  Bits: 16
@@ -417,7 +417,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public uint? LoadingScreen { get; set; } //Type: UAthenaLoadingScreenItemDefinition* Bits: 16
 
 		[NetFieldExport("Dances", RepLayoutCmdType.DynamicArray)]
-		public ActorId[] Dances { get; set; } //Type: TArray Bits: 352
+		public NetworkGUID[] Dances { get; set; } //Type: TArray Bits: 352
 
 		[NetFieldExport("MusicPack", RepLayoutCmdType.PropertyObject)]
 		public uint? MusicPack { get; set; } //Type: UAthenaMusicPackItemDefinition* Bits: 16

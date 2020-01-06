@@ -1674,11 +1674,6 @@ namespace Unreal.Core
                 var export = group.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
 
-                if(export.Name == "VocalChords")
-                {
-
-                }
-
                 if (numBits == 0)
                 {
                     continue;
