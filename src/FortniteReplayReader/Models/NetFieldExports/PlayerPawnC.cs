@@ -35,8 +35,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
 		public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 127
 
-		[NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject)]
-		public uint? AttachParent { get; set; } //Type: AActor* Bits: 16
+		[NetFieldExport("AttachParent", RepLayoutCmdType.Property)]
+		public ActorGUID AttachParent { get; set; } //Type: AActor* Bits: 16
 
 		[NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
 		public FVector LocationOffset { get; set; } //Type: FVector_NetQuantize100 Bits: 20
@@ -50,26 +50,26 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("AttachSocket", RepLayoutCmdType.Property)]
 		public FName AttachSocket { get; set; } //Type: FName Bits: 121
 
-		[NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject)]
-		public uint? AttachComponent { get; set; } //Type: USceneComponent* Bits: 16
+		[NetFieldExport("AttachComponent", RepLayoutCmdType.Property)]
+		public UObjectGUID AttachComponent { get; set; } //Type: USceneComponent* Bits: 16
 
-		[NetFieldExport("Role", RepLayoutCmdType.Ignore)]
-		public object Role { get; set; } //Type: Enum Bits: 2
+		[NetFieldExport("Role", RepLayoutCmdType.Enum)]
+		public int? Role { get; set; } //Type: Enum Bits: 2
 
-		[NetFieldExport("Instigator", RepLayoutCmdType.PropertyObject)]
-		public uint? Instigator { get; set; } //Type: APawn* Bits: 8
+		[NetFieldExport("Instigator", RepLayoutCmdType.Property)]
+		public ActorGUID Instigator { get; set; } //Type: APawn* Bits: 8
 
 		[NetFieldExport("RemoteViewPitch", RepLayoutCmdType.PropertyByte)]
 		public byte? RemoteViewPitch { get; set; } //Type: uint8 Bits: 8
 
-		[NetFieldExport("PlayerState", RepLayoutCmdType.PropertyObject)]
-		public uint? PlayerState { get; set; } //Type: APlayerState* Bits: 8
+		[NetFieldExport("PlayerState", RepLayoutCmdType.Property)]
+		public ActorGUID PlayerState { get; set; } //Type: APlayerState* Bits: 8
 
-		[NetFieldExport("Controller", RepLayoutCmdType.PropertyObject)]
-		public uint? Controller { get; set; } //Type: AController* Bits: 8
+		[NetFieldExport("Controller", RepLayoutCmdType.Property)]
+		public ActorGUID Controller { get; set; } //Type: AController* Bits: 8
 
-		[NetFieldExport("MovementBase", RepLayoutCmdType.PropertyObject)]
-		public uint? MovementBase { get; set; } //Type: UPrimitiveComponent* Bits: 16
+		[NetFieldExport("MovementBase", RepLayoutCmdType.Property)]
+		public UObjectGUID MovementBase { get; set; } //Type: UPrimitiveComponent* Bits: 16
 
 		[NetFieldExport("BoneName", RepLayoutCmdType.Property)]
 		public FName BoneName { get; set; } //Type: FName Bits: 113
@@ -128,8 +128,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsDying", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsDying { get; set; } //Type: bool Bits: 1
 
-		[NetFieldExport("CurrentWeapon", RepLayoutCmdType.PropertyObject)]
-		public uint? CurrentWeapon { get; set; } //Type: AFortWeapon* Bits: 16
+		[NetFieldExport("CurrentWeapon", RepLayoutCmdType.Property)]
+		public ActorGUID CurrentWeapon { get; set; } //Type: AFortWeapon* Bits: 16
 
 		[NetFieldExport("bIsInvulnerable", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsInvulnerable { get; set; } //Type:  Bits: 1
@@ -152,8 +152,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bWeaponHolstered", RepLayoutCmdType.PropertyBool)]
 		public bool? bWeaponHolstered { get; set; } //Type: bool Bits: 1
 
-		[NetFieldExport("FeedbackAudioComponent", RepLayoutCmdType.PropertyObject)]
-		public uint? FeedbackAudioComponent { get; set; } //Type: UAudioComponent* Bits: 0
+		[NetFieldExport("FeedbackAudioComponent", RepLayoutCmdType.Property)]
+		public UObjectGUID FeedbackAudioComponent { get; set; } //Type: UAudioComponent* Bits: 0
 
 		[NetFieldExport("VocalChords", RepLayoutCmdType.DynamicArray)]
 		public PlayerPawnC[] VocalChords { get; set; } //Type: TArray Bits: 115
@@ -209,8 +209,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsSprinting", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsSprinting { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("Vehicle", RepLayoutCmdType.PropertyObject)]
-		public uint? Vehicle { get; set; } //Type: AFortAthenaVehicle* Bits: 16
+		[NetFieldExport("Vehicle", RepLayoutCmdType.Property)]
+		public ActorGUID Vehicle { get; set; } //Type: AFortAthenaVehicle* Bits: 16
 
 		[NetFieldExport("VehicleApexZ", RepLayoutCmdType.PropertyFloat)]
 		public float? VehicleApexZ { get; set; } //Type: float Bits: 32
@@ -236,8 +236,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsTargeting", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsTargeting { get; set; } //Type: bool Bits: 1
 
-		[NetFieldExport("PawnMontage", RepLayoutCmdType.PropertyObject)]
-		public uint? PawnMontage { get; set; } //Type: UAnimMontage* Bits: 16
+		[NetFieldExport("PawnMontage", RepLayoutCmdType.Property)]
+		public UObjectGUID PawnMontage { get; set; } //Type: UAnimMontage* Bits: 16
 
 		[NetFieldExport("bPlayBit", RepLayoutCmdType.PropertyBool)]
 		public bool? bPlayBit { get; set; } //Type: bool Bits: 1
@@ -245,8 +245,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsPlayingEmote", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsPlayingEmote { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("FootstepBankOverride", RepLayoutCmdType.PropertyObject)]
-		public uint? FootstepBankOverride { get; set; } //Type: UFortFootstepAudioBank* Bits: 16
+		[NetFieldExport("FootstepBankOverride", RepLayoutCmdType.Property)]
+		public UObjectGUID FootstepBankOverride { get; set; } //Type: UFortFootstepAudioBank* Bits: 16
 
 		[NetFieldExport("PackedReplicatedSlopeAngles", RepLayoutCmdType.PropertyUInt16)]
 		public ushort? PackedReplicatedSlopeAngles { get; set; } //Type: uint16 Bits: 16
@@ -299,8 +299,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Zipline", RepLayoutCmdType.PropertyUInt32)]
 		public uint? Zipline { get; set; } //Type:  Bits: 16
 
-		[NetFieldExport("PetState", RepLayoutCmdType.PropertyObject)]
-		public uint? PetState { get; set; } //Type: AFortPlayerPetRepState* Bits: 8
+		[NetFieldExport("PetState", RepLayoutCmdType.Property)]
+		public ActorGUID PetState { get; set; } //Type: AFortPlayerPetRepState* Bits: 8
 
 		[NetFieldExport("bIsZiplining", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsZiplining { get; set; } //Type:  Bits: 1
@@ -308,14 +308,14 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bJumped", RepLayoutCmdType.PropertyBool)]
 		public bool? bJumped { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("ParachuteAttachment", RepLayoutCmdType.PropertyObject)]
-		public uint? ParachuteAttachment { get; set; } //Type: AFortPlayerParachute* Bits: 16
+		[NetFieldExport("ParachuteAttachment", RepLayoutCmdType.Property)]
+		public ActorGUID ParachuteAttachment { get; set; } //Type: AFortPlayerParachute* Bits: 16
 
 		[NetFieldExport("AuthoritativeValue", RepLayoutCmdType.PropertyUInt32)]
 		public uint? AuthoritativeValue { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("SocketOffset", RepLayoutCmdType.Ignore)]
-		public object SocketOffset { get; set; } //Type:  Bits: 96
+		[NetFieldExport("SocketOffset", RepLayoutCmdType.Property)]
+		public DebuggingObject SocketOffset { get; set; } //Type:  Bits: 96
 
 		[NetFieldExport("RemoteViewData32", RepLayoutCmdType.PropertyUInt32)]
 		public uint? RemoteViewData32 { get; set; } //Type: uint32 Bits: 32
@@ -347,8 +347,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("CrouchedSprintSpeed", RepLayoutCmdType.PropertyFloat)]
 		public float? CrouchedSprintSpeed { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("AnimMontage", RepLayoutCmdType.PropertyObject)]
-		public uint? AnimMontage { get; set; } //Type: UAnimMontage* Bits: 16
+		[NetFieldExport("AnimMontage", RepLayoutCmdType.Property)]
+		public UObjectGUID AnimMontage { get; set; } //Type: UAnimMontage* Bits: 16
 
 		[NetFieldExport("PlayRate", RepLayoutCmdType.PropertyFloat)]
 		public float? PlayRate { get; set; } //Type: float Bits: 32
@@ -386,44 +386,44 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("BannerColorId", RepLayoutCmdType.PropertyString)]
 		public string BannerColorId { get; set; } //Type: FString Bits: 152
 
-		[NetFieldExport("SkyDiveContrail", RepLayoutCmdType.PropertyObject)]
-		public uint? SkyDiveContrail { get; set; } //Type: UAthenaSkyDiveContrailItemDefinition* Bits: 16
+		[NetFieldExport("SkyDiveContrail", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID SkyDiveContrail { get; set; } //Type: UAthenaSkyDiveContrailItemDefinition* Bits: 16
 
-		[NetFieldExport("Glider", RepLayoutCmdType.PropertyObject)]
-		public uint? Glider { get; set; } //Type: UAthenaGliderItemDefinition* Bits: 16
+		[NetFieldExport("Glider", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID Glider { get; set; } //Type: UAthenaGliderItemDefinition* Bits: 16
 
-		[NetFieldExport("Pickaxe", RepLayoutCmdType.PropertyObject)]
-		public uint? Pickaxe { get; set; } //Type: UAthenaPickaxeItemDefinition* Bits: 16
+		[NetFieldExport("Pickaxe", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID Pickaxe { get; set; } //Type: UAthenaPickaxeItemDefinition* Bits: 16
 
 		[NetFieldExport("bIsDefaultCharacter", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsDefaultCharacter { get; set; } //Type: bool Bits: 1
 
-		[NetFieldExport("Character", RepLayoutCmdType.PropertyObject)]
-		public uint? Character { get; set; } //Type: UAthenaCharacterItemDefinition* Bits: 16
+		[NetFieldExport("Character", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID Character { get; set; } //Type: UAthenaCharacterItemDefinition* Bits: 16
 
 		[NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.DynamicArray)]
-		public NetworkGUID[] CharacterVariantChannels { get; set; } //Type: TArray Bits: 280
+		public ItemDefinitionGUID[] CharacterVariantChannels { get; set; } //Type: TArray Bits: 280
 
 		[NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
-		public DebuggingObject DBNOHoister { get; set; } //Type:  Bits: 16
+		public ActorGUID DBNOHoister { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Enum)]
-		public uint? DBNOCarryEvent { get; set; } //Type:  Bits: 2
+		public int? DBNOCarryEvent { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject)]
-		public uint? Backpack { get; set; } //Type: UAthenaBackpackItemDefinition* Bits: 16
+		[NetFieldExport("Backpack", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID Backpack { get; set; } //Type: UAthenaBackpackItemDefinition* Bits: 16
 
-		[NetFieldExport("LoadingScreen", RepLayoutCmdType.PropertyObject)]
-		public uint? LoadingScreen { get; set; } //Type: UAthenaLoadingScreenItemDefinition* Bits: 16
+		[NetFieldExport("LoadingScreen", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID LoadingScreen { get; set; } //Type: UAthenaLoadingScreenItemDefinition* Bits: 16
 
 		[NetFieldExport("Dances", RepLayoutCmdType.DynamicArray)]
-		public NetworkGUID[] Dances { get; set; } //Type: TArray Bits: 352
+		public ItemDefinitionGUID[] Dances { get; set; } //Type: TArray Bits: 352
 
-		[NetFieldExport("MusicPack", RepLayoutCmdType.PropertyObject)]
-		public uint? MusicPack { get; set; } //Type: UAthenaMusicPackItemDefinition* Bits: 16
+		[NetFieldExport("MusicPack", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID MusicPack { get; set; } //Type: UAthenaMusicPackItemDefinition* Bits: 16
 
-		[NetFieldExport("PetSkin", RepLayoutCmdType.PropertyObject)]
-		public uint? PetSkin { get; set; } //Type: UAthenaPetItemDefinition* Bits: 16
+		[NetFieldExport("PetSkin", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID PetSkin { get; set; } //Type: UAthenaPetItemDefinition* Bits: 16
 
 		[NetFieldExport("EncryptedPawnReplayData", RepLayoutCmdType.Property)]
 		public FAthenaPawnReplayData EncryptedPawnReplayData { get; set; } //Type: FAthenaPawnReplayData Bits: 160

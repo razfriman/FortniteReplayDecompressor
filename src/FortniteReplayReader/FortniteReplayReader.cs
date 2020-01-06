@@ -103,14 +103,6 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdatePlayerState(channel, playerState, actor, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case PlayerPawnC playerPawn:
-                    if(playerPawn.LandingFlashCountPacked != null)
-                    {
-                        if(playerPawn.LandingFlashCountPacked.ByteValue != 17)
-                        {
-
-                        }
-                    }
-
                     if (ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn, actor);

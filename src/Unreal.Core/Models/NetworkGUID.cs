@@ -39,4 +39,19 @@ namespace Unreal.Core.Models
             return Value.ToString();
         }
     }
+
+    public class ItemDefinitionGUID : NetworkGUID
+    {
+
+    }
+
+    public class ActorGUID : NetworkGUID
+    {
+
+    }
+
+    public class UObjectGUID : NetworkGUID
+    {
+
+    }
 }
