@@ -118,8 +118,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GameFlagData", RepLayoutCmdType.Ignore)]
         public int? GameFlagData { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.Ignore)]
-        public object[] AdditionalPlaylistLevelsStreamed { get; set; } //Type: TArray Bits: 393
+        [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.DynamicArray)]
+        public FName[] AdditionalPlaylistLevelsStreamed { get; set; } //Type: TArray Bits: 393
 
         [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.Ignore)]
         public int? WorldDaysElapsed { get; set; } //Type: int32 Bits: 32

@@ -15,6 +15,8 @@ namespace FortniteReplayReader.Models
         public int ItemId { get; internal set; }
         public float DeltaGameTimeSeconds { get; internal set; }
         public float Distance { get; internal set; }
+        public Weapon Weapon { get; internal set; }
+
         public string[] DeathTags
         {
             get
@@ -57,6 +59,7 @@ namespace FortniteReplayReader.Models
                     case "weapon.ranged.heavy.rocket_launcher":
                         ItemType = ItemType.Launcher;
                         break;
+                    case "weapon.ranged.pistol":
                     case "Weapon.Ranged.Pistol.Standard":
                         ItemType = ItemType.Pistol;
                         break;

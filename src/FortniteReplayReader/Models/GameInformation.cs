@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.Weapons;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -34,7 +35,9 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
+        private Dictionary<uint, FortInventory> _queuedInventories = new Dictionary<uint, FortInventory>(); //PlayerPawn Actor to inventory items
         private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
+        private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
@@ -167,7 +170,7 @@ namespace FortniteReplayReader.Models
             else
             {
                 Player eliminator = channelPlayer.LastKnockedEntry?.FinisherOrDowner;
-
+                
                 if(playerState.FinisherOrDowner != null)
                 {
                     if (playerState.FinisherOrDowner == 0)
@@ -206,7 +209,6 @@ namespace FortniteReplayReader.Models
                     entry.FinisherOrDowner = eliminator;
                     entry.CurrentPlayerState = playerState.bDBNO == true ? PlayerState.Knocked : PlayerState.Killed;
                     entry.ItemId = playerState.DeathCause ?? channelPlayer.LastKnockedEntry?.ItemId ?? 0; //0 would technically be unknown. Occurs with grenades, but we can pull that information through tags
-
 
                     if (entry.DeathTags == null)
                     {
@@ -291,7 +293,14 @@ namespace FortniteReplayReader.Models
 
             if(playerState.DeathCause != null)
             {
-                newPlayer.LastDeathTime = GameState.CurrentWorldTime;
+                newPlayer.LastDeathOrKnockTime = GameState.CurrentWorldTime;
+
+                //Only occurs on main player or server replays
+                if (newPlayer.CurrentInventory.Count > 0)
+                {
+                    newPlayer.InventoryOnDeath.Clear();
+                    newPlayer.InventoryOnDeath.AddRange(newPlayer.InventoryBeforeDeletes);
+                }
             }
 
             if (playerState.TeamIndex != null)
@@ -330,34 +339,35 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawn)
+        internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawnC, Actor actor)
         {
-            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn actor))
+            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn playerpawn))
             {
                 //Check for PlayerState
-                if(playerPawn.PlayerState != null)
+                if(playerPawnC.PlayerState != null)
                 {
-                    if (_actorToChannel.TryGetValue(playerPawn.PlayerState.Value, out uint playerStateChannel) && _players.TryGetValue(playerStateChannel, out Player player))
+                    if (_actorToChannel.TryGetValue(playerPawnC.PlayerState.Value, out uint playerStateChannel) && _players.TryGetValue(playerStateChannel, out Player player))
                     {
                         _players.TryGetValue(playerStateChannel, out Player p);
 
                         _playerPawns.TryAdd(channelId, player);
-                        actor = player;
+                        playerpawn = player;
                     }
                     else
                     {
                         //Queues up player pawn to process for later
-                        if (!_queuedPlayerPawns.TryGetValue(playerPawn.PlayerState.Value, out var playerPawns))
+                        if (!_queuedPlayerPawns.TryGetValue(playerPawnC.PlayerState.Value, out var playerPawns))
                         {
                             playerPawns = new List<QueuedPlayerPawn>();
 
-                            _queuedPlayerPawns.TryAdd(playerPawn.PlayerState.Value, playerPawns);
+                            _queuedPlayerPawns.TryAdd(playerPawnC.PlayerState.Value, playerPawns);
                         }
 
                         playerPawns.Add(new QueuedPlayerPawn
                         {
                             ChannelId = channelId,
-                            PlayerPawn = playerPawn
+                            PlayerPawn = playerPawnC,
+                            Actor = actor
                         });
 
                         return;
@@ -369,36 +379,50 @@ namespace FortniteReplayReader.Models
                 }
             }
 
-            switch (actor)
+            switch (playerpawn)
             {
                 case Player playerActor:
-                    if(playerPawn.ReplicatedMovement != null) //Update location
+                    if(playerPawnC.ReplicatedMovement != null) //Update location
                     {
                         playerActor.Locations.Add(new PlayerLocation
                         {
-                            RepLocation = playerPawn.ReplicatedMovement,
+                            RepLocation = playerPawnC.ReplicatedMovement,
                             WorldTime = GameState.CurrentWorldTime,
-                            LastUpdateTime = playerPawn.ReplayLastTransformUpdateTimeStamp
+                            LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp
                         });
                     }
 
                     //Update current weapon
-                    if(playerPawn.CurrentWeapon != null)
+                    if(playerPawnC.CurrentWeapon != null)
                     {
-                        if(_actorToChannel.TryGetValue(playerPawn.CurrentWeapon.Value, out uint weaponChannel))
+                        if(_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
                         {
-                            //Can't do this until Weapon parsing is done
+                            if(_weapons.TryGetValue(weaponChannel, out Weapon weapon))
+                            {
+                                //Handle weapon changes
+                                playerActor.WeaponSwitches.Add(new WeaponSwitch
+                                {
+                                    Weapon = weapon,
+                                    State = WeaponSwitchState.Equipped,
+                                    WorldTime = GameState.CurrentWorldTime
+                                });
+
+                                playerActor.CurrentWeapon = weapon;
+                            }
+                            else
+                            {
+                                //Pickaxe
+
+                            }
                         }
                         else
                         {
-                            //?
+                            //Ignore as it's most likely their pickaxe
                         }
                     }
 
                     break;
             }
-
-            //Currently only updating movement
         }
 
         internal void UpdateBatchedDamage(uint channelId, BatchedDamage batchedDamage)
@@ -477,25 +501,83 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateFortInventory(uint channelId, FortInventory inventory)
         {
-
+            if(inventory.ReplayPawn > 0)
+            {
+                //Normal replays only have your inventory. Every time you die, there's a new player pawn.
+                _inventories.TryAdd(channelId, inventory);
+            }
         }
 
+        //Only occur on main player's inventory or server replays
         internal void UpdateNetDeltaFortInventory(NetDeltaUpdate deltaUpdate)
         {
-        }
+            if (!_inventories.TryGetValue(deltaUpdate.ChannelIndex, out FortInventory inventory) || 
+               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out uint channel) || 
+               !_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
+            {
+                return;
+            }
 
-        private Dictionary<uint, List<FortPickup>> _pickups = new Dictionary<uint, List<FortPickup>>();
+            if (!(playerPawn is Player player))
+            {
+                return;
+            }
+
+
+            if (deltaUpdate.Deleted)
+            {
+                //Cache inventory when deleting to hold on to inventory prior to death
+                if (player.InventoryBaseReplicationKey != deltaUpdate.Header.BaseReplicationKey)
+                {
+                    player.InventoryBeforeDeletes.Clear();
+                    player.InventoryBeforeDeletes.AddRange(player.CurrentInventory.Items);
+                }
+
+                player.CurrentInventory.DeleteIndex(deltaUpdate.ElementIndex);
+
+                player.InventoryBaseReplicationKey = deltaUpdate.Header.BaseReplicationKey;
+            }
+            else
+            {
+                FortInventory fortInventory = deltaUpdate.Export as FortInventory;
+
+                if (player.CurrentInventory.TryGetItem(deltaUpdate.ElementIndex, out InventoryItem item))
+                {
+                    item.LoadedAmmo = fortInventory.LoadedAmmo ?? item.LoadedAmmo;
+                    item.Count = fortInventory.Count ?? item.Count;
+                }
+                else
+                {
+                    string itemName = String.Empty;
+
+                    if(fortInventory.ItemDefinition != null)
+                    {
+                        NetGUIDToPathName.TryGetValue(fortInventory.ItemDefinition.Value, out itemName);
+                    }
+
+                    InventoryItem inventoryItem = new InventoryItem
+                    {
+                        Count = fortInventory.Count ?? 0,
+                        ItemDefinition = fortInventory.ItemDefinition ?? 0,
+                        ItemIdName = itemName,
+                        LoadedAmmo = fortInventory.LoadedAmmo ?? 0,
+                        UniqueWeaponId = new UniqueItemId
+                        {
+                            A = fortInventory.A ?? 0,
+                            B = fortInventory.B ?? 0,
+                            C = fortInventory.C ?? 0,
+                            D = fortInventory.D ?? 0
+                        }
+                    };
+
+                    player.CurrentInventory.TryAddItem(deltaUpdate.ElementIndex, inventoryItem);
+                }
+            }
+        }
 
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
         {
-            if(!_pickups.TryGetValue(channelId, out var asdfasd))
-            {
-                asdfasd = new List<FortPickup>();
-
-                _pickups.TryAdd(channelId, asdfasd);
-            }
-
-            asdfasd.Add(pickup);
+            /*
 
             bool isNewItem = !_items.TryGetValue(channelId, out InventoryItem newItem);
 
@@ -579,6 +661,73 @@ namespace FortniteReplayReader.Models
                         }
                     }
                 }
+            }*/
+        }
+
+        internal void HandleWeapon(uint channelId, BaseWeapon weapon)
+        {
+            bool isNewWeapon = !_weapons.TryGetValue(channelId, out Weapon newWeapon);
+
+            if (isNewWeapon)
+            {
+                newWeapon = new Weapon();
+
+                _weapons.TryAdd(channelId, newWeapon);
+            }
+
+            newWeapon.IsEquipping = weapon.bIsEquippingWeapon ?? newWeapon.IsEquipping;
+            newWeapon.IsReloading = weapon.bIsReloadingWeapon ?? newWeapon.IsReloading;
+            newWeapon.WeaponLevel = weapon.WeaponLevel ?? newWeapon.WeaponLevel;
+            newWeapon.Ammo = weapon.AmmoCount ?? newWeapon.Ammo;
+
+            if (weapon.A != null)
+            {
+                newWeapon.UniqueItemId = new UniqueItemId
+                {
+                    A = weapon.A ?? 0,
+                    B = weapon.B ?? 0,
+                    C = weapon.C ?? 0,
+                    D = weapon.D ?? 0
+                };
+            }
+
+            if (weapon.WeaponData != null)
+            {
+                NetGUIDToPathName.TryGetValue(weapon.WeaponData.Value, out string itemName);
+
+                newWeapon.Item = new ItemName(itemName);
+            }
+
+            if (weapon.Owner != null)
+            {
+                if (_actorToChannel.TryGetValue(weapon.Owner.Value, out uint channel))
+                {
+                    if(_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
+                    {
+                        Player player = playerPawn as Player;
+
+                        newWeapon.Owner = player;
+
+                        if(player.CurrentInventory.Count > 0)
+                        {
+                            InventoryItem inventoryItem = player.CurrentInventory.Items.FirstOrDefault(x => x.UniqueWeaponId.Equals(newWeapon.UniqueItemId));
+
+                            if(inventoryItem != null)
+                            {
+                                inventoryItem.Weapon = newWeapon;
+                                newWeapon.InventoryItem = inventoryItem;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void HandleDeltaNetRead(NetDeltaUpdate deltaUpdate)
+        {
+            if (_inventories.ContainsKey(deltaUpdate.ChannelIndex))
+            {
+                UpdateNetDeltaFortInventory(deltaUpdate);
             }
         }
 
@@ -586,12 +735,11 @@ namespace FortniteReplayReader.Models
         {
             if(_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out var playerPawns))
             {
-                foreach(var playerPawn in playerPawns)
+                foreach(QueuedPlayerPawn playerPawn in playerPawns)
                 {
-                    UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
+                    UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn, playerPawn.Actor);
                 }
             }
         }
-
     }
 }

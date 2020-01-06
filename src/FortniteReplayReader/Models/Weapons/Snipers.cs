@@ -7,7 +7,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.Weapons
 {
-    public class Sniper : Weapon
+    public class Sniper : BaseWeapon
     { 
     }
 
@@ -30,6 +30,7 @@ namespace FortniteReplayReader.Models.Weapons
     public class SuppressedSniper : Sniper
     {
     }
+
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/B_Rifle_Sniper_Auto_Athena_Child.B_Rifle_Sniper_Auto_Athena_Child_C", ParseType.Normal)]
     public class SemiAutoSniper : Sniper
     {

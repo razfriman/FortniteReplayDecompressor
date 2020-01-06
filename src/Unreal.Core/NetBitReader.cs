@@ -80,20 +80,23 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
         /// </summary>
-        public FRepMovement SerializeRepMovement()
+        public FRepMovement SerializeRepMovement(
+            VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
+            RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
+            VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
             var flags = ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
-            repMovement.bRepPhysics = (flags & (1 << 1)) == 1;
+            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
 
-            repMovement.Location = SerializeQuantizedVector(VectorQuantization.RoundTwoDecimals);
+            repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
             repMovement.Rotation = ReadRotation();
-            repMovement.LinearVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+            repMovement.LinearVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
 
             if (repMovement.bRepPhysics)
             {
-                repMovement.AngularVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+                repMovement.AngularVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
             }
 
             return repMovement;

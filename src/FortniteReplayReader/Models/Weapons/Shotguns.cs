@@ -7,7 +7,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.Weapons
 {
-    public class Shotgun : Weapon
+    public class Shotgun : BaseWeapon
     {
     }
 
@@ -27,7 +27,6 @@ namespace FortniteReplayReader.Models.Weapons
     {
     }
 
-    /* Need to figure out heavy + tactical shotguns */
     [NetFieldExportGroup("/Game/Weapons/FORT_Shotguns/Blueprints/B_Shotgun_SemiAuto_Athena.B_Shotgun_SemiAuto_Athena_C", ParseType.Normal)]
     public class HeavyShotgun : Shotgun
     {
@@ -42,7 +41,6 @@ namespace FortniteReplayReader.Models.Weapons
     public class TacticalShotgun : Shotgun
     {
     }
-    /* End Check area */
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Shotguns/Blueprints/B_Shotgun_Combat_Athena.B_Shotgun_Combat_Athena_C", ParseType.Normal)]
     public class CombatShotgun : Shotgun

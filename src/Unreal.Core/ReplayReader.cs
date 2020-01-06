@@ -120,7 +120,6 @@ namespace Unreal.Core
             IgnoringChannels = new uint?[DefaultMaxChannelSize];
 
             GuidCache.ClearCache();
-
         }
 
         /// <summary>

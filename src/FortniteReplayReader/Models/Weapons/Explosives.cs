@@ -7,7 +7,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.Weapons
 {
-    public class Explosives : Weapon
+    public class Explosives : BaseWeapon
     {
     }
 

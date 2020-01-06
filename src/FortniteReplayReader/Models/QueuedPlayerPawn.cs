@@ -10,5 +10,6 @@ namespace FortniteReplayReader.Models
     {
         public uint ChannelId { get; internal set; }
         public PlayerPawnC PlayerPawn { get; internal set; }
+        public Actor Actor { get; internal set; }
     }
 }

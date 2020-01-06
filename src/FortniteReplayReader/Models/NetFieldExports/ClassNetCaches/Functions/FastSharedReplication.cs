@@ -8,11 +8,10 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
+    //[NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
     public class FastSharedReplication : INetFieldExportGroup
     {
         [NetFieldExport("SharedRepMovement", RepLayoutCmdType.RepMovement)]
         public FRepMovement SharedRepMovement { get; set; } //Type:  Bits: 1
-
     }
 }

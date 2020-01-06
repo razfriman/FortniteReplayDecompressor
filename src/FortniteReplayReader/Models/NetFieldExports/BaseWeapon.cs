@@ -7,7 +7,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    public class Weapon : INetFieldExportGroup
+    public class BaseWeapon : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]
         public bool? bHidden { get; set; } //Type:  Bits: 1

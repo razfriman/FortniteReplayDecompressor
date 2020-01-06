@@ -68,7 +68,7 @@ namespace FortniteReplayReader
 
         protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
         {
-
+            Replay.GameInformation.HandleDeltaNetRead(deltaUpdate);
         }
 
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
@@ -106,7 +106,7 @@ namespace FortniteReplayReader
                 case PlayerPawnC playerPawn:
                     if (ParseType >= ParseType.Normal)
                     {
-                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
+                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn, actor);
                     }
                     break;
                 case FortPickup fortPickup:
@@ -126,7 +126,8 @@ namespace FortniteReplayReader
 
                     Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
                     break;
-                case Explosion explosion:
+                case BaseWeapon weapon:
+                    Replay.GameInformation.HandleWeapon(channel, weapon);
                     break;
                 case FortPoiManager poiManager:
                     Replay.GameInformation.UpdatePoiManager(poiManager, GuidCache.NetworkGameplayTagNodeIndex);
@@ -135,6 +136,10 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateFortInventory(channel, inventory);
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
+                    if(debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later
+                    {
+
+                    }
                     break;
             }
         }

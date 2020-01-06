@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Unreal.Core.Models
@@ -7,6 +8,7 @@ namespace Unreal.Core.Models
     public class NetDeltaArray<T>
     {
         public ICollection<T> Items => _items.Values;
+        public int Count => _items.Count;
 
         private Dictionary<int, T> _items = new Dictionary<int, T>();
 
@@ -15,7 +17,7 @@ namespace Unreal.Core.Models
             return _items.Remove(index);
         }
 
-        public bool AddItem(int index, T item)
+        public bool TryAddItem(int index, T item)
         {
             return _items.TryAdd(index, item);
         }
