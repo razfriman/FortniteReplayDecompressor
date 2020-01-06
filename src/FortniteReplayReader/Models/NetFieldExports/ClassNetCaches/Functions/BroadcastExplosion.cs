@@ -12,7 +12,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     public class Explosion : INetFieldExportGroup
     {
         [NetFieldExport("HitActors", RepLayoutCmdType.DynamicArray)]
-        public ActorId[] HitActors { get; set; } //Type: bool Bits: 1
+        public NetworkGUID[] HitActors { get; set; } //Type: bool Bits: 1
 
         [NetFieldExport("HitResults", RepLayoutCmdType.DynamicArray)]
         public FHitResult[] HitResults { get; set; } //Type: bool Bits: 1

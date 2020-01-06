@@ -407,8 +407,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
 		public DebuggingObject DBNOHoister { get; set; } //Type:  Bits: 16
 
-		[NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore)]
-		public object DBNOCarryEvent { get; set; } //Type:  Bits: 2
+		[NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Enum)]
+		public uint? DBNOCarryEvent { get; set; } //Type:  Bits: 2
 
 		[NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject)]
 		public uint? Backpack { get; set; } //Type: UAthenaBackpackItemDefinition* Bits: 16
