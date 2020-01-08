@@ -22,8 +22,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public object Role { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("Instigator", RepLayoutCmdType.PropertyObject)]
-        public uint? Instigator { get; set; } //Type:  Bits: 16
+        [NetFieldExport("Instigator", RepLayoutCmdType.Property)]
+        public ActorGUID Instigator { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("bIsEquippingWeapon", RepLayoutCmdType.PropertyBool)]
         public bool? bIsEquippingWeapon { get; set; } //Type:  Bits: 1
@@ -31,8 +31,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsReloadingWeapon", RepLayoutCmdType.PropertyBool)]
         public bool? bIsReloadingWeapon { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("WeaponData", RepLayoutCmdType.PropertyObject)]
-        public uint? WeaponData { get; set; } //Type:  Bits: 16
+        [NetFieldExport("WeaponData", RepLayoutCmdType.Property)]
+        public ItemDefinitionGUID WeaponData { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("A", RepLayoutCmdType.PropertyUInt32)]
         public uint? A { get; set; } //Type:  Bits: 32
@@ -52,8 +52,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AmmoCount", RepLayoutCmdType.PropertyUInt32)]
         public uint? AmmoCount { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("AppliedAlterations", RepLayoutCmdType.Ignore)]
-        public object AppliedAlterations { get; set; } //Type:  Bits: 64
+        [NetFieldExport("AppliedAlterations", RepLayoutCmdType.DynamicArray)]
+        public ItemDefinitionGUID[] AppliedAlterations { get; set; } //Type:  Bits: 64
 
         [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.PropertyFloat)]
         public float? LastFireTimeVerified { get; set; }

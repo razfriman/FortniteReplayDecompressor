@@ -18,8 +18,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
         public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 102
 
-        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject)]
-        public uint? AttachParent { get; set; } //Type:  Bits: 16
+        [NetFieldExport("AttachParent", RepLayoutCmdType.Property)]
+        public ActorGUID AttachParent { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
         public FVector LocationOffset { get; set; } //Type:  Bits: 35
@@ -45,8 +45,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Count", RepLayoutCmdType.PropertyInt)]
         public int? Count { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject)]
-        public uint? ItemDefinition { get; set; } //Type: UFortItemDefinition* Bits: 16
+        [NetFieldExport("ItemDefinition", RepLayoutCmdType.Property)]
+        public ItemDefinitionGUID ItemDefinition { get; set; } //Type: UFortItemDefinition* Bits: 16
 
         [NetFieldExport("Durability", RepLayoutCmdType.PropertyFloat)]
         public float? Durability { get; set; } //Type: float Bits: 32

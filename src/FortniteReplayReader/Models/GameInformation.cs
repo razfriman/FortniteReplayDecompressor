@@ -145,6 +145,11 @@ namespace FortniteReplayReader.Models
             }
         }
 
+        internal void UpdateContainer(uint channel, BaseProp container)
+        {
+
+        }
+
         internal void UpdateKillFeed(uint channelId, FortPlayerState playerState)
         {
             KillFeedEntry entry = new KillFeedEntry();
@@ -577,6 +582,15 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
         {
+            if(pickup.bTossedFromContainer == true)
+            {
+
+            }
+
+            if (pickup.ItemDefinition != null)
+            {
+                NetGUIDToPathName.TryGetValue(pickup.ItemDefinition.Value, out string v);
+            }
             /*
 
             bool isNewItem = !_items.TryGetValue(channelId, out InventoryItem newItem);

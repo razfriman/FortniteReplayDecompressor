@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Unreal.Core.Attributes
 {
-    public class NetFieldExportRPCPropertyAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public sealed class NetFieldExportRPCPropertyAttribute : Attribute
     {
         public string Name { get; private set; }
         public string TypePathName { get; private set; }

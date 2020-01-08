@@ -109,7 +109,7 @@ namespace FortniteReplayReader
                     }
                     break;
                 case FortPickup fortPickup:
-                    if(ParseType >= ParseType.Normal)
+                    if (ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
                     }
@@ -134,8 +134,11 @@ namespace FortniteReplayReader
                 case FortInventory inventory:
                     Replay.GameInformation.UpdateFortInventory(channel, inventory);
                     break;
+                case BaseProp prop:
+                    Replay.GameInformation.UpdateContainer(channel, prop);
+                    break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-                    if(debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later
+                    if (debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later
                     {
 
                     }

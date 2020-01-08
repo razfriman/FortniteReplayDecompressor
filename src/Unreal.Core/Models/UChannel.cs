@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Enums;
+﻿using System.Collections.Generic;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -14,6 +15,6 @@ namespace Unreal.Core.Models
         public bool Broken { get; set; }
         public Actor Actor { get; set; }
         public bool? IgnoreChannel { get; set; }
-        public string Group { get; set; }
+        public HashSet<string> Group { get; set; } = new HashSet<string>();
     }
 }

@@ -60,7 +60,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
             //var replayFile = "Replays/creative2.replay";
             //var replayFile = "Replays/weapons.replay";
-
+            //var replayFile = "Replays/iceblocks2.replay";
             Stopwatch sw = new Stopwatch();
 
             long totalTime = 0;
@@ -93,6 +93,7 @@ namespace ConsoleReader
 
                 var c = replay.GameInformation.Players.Where(x => x.CurrentInventory.Count > 0);
                 //var a = NetFieldParser.UnknownNetFields;
+
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");

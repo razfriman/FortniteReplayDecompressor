@@ -113,7 +113,9 @@ namespace Unreal.Core
             }
 
             var s = builder.ToString();
+            var a = String.Join("\n", GuidCache.FailedNames);
 #endif
+
             InReliable = new int?[DefaultMaxChannelSize];
             Channels = new UChannel[DefaultMaxChannelSize];
             ChannelActors = new bool?[DefaultMaxChannelSize];
@@ -1356,7 +1358,29 @@ namespace Unreal.Core
         {
             // outer is used to get path name
             // coreredirects.cpp ...
+
             NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
+
+            if(false)
+            {
+                archive.ReadBit();
+                Console.WriteLine($"Tested - {archive.GetBitsLeft()}");
+
+                var a = Channels[bunch.ChIndex];
+
+                while(true)
+                {
+                    var handle = archive.ReadIntPacked();
+                    
+                    if(handle == 0)
+                    {
+                        break;
+                    }
+
+                    var numBits = archive.ReadIntPacked();
+                    archive.ReadBits(numBits);
+                }
+            }
 
             //Mainly props. If needed, add them in
             if (netFieldExportGroup == null)
@@ -1612,7 +1636,9 @@ namespace Unreal.Core
                 return false;
             }
 
-            Channels[channelIndex].Group = group.PathName;
+#if DEBUG
+            Channels[channelIndex].Group.Add(group.PathName);
+#endif
 
             if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
             {

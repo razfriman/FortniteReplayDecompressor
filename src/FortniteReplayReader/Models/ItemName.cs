@@ -67,7 +67,7 @@ namespace FortniteReplayReader.Models
             _weaponIds.Add("WID_Assault_LMGSAW", "LMG");
         }
 
-        internal ItemName(string itemId)
+        public ItemName(string itemId)
         {
             ItemId = itemId;
 

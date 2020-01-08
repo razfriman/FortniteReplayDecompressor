@@ -139,7 +139,6 @@ namespace Unreal.Core.Models
                     if (!_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
                     {
                         groupPathFixed = RemoveAllPathPrefixes(groupPath);
-
                         _cleanedPaths[groupPathKvp.Value.PathNameIndex] = groupPathFixed;
                     }
 
@@ -152,6 +151,33 @@ namespace Unreal.Core.Models
                     }
                 }
 
+
+                //Try fixing ...
+                if(path.EndsWith("Set", StringComparison.Ordinal) || path.EndsWith("Component", StringComparison.Ordinal)) //Need to deal with later
+                {
+                    return null;
+                }
+
+                var cleanedPath = CleanPathSuffix(path);
+
+                foreach (var groupPathKvp in NetFieldExportGroupMap)
+                {
+                    var groupPath = groupPathKvp.Key;
+
+                    if (_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
+                    {
+                        if (groupPathFixed.Contains(cleanedPath, StringComparison.Ordinal))
+                        {
+                            NetFieldExportGroupMapPathFixed[guid] = NetFieldExportGroupMap[groupPath];
+                            _archTypeToExportGroup[guid] = NetFieldExportGroupMap[groupPath];
+
+                            return NetFieldExportGroupMap[groupPath];
+                        }
+                    }
+                }
+
+                FailedNames.Add(path);
+
                 return null;
             }
             else
@@ -159,6 +185,8 @@ namespace Unreal.Core.Models
                 return _archTypeToExportGroup[guid];
             }
         }
+
+        public HashSet<string> FailedNames = new HashSet<string>();
 
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
         {
@@ -182,7 +210,7 @@ namespace Unreal.Core.Models
 
             for(int i = path.Length - 1; i >= 0; i--)
             {
-                switch(path[i])
+                switch (path[i])
                 {
                     case '.':
                         return path.Substring(i + 1);
@@ -212,6 +240,44 @@ namespace Unreal.Core.Models
             return path.Substring(toRemove.Length);
         }
 
+        private string RemovePathSuffix(string path, string toRemove)
+        {
+            if (toRemove.Length > path.Length)
+            {
+                return path;
+            }
+
+            for (int i = 0; i < toRemove.Length; i++)
+            {
+                int pathIndex = path.Length - toRemove.Length + i;
+
+                if (path[pathIndex] != toRemove[i])
+                {
+                    return path;
+                }
+            }
+
+            return path.Substring(0, path.Length - toRemove.Length);
+        }
+
+        //Removes all numbers and underscores from suffix
+        private string CleanPathSuffix(string path)
+        {
+            for(int i = path.Length - 1; i >= 0; i--)
+            {
+                bool isDigit = (path[i] ^ '0') <= 9;
+                bool isUnderscore = path[i] == '_';
+
+                if(!isDigit && !isUnderscore)
+                {
+                    return path.Substring(0, i + 1);
+                }
+            }
+
+            return path;
+        }
+
+        /*
         private string RemovePathSuffix(string path)
         {
             return Regex.Replace(path, @"(_?[0-9]+)+$", "");
@@ -221,5 +287,6 @@ namespace Unreal.Core.Models
         {
             return Regex.Replace(path, $@"{toRemove}$", "");
         }
+        */
     }
 }

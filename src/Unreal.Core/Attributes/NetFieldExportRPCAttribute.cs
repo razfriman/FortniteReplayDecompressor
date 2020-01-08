@@ -5,6 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Attributes
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class NetFieldExportRPCAttribute : Attribute
     {
         public string PathName { get; private set; }
