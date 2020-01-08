@@ -5,7 +5,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Weapons
+namespace FortniteReplayReader.Models.Items.Weapons
 {
     public class Rifles : BaseWeapon
     {

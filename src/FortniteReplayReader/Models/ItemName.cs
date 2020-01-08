@@ -122,9 +122,12 @@ namespace FortniteReplayReader.Models
                 }
 
                 weaponId = String.Join("_", parts.Take(athenaIndex));
-                string rarity = parts[athenaIndex + 1];
-                UpdateWeaponRarity(rarity);
 
+                if(athenaIndex + 1 < parts.Length)
+                {
+                    string rarity = parts[athenaIndex + 1];
+                    UpdateWeaponRarity(rarity);
+                }
             }
 
             if(_weaponIds.TryGetValue(weaponId, out string name))

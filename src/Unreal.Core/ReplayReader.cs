@@ -113,7 +113,6 @@ namespace Unreal.Core
             }
 
             var s = builder.ToString();
-            var a = String.Join("\n", GuidCache.FailedNames);
 #endif
 
             InReliable = new int?[DefaultMaxChannelSize];
@@ -718,6 +717,12 @@ namespace Unreal.Core
                         group.NetFieldExports = new NetFieldExport[numExports];
 
                         GuidCache.AddToExportGroupMap(pathName, group);
+
+                        //Check if partial group
+                        if(NetFieldParser.TryGetRedirectPathName(pathName, out string redirectPath))
+                        {
+                            GuidCache.AddPartialPathName(pathName, redirectPath);
+                        }
                     }
 
                     //GuidCache.NetFieldExportGroupPathToIndex[pathName] = pathNameIndex;
@@ -1360,27 +1365,6 @@ namespace Unreal.Core
             // coreredirects.cpp ...
 
             NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
-
-            if(false)
-            {
-                archive.ReadBit();
-                Console.WriteLine($"Tested - {archive.GetBitsLeft()}");
-
-                var a = Channels[bunch.ChIndex];
-
-                while(true)
-                {
-                    var handle = archive.ReadIntPacked();
-                    
-                    if(handle == 0)
-                    {
-                        break;
-                    }
-
-                    var numBits = archive.ReadIntPacked();
-                    archive.ReadBits(numBits);
-                }
-            }
 
             //Mainly props. If needed, add them in
             if (netFieldExportGroup == null)

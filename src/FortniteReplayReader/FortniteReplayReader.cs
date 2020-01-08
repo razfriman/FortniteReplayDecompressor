@@ -3,6 +3,7 @@ using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.Weapons;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

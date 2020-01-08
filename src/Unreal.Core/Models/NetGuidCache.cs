@@ -19,6 +19,7 @@ namespace Unreal.Core.Models
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
+        private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
 
         public void ClearCache()
         {
@@ -99,6 +100,11 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMap[group] = exportGroup;
         }
 
+        public void AddPartialPathName(string pathName, string redirectPathName)
+        {
+            _partialPathNames.TryAdd(RemoveAllPathPrefixes(pathName), redirectPathName);
+        }
+
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
         {
             if(String.IsNullOrEmpty(pathName))
@@ -124,6 +130,11 @@ namespace Unreal.Core.Models
                 }
 
                 var path = NetGuidToPathName[guid];
+
+                if(_partialPathNames.TryGetValue(path, out string redirectPath))
+                {
+                    path = redirectPath;
+                }
 
                 if (NetFieldExportGroupMapPathFixed.ContainsKey(guid))
                 {
@@ -176,8 +187,6 @@ namespace Unreal.Core.Models
                     }
                 }
 
-                FailedNames.Add(path);
-
                 return null;
             }
             else
@@ -185,8 +194,6 @@ namespace Unreal.Core.Models
                 return _archTypeToExportGroup[guid];
             }
         }
-
-        public HashSet<string> FailedNames = new HashSet<string>();
 
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
         {

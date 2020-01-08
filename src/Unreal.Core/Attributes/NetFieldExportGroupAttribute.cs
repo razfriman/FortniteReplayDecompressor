@@ -7,13 +7,11 @@ namespace Unreal.Core.Attributes
     public class NetFieldExportGroupAttribute : Attribute
     {
         public string Path { get; protected set; }
-        public bool PartialGroup { get; protected set; }
         public ParseType MinimumParseType { get; protected set; }
 
-        public NetFieldExportGroupAttribute(string path, ParseType minParseType = ParseType.Minimal, bool partialGroup = false)
+        public NetFieldExportGroupAttribute(string path, ParseType minParseType = ParseType.Minimal)
         {
             Path = path;
-            PartialGroup = partialGroup;
             MinimumParseType = minParseType;
         }
     }

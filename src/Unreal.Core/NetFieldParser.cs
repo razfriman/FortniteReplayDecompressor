@@ -21,6 +21,7 @@ namespace Unreal.Core
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
         private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCStructureTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
         private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private static Dictionary<string, string> _partialPathNames = new Dictionary<string, string>(); //Maps partial paths to an export group path name
 
 #if DEBUG
         public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
@@ -59,6 +60,11 @@ namespace Unreal.Core
                         Attribute = netFieldExportAttribute,
                         PropertyInfo = property
                     };
+                }
+
+                if(attribute is PartialNetFieldExportGroup partialGroup)
+                {
+                    _partialPathNames.TryAdd(partialGroup.PartialPath, partialGroup.Path);
                 }
             }
 
@@ -157,6 +163,22 @@ namespace Unreal.Core
             return false;
         }
 
+        public static bool TryGetRedirectPathName(string pathName, out string redirectPathName)
+        {
+            redirectPathName = String.Empty;
+
+            foreach(var pathNamesKvp in _partialPathNames)
+            {
+                if(pathName.StartsWith(pathNamesKvp.Key, StringComparison.Ordinal))
+                {
+                    redirectPathName = pathNamesKvp.Value;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public static bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
