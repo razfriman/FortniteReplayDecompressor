@@ -13,7 +13,8 @@ namespace FortniteReplayReader.Models.Items.Weapons
 
     }
 
-    [PartialNetFieldExportGroup("/Game/Weapons/FORT_Melee/Blueprints/", "/Game/Weapons/FORT_Melee/Blueprints/B_Athena_Pickaxe_Generic.B_Athena_Pickaxe_Generic_C", ParseType.Normal)]
+    [NetFieldExportGroup("/Game/Weapons/FORT_Melee/Blueprints/B_Athena_Pickaxe_Generic.B_Athena_Pickaxe_Generic_C", ParseType.Normal)]
+    [PartialNetFieldExportGroup("/Game/Weapons/FORT_Melee/Blueprints/")]
     public class PickAxe : Melee
     {
 

@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core.Attributes
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class NetFieldExportAttribute : Attribute
+    public sealed class NetFieldExportAttribute : Attribute
     {
         public string Name { get; private set; }
         public RepLayoutCmdType Type { get; private set; }

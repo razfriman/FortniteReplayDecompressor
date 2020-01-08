@@ -6,11 +6,11 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class PartialNetFieldExportGroup : NetFieldExportGroupAttribute
+    public sealed class PartialNetFieldExportGroup : Attribute
     {
         public string PartialPath { get; private set; }
 
-        public PartialNetFieldExportGroup(string partialPath, string redirectPath, ParseType minParseType = ParseType.Minimal) : base(redirectPath, minParseType)
+        public PartialNetFieldExportGroup(string partialPath)
         {
             PartialPath = partialPath;
         }

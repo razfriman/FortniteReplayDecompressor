@@ -57,17 +57,17 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("LoadedAmmo", RepLayoutCmdType.PropertyInt)]
         public int? LoadedAmmo { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("A", RepLayoutCmdType.PropertyInt)]
-        public int? A { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("A", RepLayoutCmdType.PropertyUInt32)]
+        public uint? A { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("B", RepLayoutCmdType.PropertyInt)]
-        public int? B { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("B", RepLayoutCmdType.PropertyUInt32)]
+        public uint? B { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("C", RepLayoutCmdType.PropertyInt)]
-        public int? C { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("C", RepLayoutCmdType.PropertyUInt32)]
+        public uint? C { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("D", RepLayoutCmdType.PropertyInt)]
-        public int? D { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("D", RepLayoutCmdType.PropertyUInt32)]
+        public uint? D { get; set; } //Type: int32 Bits: 32
 
         [NetFieldExport("bUpdateStatsOnCollection", RepLayoutCmdType.PropertyBool)]
         public bool? bUpdateStatsOnCollection { get; set; } //Type:  Bits: 1

@@ -21,7 +21,7 @@ namespace FortniteReplayReader.Models
         public ICollection<Team> Teams => _teams.Values;
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
         public ICollection<PlayerReboot> Resurrections => _resurrections;
-        public ICollection<InventoryItem> Items => _items.Values;
+        public ICollection<InventoryItem> FloorLoot => _floorLoot.Values;
         public ICollection<KillFeedEntry> KillFeed => _killFeed;
 
         public GameState GameState { get; private set; } = new GameState();
@@ -30,7 +30,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel supply drop
-        private Dictionary<uint, InventoryItem> _items = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem
+        private Dictionary<uint, InventoryItem> _floorLoot = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem. These will be removed/added over time
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
@@ -48,6 +48,7 @@ namespace FortniteReplayReader.Models
         internal void ChannelClosed(uint channel)
         {
             _weapons.Remove(channel);
+            _floorLoot.Remove(channel);
         }
 
         internal void AddActor(uint channel, Actor actor)
@@ -533,7 +534,6 @@ namespace FortniteReplayReader.Models
                 return;
             }
 
-
             if (deltaUpdate.Deleted)
             {
                 //Cache inventory when deleting to hold on to inventory prior to death
@@ -587,91 +587,62 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
         {
-            /*
-
-            bool isNewItem = !_items.TryGetValue(channelId, out InventoryItem newItem);
+            bool isNewItem = !_floorLoot.TryGetValue(channelId, out InventoryItem newItem);
 
             //Create a new item. Same channel seems to be used for multiple items. Dropped items can be on a different channel
-            if(pickup.ItemDefinition != null)
+
+            if (isNewItem)
             {
-                if (isNewItem || pickup.PickupTarget == null)
-                {
-                    newItem = new InventoryItem();
-                    _items[channelId] = newItem;
-                }
+                newItem = new InventoryItem();
+                _floorLoot.TryAdd(channelId, newItem);
             }
 
             if (pickup.ItemDefinition != null)
             {
                 if (NetGUIDToPathName.TryGetValue(pickup.ItemDefinition.Value, out string weaponPathName))
                 {
-                    newItem.ItemIdName = weaponPathName;
+                    newItem.Item = new ItemName(weaponPathName);
                 }
             }
 
-            newItem.Channel = channelId;
-            newItem.ItemDefinition = pickup.ItemDefinition ?? newItem.ItemDefinition;
+            if (pickup.A != null)
+            {
+                newItem.UniqueWeaponId = new UniqueItemId
+                {
+                    A = pickup.A ?? 0,
+                    B = pickup.B ?? 0,
+                    C = pickup.C ?? 0,
+                    D = pickup.D ?? 0
+                };
+            }
+
+            newItem.ItemDefinition = pickup.ItemDefinition?.Value ?? newItem.ItemDefinition;
             newItem.InitialPosition = pickup.LootInitialPosition ?? newItem.InitialPosition;
             newItem.Count = pickup.Count ?? newItem.Count;
-            newItem.Level = pickup.Level ?? newItem.Level;
-            newItem.Ammo = pickup.LoadedAmmo ?? newItem.Ammo;
+            newItem.LoadedAmmo = pickup.LoadedAmmo ?? newItem.LoadedAmmo;
 
             //Need to test if it's correct
             if (pickup.CombineTarget != null)
             {
                 if (_actorToChannel.TryGetValue(pickup.CombineTarget.Value, out uint actorChannel))
                 {
-                    if(_items.TryGetValue(actorChannel, out InventoryItem combinedItem))
+                    if(_floorLoot.TryGetValue(actorChannel, out InventoryItem combinedItem))
                     {
                         newItem.CombineTarget = combinedItem;
                     }
                 }
             }
 
-            //Only handle weapons
-            if (newItem.ItemIdName.StartsWith("WID"))
+            if(pickup.PawnWhoDroppedPickup != null)
             {
-                //Item picked up
-                if (pickup.PickupTarget != null)
+                if (_actorToChannel.TryGetValue(pickup.PawnWhoDroppedPickup.Value, out uint actorChannel))
                 {
-                    if (_actorToChannel.TryGetValue(pickup.PickupTarget.Value, out uint actorChannel))
+                    if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn playerPawn))
                     {
-                        if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn playerPawn))
-                        {
-                            Player player = (Player)playerPawn;
-
-                            player.InventoryChanges.Add(new InventoryItemChange
-                            {
-                                Item = newItem,
-                                State = ItemChangeState.PickedUp,
-                                WorldTime = GameState.CurrentWorldTime,
-                            });
-
-                            newItem.CurrentOwner = player;
-                        }
+                        newItem.LastDroppedBy = playerPawn as Player;
                     }
                 }
-                else if (pickup.PawnWhoDroppedPickup != null) //Item dropped
-                {
-                    if (_actorToChannel.TryGetValue(pickup.PawnWhoDroppedPickup.Value, out uint actorChannel))
-                    {
-                        if (_playerPawns.TryGetValue(actorChannel, out PlayerPawn playerPawn))
-                        {
-                            Player player = (Player)playerPawn;
-
-                            player.InventoryChanges.Add(new InventoryItemChange
-                            {
-                                Item = newItem,
-                                State = ItemChangeState.Dropped,
-                                WorldTime = GameState.CurrentWorldTime,
-                            });
-
-                            newItem.CurrentOwner = null;
-                            newItem.LastDroppedBy = player;
-                        }
-                    }
-                }
-            }*/
+            }
         }
 
         internal void HandleWeapon(uint channelId, BaseWeapon weapon)

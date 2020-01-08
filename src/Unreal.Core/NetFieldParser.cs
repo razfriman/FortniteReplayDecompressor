@@ -62,9 +62,12 @@ namespace Unreal.Core
                     };
                 }
 
-                if(attribute is PartialNetFieldExportGroup partialGroup)
+                //Check for partial group
+                PartialNetFieldExportGroup partialAttribute = type.GetCustomAttribute<PartialNetFieldExportGroup>();
+
+                if (partialAttribute != null)
                 {
-                    _partialPathNames.TryAdd(partialGroup.PartialPath, partialGroup.Path);
+                    _partialPathNames.TryAdd(partialAttribute.PartialPath, attribute.Path);
                 }
             }
 
