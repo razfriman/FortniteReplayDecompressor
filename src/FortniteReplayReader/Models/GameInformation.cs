@@ -28,14 +28,13 @@ namespace FortniteReplayReader.Models
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
-        private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
-        private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>();
+        private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
+        private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel supply drop
         private Dictionary<uint, InventoryItem> _items = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
-        private Dictionary<uint, FortInventory> _queuedInventories = new Dictionary<uint, FortInventory>(); //PlayerPawn Actor to inventory items
         private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
 
@@ -45,6 +44,11 @@ namespace FortniteReplayReader.Models
         private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
         internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
+
+        internal void ChannelClosed(uint channel)
+        {
+            _weapons.Remove(channel);
+        }
 
         internal void AddActor(uint channel, Actor actor)
         {
@@ -414,15 +418,11 @@ namespace FortniteReplayReader.Models
 
                                 playerActor.CurrentWeapon = weapon;
                             }
-                            else
-                            {
-                                //Pickaxe
-                                var a = Channels[weaponChannel];
-                            }
                         }
                         else
                         {
                             //Ignore as it's most likely their pickaxe when initially loading
+                            //Can fix this later, if needed
                         }
                     }
 
@@ -457,10 +457,10 @@ namespace FortniteReplayReader.Models
                 IsBallistic = batchedDamage.bIsBallistic,
                 IsShield = batchedDamage.bIsShield,
                 Location = batchedDamage.Location,
-                Magnitude = batchedDamage.Magnitude,
+                Damage = batchedDamage.Magnitude,
                 Normal = batchedDamage.Normal,
                 IsShieldDestroyed = batchedDamage.bIsShieldDestroyed,
-                WorldTime = GameState.CurrentWorldTime,
+                DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime,
                 Weapon = player.CurrentWeapon
             };
 
@@ -478,12 +478,17 @@ namespace FortniteReplayReader.Models
                     else
                     {
                         //These are non player actors and other objects
+                        var a = Channels[actorChannel];
                     }
                 }
                 else
                 {
                     //Miss?
                 }
+            }
+            else
+            {
+                //Hit nothing, not even the ground
             }
 
             player.Shots.Add(shot);
@@ -509,7 +514,7 @@ namespace FortniteReplayReader.Models
             if(inventory.ReplayPawn > 0)
             {
                 //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                _inventories.TryAdd(channelId, inventory);
+                _inventories[channelId] = inventory;
             }
         }
 

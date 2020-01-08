@@ -49,7 +49,7 @@ namespace Unreal.Core
         private DataBunch PartialBunch;
         private int?[] InReliable = new int?[DefaultMaxChannelSize];
         public UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
-        private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
+        //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
 
@@ -117,7 +117,7 @@ namespace Unreal.Core
 
             InReliable = new int?[DefaultMaxChannelSize];
             Channels = new UChannel[DefaultMaxChannelSize];
-            ChannelActors = new bool?[DefaultMaxChannelSize];
+            //ChannelActors = new bool?[DefaultMaxChannelSize];
             IgnoringChannels = new uint?[DefaultMaxChannelSize];
 
             GuidCache.ClearCache();
@@ -1155,7 +1155,10 @@ namespace Unreal.Core
             if (bunch.bClose)
             {
                 // We have fully received the bunch, so process it.
-                ChannelActors[bunch.ChIndex] = false;
+                //ChannelActors[bunch.ChIndex] = false;
+                Channels[bunch.ChIndex] = null;
+                OnChannelClosed(bunch.ChIndex);
+
                 return true;
             }
 
@@ -1223,7 +1226,7 @@ namespace Unreal.Core
                 return;
             }
 
-            var actor = ChannelActors[bunch.ChIndex] == true;
+            var actor = Channels[bunch.ChIndex].Actor != null;
 
             if (!actor)
             {
@@ -1309,7 +1312,7 @@ namespace Unreal.Core
                 #endregion
 
                 channel.Actor = inActor;
-                ChannelActors[bunch.ChIndex] = true;
+                //ChannelActors[bunch.ChIndex] = true;
 
                 OnChannelActorRead(channel.ChannelIndex, inActor);
                 //ChannelNetGuids[bunch.ChIndex] = inActor.ActorNetGUID.Value;
@@ -2240,5 +2243,6 @@ namespace Unreal.Core
         protected abstract void OnNetDeltaRead(NetDeltaUpdate deltaUpdate);
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);
+        protected abstract void OnChannelClosed(uint channel); //Allows reuse of channel
     }
 }

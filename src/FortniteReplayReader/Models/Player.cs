@@ -66,10 +66,10 @@ namespace FortniteReplayReader.Models
         public PlayerPawn ShotByPlayerPawn { get; set; }
         public PlayerPawn HitPlayerPawn { get; set; }
         public Weapon Weapon { get; set;}
-        public float WorldTime { get; set; }
+        public float DeltaGameTimeSeconds { get; set; }
         public FVector Location { get; set; } 
         public FVector Normal { get; set; }
-        public float Magnitude { get; set; }
+        public float Damage { get; set; }
         public bool WeaponActivate { get; set; }
         public bool IsFatal { get; set; }
         public bool IsCritical { get; set; }

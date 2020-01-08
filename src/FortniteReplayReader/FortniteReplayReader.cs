@@ -168,6 +168,11 @@ namespace FortniteReplayReader
             }
         }
 
+        protected override void OnChannelClosed(uint channel)
+        {
+            Replay.GameInformation.ChannelClosed(channel);
+        }
+
         protected override void ReadReplayHeader(FArchive archive)
         {
             base.ReadReplayHeader(archive);
