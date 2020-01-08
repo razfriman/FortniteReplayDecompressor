@@ -19,4 +19,9 @@ namespace FortniteReplayReader.Models.Items.Consumables
     public class HalfPot : ShieldConsumable
     {
     }
+
+    [NetFieldExportGroup("/Game/Abilities/Player/Generic/UtilityItems/B_UtilityItem_Generic_Athena.B_UtilityItem_Generic_Athena_C", ParseType.Normal)]
+    public class ChugJug : ShieldConsumable
+    {
+    }
 }

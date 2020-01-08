@@ -46,4 +46,9 @@ namespace FortniteReplayReader.Models.Items.Weapons
     public class ProximityLauncher : Explosives
     {
     }
+
+    [NetFieldExportGroup("/Game/Abilities/Player/Generic/UtilityItems/B_Grenade_Frag_Athena.B_Grenade_Frag_Athena_C", ParseType.Normal)]
+    public class FragGrenade : Explosives
+    {
+    }
 }

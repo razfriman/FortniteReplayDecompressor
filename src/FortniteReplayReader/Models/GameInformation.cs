@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FortniteReplayReader.Models.Items.Consumables;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using Unreal.Core.Models;
@@ -416,12 +417,12 @@ namespace FortniteReplayReader.Models
                             else
                             {
                                 //Pickaxe
-
+                                var a = Channels[weaponChannel];
                             }
                         }
                         else
                         {
-                            //Ignore as it's most likely their pickaxe
+                            //Ignore as it's most likely their pickaxe when initially loading
                         }
                     }
 
