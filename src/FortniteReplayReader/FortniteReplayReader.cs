@@ -3,6 +3,7 @@ using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -136,6 +137,9 @@ namespace FortniteReplayReader
                     break;
                 case BaseProp prop:
                     Replay.GameInformation.UpdateContainer(channel, prop);
+                    break;
+                case HealthSet healthSet:
+                    Replay.GameInformation.UpdateHealth(channel, healthSet);
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
                     if (debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later

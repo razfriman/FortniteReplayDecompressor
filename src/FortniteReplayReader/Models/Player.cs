@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -39,6 +40,7 @@ namespace FortniteReplayReader.Models
         public List<WeaponSwitch> WeaponSwitches { get; private set; } = new List<WeaponSwitch>();
 
         public List<KillFeedEntry> StatusChanges { get; private set; } = new List<KillFeedEntry>();
+        public List<HealthUpdate> HealthChanges { get; private set; } = new List<HealthUpdate>();
 
         /// <summary>
         /// Last known location when player landed from bus

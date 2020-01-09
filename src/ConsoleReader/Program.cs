@@ -58,9 +58,9 @@ namespace ConsoleReader
             //var replayFile = "Replays/123.replay";
             //var replayFile = "Replays/WCReplay.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
-            var replayFile = "Replays/creative2.replay";
+            //var replayFile = "Replays/creative.replay";
            // var replayFile = "Replays/weapons2.replay";
-            //var replayFile = "Replays/iceblocks2.replay";
+            var replayFile = "Replays/iceblocks2.replay";
             Stopwatch sw = new Stopwatch();
 
             long totalTime = 0;

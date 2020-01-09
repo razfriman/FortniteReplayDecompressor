@@ -70,18 +70,10 @@ namespace Unreal.Core
 
                         info.HandleProperties[netFieldExportHandleAttribute.Handle] = new NetFieldInfo
                         {
-                            Attribute = netFieldExportAttribute,
+                            Attribute = netFieldExportHandleAttribute,
                             PropertyInfo = property
                         };
                     }
-                }
-
-                //Check for partial group
-                PartialNetFieldExportGroup partialAttribute = type.GetCustomAttribute<PartialNetFieldExportGroup>();
-
-                if (partialAttribute != null)
-                {
-                    _partialPathNames.TryAdd(partialAttribute.PartialPath, attribute.Path);
                 }
             }
 
@@ -180,23 +172,6 @@ namespace Unreal.Core
             return false;
         }
 
-        public static bool TryGetRedirectPathName(string pathName, out string redirectPathName)
-        {
-            redirectPathName = String.Empty;
-
-            foreach(var pathNamesKvp in _partialPathNames)
-            {
-                if(pathName.StartsWith(pathNamesKvp.Key, StringComparison.Ordinal))
-                {
-                    redirectPathName = pathNamesKvp.Value;
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public static bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
             ignoreChannel = false;
@@ -237,11 +212,6 @@ namespace Unreal.Core
             }
 
             NetFieldInfo netFieldInfo = null;
-
-            if(netGroupInfo.UsesHandles)
-            {
-
-            }
 
             if ((!netGroupInfo.UsesHandles && !netGroupInfo.Properties.TryGetValue(fixedExportName, out netFieldInfo)) ||
                 (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo)))
@@ -484,216 +454,6 @@ namespace Unreal.Core
             return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
         }
 
-#if DEBUG
-        public static void GenerateFiles(string directory)
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, true);
-            }
-
-            Directory.CreateDirectory(directory);
-
-            foreach (KeyValuePair<string, NetFieldGroupInfo> netFieldGroundKvp in _netFieldGroups)
-            {
-                foreach (KeyValuePair<string, NetFieldInfo> netFieldInfo in netFieldGroundKvp.Value.Properties)
-                {
-                    AddUnknownField(netFieldGroundKvp.Key, netFieldInfo.Value.Attribute.Info);
-                }
-            }
-
-
-            foreach (KeyValuePair<string, HashSet<UnknownFieldInfo>> kvp in UnknownNetFields)
-            {
-                string fileName = String.Join("", kvp.Key.Split('/').Last().Split('.').Last().Split("_")).Replace("Athena", "");
-                fileName = FixInvalidNames(fileName);
-
-                if (char.IsDigit(fileName[0]))
-                {
-                    int firstCharacter = fileName.ToList().FindIndex(x => !char.IsDigit(x));
-
-                    fileName = fileName.Substring(firstCharacter);
-                }
-
-
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine("using System.Collections.Generic;");
-                builder.AppendLine("using Unreal.Core.Attributes;");
-                builder.AppendLine("using Unreal.Core.Contracts;");
-                builder.AppendLine("using Unreal.Core.Models.Enums;\n");
-                builder.AppendLine("namespace Unreal.Core.Models");
-                builder.AppendLine("{");
-                builder.AppendLine($"\t[NetFieldExportGroup(\"{kvp.Key}\")]");
-                builder.AppendLine($"\tpublic class {fileName} : INetFieldExportGroup");
-                builder.AppendLine("\t{");
-
-                foreach (UnknownFieldInfo unknownField in kvp.Value.OrderBy(x => x.Handle))
-                {
-                    RepLayoutCmdType commandType = RepLayoutCmdType.Ignore;
-                    string type = "object";
-
-                    if (!String.IsNullOrEmpty(unknownField.Type))
-                    {
-                        //8, 16, or 32
-                        if (unknownField.Type.EndsWith("*") || unknownField.Type.StartsWith("TSubclassOf"))
-                        {
-                            type = "uint?";
-                            commandType = RepLayoutCmdType.PropertyObject;
-                        }
-                        else if (unknownField.Type.StartsWith("TEnumAsByte"))
-                        {
-                            type = "int?";
-                            commandType = RepLayoutCmdType.Enum;
-                        }
-                        else if (unknownField.Type.StartsWith("E") && unknownField.Type.Length > 1 && Char.IsUpper(unknownField.Type[1]))
-                        {
-                            type = "int?";
-                            commandType = RepLayoutCmdType.Enum;
-                        }
-                        else
-                        {
-                            switch (unknownField.Type)
-                            {
-                                case "TArray":
-                                    type = "object[]";
-                                    commandType = RepLayoutCmdType.DynamicArray;
-                                    break;
-                                case "FRotator":
-                                    type = "FRotator";
-                                    commandType = RepLayoutCmdType.PropertyRotator;
-                                    break;
-                                case "float":
-                                    type = "float?";
-                                    commandType = RepLayoutCmdType.PropertyFloat;
-                                    break;
-                                case "bool":
-                                    type = "bool?";
-                                    commandType = RepLayoutCmdType.PropertyBool;
-                                    break;
-                                case "int8":
-                                    if (unknownField.BitCount == 1)
-                                    {
-                                        type = "bool?";
-                                        commandType = RepLayoutCmdType.PropertyBool;
-                                    }
-                                    else
-                                    {
-                                        type = "byte?";
-                                        commandType = RepLayoutCmdType.PropertyByte;
-                                    }
-                                    break;
-                                case "uint8":
-                                    if (unknownField.BitCount == 1)
-                                    {
-                                        type = "bool?";
-                                        commandType = RepLayoutCmdType.PropertyBool;
-                                    }
-                                    else
-                                    {
-                                        type = "byte?";
-                                        commandType = RepLayoutCmdType.PropertyByte;
-                                    }
-                                    break;
-                                case "int16":
-                                    type = "ushort?";
-                                    commandType = RepLayoutCmdType.PropertyUInt16;
-                                    break;
-                                case "uint16":
-                                    type = "ushort?";
-                                    commandType = RepLayoutCmdType.PropertyUInt16;
-                                    break;
-                                case "uint32":
-                                    type = "uint?";
-                                    commandType = RepLayoutCmdType.PropertyUInt32;
-                                    break;
-                                case "int32":
-                                    type = "int?";
-                                    commandType = RepLayoutCmdType.PropertyInt;
-                                    break;
-                                case "FUniqueNetIdRepl":
-                                    type = "string";
-                                    commandType = RepLayoutCmdType.PropertyNetId;
-                                    break;
-                                case "FHitResult":
-                                case "FGameplayTag":
-                                case "FText":
-                                case "FVector2D":
-                                case "FAthenaPawnReplayData":
-                                case "FDateTime":
-                                case "FName":
-                                case "FQuat":
-                                case "FVector":
-                                case "FQuantizedBuildingAttribute":
-                                    type = unknownField.Type;
-                                    commandType = RepLayoutCmdType.Property;
-                                    break;
-                                case "FVector_NetQuantize":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVectorQ;
-                                    break;
-                                case "FVector_NetQuantize10":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVector10;
-                                    break;
-                                case "FVector_NetQuantizeNormal":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVectorNormal;
-                                    break;
-                                case "FVector_NetQuantize100":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVector100;
-                                    break;
-                                case "FString":
-                                    type = "string";
-                                    commandType = RepLayoutCmdType.PropertyString;
-                                    break;
-                                case "FRepMovement":
-                                    type = "FRepMovement";
-                                    commandType = RepLayoutCmdType.RepMovement;
-                                    break;
-                                case "FMinimalGameplayCueReplicationProxy":
-                                    type = "int?";
-                                    commandType = RepLayoutCmdType.Enum;
-                                    break;
-                                default:
-                                    //Console.WriteLine(unknownField.Type);
-                                    break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        switch (unknownField.BitCount)
-                        {
-                            case 1:
-                                type = "bool?";
-                                commandType = RepLayoutCmdType.PropertyBool;
-                                break;
-                            case 8: //Can't determine if it's a pointer that can have 8, 16, or 32 bits
-                            case 16:
-                            case 32:
-                                type = "uint?";
-                                commandType = RepLayoutCmdType.PropertyUInt32;
-                                break;
-                        }
-                    }
-
-                    string fixedPropertyName = FixInvalidNames(unknownField.PropertyName);
-
-                    builder.AppendLine($"\t\t[NetFieldExport(\"{unknownField.PropertyName}\", RepLayoutCmdType.{commandType.ToString()}, {unknownField.Handle}, \"{unknownField.PropertyName}\", \"{unknownField.Type}\", {unknownField.BitCount})]");
-                    builder.AppendLine($"\t\tpublic {type} {fixedPropertyName} {{ get; set; }} //Type: {unknownField.Type} Bits: {unknownField.BitCount}\n");
-                }
-
-                builder.AppendLine("\t}");
-                builder.AppendLine("}");
-
-                string cSharpFile = builder.ToString();
-
-                File.WriteAllText(Path.Combine(directory, fileName) + ".cs", cSharpFile);
-            }
-        }
-#endif
-
         private static unsafe string FixInvalidNames(string str)
         {
             int len = str.Length;
@@ -756,7 +516,8 @@ namespace Unreal.Core
 
         private class NetFieldInfo
         {
-            public NetFieldExportAttribute Attribute { get; set; }
+            public RepLayoutAttribute Attribute { get; set; }
+
             public PropertyInfo PropertyInfo { get; set; }
         }
 

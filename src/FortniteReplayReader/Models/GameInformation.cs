@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -32,7 +33,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, InventoryItem> _floorLoot = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem. These will be removed/added over time
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
-        private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id to Actor
+        private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id (player pawn) to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
         private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
@@ -421,7 +422,7 @@ namespace FortniteReplayReader.Models
                             }
                             else
                             {
-
+                                //Useful to debug weapons that aren't added
                             }
                         }
                         else
@@ -654,6 +655,18 @@ namespace FortniteReplayReader.Models
                         newItem.LastDroppedBy = playerPawn as Player;
                     }
                 }
+            }
+        }
+
+        internal void UpdateHealth(uint channelId, HealthSet health)
+        {
+            if(_players.TryGetValue(channelId, out Player player))
+            {
+                player.HealthChanges.Add(new HealthUpdate
+                {
+                    Health = health,
+                    DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime
+                });
             }
         }
 
