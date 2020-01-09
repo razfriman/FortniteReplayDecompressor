@@ -4,7 +4,7 @@ using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Items.Consumables
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
 {
     public class Fish : Consumable
     {

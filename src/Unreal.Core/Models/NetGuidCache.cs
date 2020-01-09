@@ -12,7 +12,7 @@ namespace Unreal.Core.Models
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
-        public Dictionary<uint, string> NetGuidToPathName{ get; private set; } = new Dictionary<uint, string>();
+        public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
         public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -98,11 +98,15 @@ namespace Unreal.Core.Models
             }
 
             NetFieldExportGroupMap[group] = exportGroup;
-        }
 
-        public void AddPartialPathName(string pathName, string redirectPathName)
-        {
-            _partialPathNames.TryAdd(RemoveAllPathPrefixes(pathName), redirectPathName);
+            //Check if partial path
+            foreach(KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
+            {
+                if(group.StartsWith(partialRedirectKvp.Key))
+                {
+                    _partialPathNames.Add(group, partialRedirectKvp.Value);
+                }
+            }
         }
 
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
@@ -130,6 +134,8 @@ namespace Unreal.Core.Models
                 }
 
                 var path = NetGuidToPathName[guid];
+
+                path = CoreRedirects.GetRedirect(path);
 
                 if(_partialPathNames.TryGetValue(path, out string redirectPath))
                 {
@@ -164,10 +170,10 @@ namespace Unreal.Core.Models
 
 
                 //Try fixing ...
-                if(path.EndsWith("Set", StringComparison.Ordinal) || path.EndsWith("Component", StringComparison.Ordinal)) //Need to deal with later
+                /*if(path.EndsWith("Set", StringComparison.Ordinal) || path.EndsWith("Component", StringComparison.Ordinal)) //Need to deal with later
                 {
                     return null;
-                }
+                }*/
 
                 var cleanedPath = CleanPathSuffix(path);
 

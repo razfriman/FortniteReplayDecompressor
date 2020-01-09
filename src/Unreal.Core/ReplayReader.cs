@@ -717,12 +717,6 @@ namespace Unreal.Core
                         group.NetFieldExports = new NetFieldExport[numExports];
 
                         GuidCache.AddToExportGroupMap(pathName, group);
-
-                        //Check if partial group
-                        if(NetFieldParser.TryGetRedirectPathName(pathName, out string redirectPath))
-                        {
-                            GuidCache.AddPartialPathName(pathName, redirectPath);
-                        }
                     }
 
                     //GuidCache.NetFieldExportGroupPathToIndex[pathName] = pathNameIndex;
@@ -1366,7 +1360,6 @@ namespace Unreal.Core
         {
             // outer is used to get path name
             // coreredirects.cpp ...
-
             NetFieldExportGroup netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
 
             //Mainly props. If needed, add them in

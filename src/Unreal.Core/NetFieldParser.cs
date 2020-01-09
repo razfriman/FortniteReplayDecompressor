@@ -48,18 +48,32 @@ namespace Unreal.Core
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
-                    NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
+                    NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
+                    NetFieldExportHandleAttribute netFieldExportHandleAttribute = property.GetCustomAttribute<NetFieldExportHandleAttribute>(); //Uses handle id
 
-                    if (netFieldExportAttribute == null)
+                    if (netFieldExportAttribute == null && netFieldExportHandleAttribute == null)
                     {
                         continue;
                     }
 
-                    info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                    if (netFieldExportAttribute != null)
                     {
-                        Attribute = netFieldExportAttribute,
-                        PropertyInfo = property
-                    };
+                        info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                        {
+                            Attribute = netFieldExportAttribute,
+                            PropertyInfo = property
+                        };
+                    }
+                    else
+                    {
+                        info.UsesHandles = true;
+
+                        info.HandleProperties[netFieldExportHandleAttribute.Handle] = new NetFieldInfo
+                        {
+                            Attribute = netFieldExportAttribute,
+                            PropertyInfo = property
+                        };
+                    }
                 }
 
                 //Check for partial group
@@ -222,12 +236,18 @@ namespace Unreal.Core
                 return;
             }
 
-            if (!netGroupInfo.Properties.ContainsKey(fixedExportName))
+            NetFieldInfo netFieldInfo = null;
+
+            if(netGroupInfo.UsesHandles)
+            {
+
+            }
+
+            if ((!netGroupInfo.UsesHandles && !netGroupInfo.Properties.TryGetValue(fixedExportName, out netFieldInfo)) ||
+                (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo)))
             {
                 return;
             }
-
-            NetFieldInfo netFieldInfo = netGroupInfo.Properties[fixedExportName];
 
             SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
         }
@@ -729,7 +749,9 @@ namespace Unreal.Core
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
+            public bool UsesHandles { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
+            public Dictionary<uint, NetFieldInfo> HandleProperties { get; set; } = new Dictionary<uint, NetFieldInfo>();
         }
 
         private class NetFieldInfo

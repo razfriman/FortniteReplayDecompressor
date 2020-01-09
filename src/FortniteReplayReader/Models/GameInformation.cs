@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using FortniteReplayReader.Models.Items.Consumables;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using Unreal.Core.Models;
@@ -37,6 +36,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
         private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
+        private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
@@ -403,7 +403,7 @@ namespace FortniteReplayReader.Models
                     }
 
                     //Update current weapon
-                    if(playerPawnC.CurrentWeapon != null)
+                    if(playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
                     {
                         if(_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
                         {
@@ -414,16 +414,28 @@ namespace FortniteReplayReader.Models
                                 {
                                     Weapon = weapon,
                                     State = WeaponSwitchState.Equipped,
-                                    WorldTime = GameState.CurrentWorldTime
+                                    DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime
                                 });
 
                                 playerActor.CurrentWeapon = weapon;
                             }
+                            else
+                            {
+
+                            }
                         }
                         else
                         {
-                            //Ignore as it's most likely their pickaxe when initially loading
-                            //Can fix this later, if needed
+                            Weapon weapon = new Weapon();
+
+                            _unknownWeapons.Add(playerPawnC.CurrentWeapon.Value, weapon);
+
+                            playerActor.WeaponSwitches.Add(new WeaponSwitch
+                            {
+                                Weapon = weapon,
+                                State = WeaponSwitchState.Equipped,
+                                DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime
+                            });
                         }
                     }
 
@@ -645,9 +657,22 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void HandleWeapon(uint channelId, BaseWeapon weapon)
+        internal void HandleWeapon(uint channelId, BaseWeapon weapon, Actor actor)
         {
             bool isNewWeapon = !_weapons.TryGetValue(channelId, out Weapon newWeapon);
+
+            //Updates the current weapon instead of creating a new one
+            if(isNewWeapon)
+            {
+                isNewWeapon = !_unknownWeapons.TryGetValue(actor.ActorNetGUID.Value, out newWeapon);
+                _unknownWeapons.Remove(actor.ActorNetGUID.Value);
+
+                //Pulled from unknown weapons, so add to current weapons
+                if (!isNewWeapon)
+                {
+                    _weapons.TryAdd(channelId, newWeapon);
+                }
+            }
 
             if (isNewWeapon)
             {

@@ -92,7 +92,6 @@ namespace ConsoleReader
                 totalTime += sw.ElapsedMilliseconds;
 
                 var c = replay.GameInformation.Players.Where(x => x.CurrentInventory.Count > 0);
-
                 //var a = NetFieldParser.UnknownNetFields;
 
             }

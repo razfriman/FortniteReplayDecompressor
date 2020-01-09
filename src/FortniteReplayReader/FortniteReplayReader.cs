@@ -126,7 +126,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
                     break;
                 case BaseWeapon weapon:
-                    Replay.GameInformation.HandleWeapon(channel, weapon);
+                    Replay.GameInformation.HandleWeapon(channel, weapon, actor);
                     break;
                 case FortPoiManager poiManager:
                     Replay.GameInformation.UpdatePoiManager(poiManager, GuidCache.NetworkGameplayTagNodeIndex);

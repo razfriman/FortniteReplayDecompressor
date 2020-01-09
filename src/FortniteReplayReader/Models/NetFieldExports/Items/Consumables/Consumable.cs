@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 
-namespace FortniteReplayReader.Models.Items.Consumables
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
 {
     public class Consumable : BaseWeapon
     {
