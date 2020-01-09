@@ -30,6 +30,10 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel supply drop
+
+        /// <summary>
+        /// Requires Full parse mode
+        /// </summary>
         private Dictionary<uint, InventoryItem> _floorLoot = new Dictionary<uint, InventoryItem>(); //Channel Id to InventoryItem. These will be removed/added over time
 
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
@@ -492,7 +496,7 @@ namespace FortniteReplayReader.Models
                     else
                     {
                         //These are non player actors and other objects
-                        var a = Channels[actorChannel];
+                        //var a = Channels[actorChannel];
                     }
                 }
                 else
@@ -601,8 +605,6 @@ namespace FortniteReplayReader.Models
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
         {
             bool isNewItem = !_floorLoot.TryGetValue(channelId, out InventoryItem newItem);
-
-            //Create a new item. Same channel seems to be used for multiple items. Dropped items can be on a different channel
 
             if (isNewItem)
             {

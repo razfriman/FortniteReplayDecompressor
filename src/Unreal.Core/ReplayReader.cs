@@ -1343,6 +1343,12 @@ namespace Unreal.Core
                     continue;
                 }
 
+                //Channel's being ignored
+                if(Channels[bunch.ChIndex].IgnoreChannel == true)
+                {
+                    continue;
+                }
+
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
                 if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout))
                 {
@@ -1610,12 +1616,7 @@ namespace Unreal.Core
             outExport = null;
 
             ++TotalGroupsRead;
-
-            if(Channels[channelIndex].IgnoreChannel == true)
-            {
-                return false;
-            }
-
+            
 #if DEBUG
             Channels[channelIndex].Group.Add(group.PathName);
 #endif
