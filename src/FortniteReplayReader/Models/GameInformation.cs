@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Unreal.Core.Models;
@@ -74,6 +75,14 @@ namespace FortniteReplayReader.Models
             newLlama.Opened = supplyDropLlama.Looted ?? newLlama.Opened;
             newLlama.Destroyed = supplyDropLlama.bDestroyed ?? newLlama.Destroyed;
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
+        }
+
+        internal void UpdatePlaylistInfo(uint channel, CurrentPlaylistInfo playlistInfo)
+        {
+            if (NetGUIDToPathName.TryGetValue(playlistInfo.Id.Value, out string playlistId))
+            {
+                GameState.PlaylistId = playlistId;
+            }
         }
 
         internal void UpdateSupplyDrop(uint channel, SupplyDropC supplyDrop)

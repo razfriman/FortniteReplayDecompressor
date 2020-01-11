@@ -2,6 +2,7 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
@@ -91,6 +92,9 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case CurrentPlaylistInfo playlistInfo:
+                    Replay.GameInformation.UpdatePlaylistInfo(channel, playlistInfo);
+                    break;
                 case SupplyDropLlamaC llama:
                     Replay.GameInformation.UpdateLlama(channel, llama);
                     break;

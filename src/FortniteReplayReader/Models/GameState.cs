@@ -14,6 +14,7 @@ namespace FortniteReplayReader.Models
         public DateTime MatchTime { get; internal set; }
         public int TotalBots { get; internal set; }
         public FortPoiManager PoiManager { get; internal set; }
+        public string PlaylistId { get; internal set; }
 
         public int TotalTeams { get; internal set; }
         public int TeamSize

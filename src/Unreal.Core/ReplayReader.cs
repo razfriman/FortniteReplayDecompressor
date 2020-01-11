@@ -1401,6 +1401,11 @@ namespace Unreal.Core
 
             if (classNetCache == null)
             {
+                if (ParseType == ParseType.Debug)
+                {
+                    _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
+                }
+
                 return false;
             }
 
@@ -1429,7 +1434,7 @@ namespace Unreal.Core
                 {
                     continue;
                 }
-
+                
                 //Find export group
                 bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out string pathName, out bool isFunction, out bool willParse);
 
@@ -1458,11 +1463,21 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
+                        if (exportGroup != null)
                         {
-                            _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                            if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
+                            {
+                                _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
-                            return false;
+                                return false;
+                            }
+                        }
+                        else //Custom serialization
+                        {
+                            if(!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
+                            {
+                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
+                            }
                         }
                     }
                 }
@@ -1475,6 +1490,12 @@ namespace Unreal.Core
             return true;
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         protected virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup netFieldExportGroup, uint channelIndex)
         {
             ReceiveProperties(reader, netFieldExportGroup, channelIndex, out INetFieldExportGroup export);
@@ -1494,6 +1515,11 @@ namespace Unreal.Core
             return true;
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3744
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         protected virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
         {
             bool bSupportsFastArrayDeltaStructSerialization = false;
@@ -1516,6 +1542,11 @@ namespace Unreal.Core
             return false;
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1064
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         protected virtual bool NetDeltaSerialize(FBitArchive reader, bool bSupportsFastArrayDeltaStructSerialization, NetFieldExportGroup netFieldExportGroup, uint handle, uint channelIndex)
         {
             if(!bSupportsFastArrayDeltaStructSerialization)
@@ -1595,6 +1626,11 @@ namespace Unreal.Core
             return true;
         }
 
+        /// <summary>
+        /// https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L895
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         private FFastArraySerializerHeader ReadDeltaHeader(FBitArchive reader)
         {
             FFastArraySerializerHeader header = new FFastArraySerializerHeader();
@@ -1605,6 +1641,28 @@ namespace Unreal.Core
             header.NumChanged = reader.ReadInt32();
 
             return header;
+        }
+
+        private bool ReceiveCustomProperty(FBitArchive reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
+        {
+            if (NetFieldParser.TryCreateRPCPropertyType(classNetCache.PathName, fieldCache.Name, out IProperty customProperty))
+            {
+                NetBitReader netreader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
+                {
+                    EngineNetworkVersion = reader.EngineNetworkVersion,
+                    NetworkVersion = reader.NetworkVersion
+                };
+
+                customProperty.Serialize(netreader);
+
+                OnExportRead(channelIndex, customProperty as INetFieldExportGroup);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

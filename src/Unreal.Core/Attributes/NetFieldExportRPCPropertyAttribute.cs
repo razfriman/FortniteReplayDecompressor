@@ -11,14 +11,19 @@ namespace Unreal.Core.Attributes
         public string TypePathName { get; private set; }
         public bool NetDeltaSerialization { get; private set; }
         public bool IsFunction { get; private set; }
+        public bool CustomStructure { get; private set; }
 
-        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool netDeltaSerialize = true)
+        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool netDeltaSerialize = true, bool customStructure = false)
         {
             Name = name;
             TypePathName = typePathname;
             NetDeltaSerialization = netDeltaSerialize;
+            CustomStructure = customStructure;
 
-            IsFunction = typePathname[^(name.Length + 1)] == ':';
+            if (typePathname.Length > name.Length)
+            {
+                IsFunction = typePathname[^(name.Length + 1)] == ':';
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using Unreal.Core.Attributes;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
@@ -11,10 +13,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
         [NetFieldExportRPCProperty("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier", false)]
         public object ActiveGameplayModifiers { get; set; }
 
-        [NetFieldExportRPCProperty("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
+        //[NetFieldExportRPCProperty("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
         public object GameMemberInfoArray { get; set; }
 
-        //[NetFieldExportRPCProperty("CurrentPlaylistInfo", "/Script/FortniteGame.???")]
-        public object CurrentPlaylistInfo { get; set; }
+        [NetFieldExportRPCProperty("CurrentPlaylistInfo", "CurrentPlaylistInfo")]
+        public CurrentPlaylistInfo CurrentPlaylistInfo { get; set; }
     }
 }

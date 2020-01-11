@@ -20,9 +20,8 @@ namespace Unreal.Core
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
         private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCStructureTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
-        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
-        private static Dictionary<string, string> _partialPathNames = new Dictionary<string, string>(); //Maps partial paths to an export group path name
         private static HashSet<string> _playerControllers = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
+        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
 
 #if DEBUG
         public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
@@ -101,7 +100,11 @@ namespace Unreal.Core
 
                     if (propertyAttribute != null)
                     {
-                        info.PathNames.TryAdd(propertyAttribute.Name, propertyAttribute);
+                        info.PathNames.TryAdd(propertyAttribute.Name, new NetRPCFieldInfo
+                        {
+                            PropertyInfo = property,
+                            Attribute = propertyAttribute
+                        });
                     }
                 }
             }
@@ -138,11 +141,11 @@ namespace Unreal.Core
 
             if(_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
-                if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetFieldExportRPCPropertyAttribute rpcAttribute))
+                if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
                 {
-                    deltaSerialize = rpcAttribute.NetDeltaSerialization;
+                    deltaSerialize = rpcAttribute.Attribute.NetDeltaSerialization;
 
-                    return rpcAttribute.TypePathName;
+                    return rpcAttribute.Attribute.TypePathName;
                 }
                 else
                 {
@@ -172,10 +175,10 @@ namespace Unreal.Core
                     return true;
                 }
 
-                if(groups.PathNames.TryGetValue(property, out NetFieldExportRPCPropertyAttribute netFieldExportRPCPropertyAttribute))
+                if(groups.PathNames.TryGetValue(property, out NetRPCFieldInfo netFieldExportRPCPropertyAttribute))
                 {
-                    pathName = netFieldExportRPCPropertyAttribute.TypePathName;
-                    isFunction = netFieldExportRPCPropertyAttribute.IsFunction;
+                    pathName = netFieldExportRPCPropertyAttribute.Attribute.TypePathName;
+                    isFunction = netFieldExportRPCPropertyAttribute.Attribute.IsFunction;
 
                     return true;
                 }
@@ -466,6 +469,29 @@ namespace Unreal.Core
             return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
         }
 
+        /// <summary>
+        /// Create the object associated with the property that should be read.
+        /// Used as a workaround for RPC structs.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
+        {
+            property = null;
+
+            if (_netRPCStructureTypes.TryGetValue(group, out NetRPCFieldGroupInfo groupInfo))
+            {
+                if(groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
+                {
+                    property = (IProperty)_linqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static unsafe string FixInvalidNames(string str)
         {
             int len = str.Length;
@@ -533,10 +559,16 @@ namespace Unreal.Core
             public PropertyInfo PropertyInfo { get; set; }
         }
 
+        private class NetRPCFieldInfo
+        {
+            public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
+            public PropertyInfo PropertyInfo { get; set; }
+        }
+
         private class NetRPCFieldGroupInfo
         {
             public ParseType ParseType { get; set; }
-            public Dictionary<string, NetFieldExportRPCPropertyAttribute> PathNames { get; set; } = new Dictionary<string, NetFieldExportRPCPropertyAttribute>();
+            public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
         }
     }
 
