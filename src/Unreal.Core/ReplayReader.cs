@@ -1555,7 +1555,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            string pathName = NetFieldParser.GetClassNetPropertyPathname(netFieldExportGroup.PathName, netFieldExportGroup.NetFieldExports[handle].Name, out bool deltaSerialize);
+            string pathName = NetFieldParser.GetClassNetPropertyPathname(netFieldExportGroup.PathName, netFieldExportGroup.NetFieldExports[handle].Name, out bool readChecksumBit);
 
             NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
@@ -1598,21 +1598,18 @@ namespace Unreal.Core
             {
                 int elementIndex = reader.ReadInt32();
 
-                if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !deltaSerialize))
+                if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
-                    if (deltaSerialize)
+                    OnNetDeltaRead(new NetDeltaUpdate
                     {
-                        OnNetDeltaRead(new NetDeltaUpdate
-                        {
-                            ChannelIndex = channelIndex,
-                            ElementIndex = elementIndex,
-                            Export = export,
-                            ExportGroup = netFieldExportGroup,
-                            PropertyExport = propertyExportGroup,
-                            Handle = handle,
-                            Header = header
-                        });
-                    }
+                        ChannelIndex = channelIndex,
+                        ElementIndex = elementIndex,
+                        Export = export,
+                        ExportGroup = netFieldExportGroup,
+                        PropertyExport = propertyExportGroup,
+                        Handle = handle,
+                        Header = header
+                    });
                 }
             }
 
@@ -1671,7 +1668,7 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup outExport, bool readChecksumBit = true)
+        protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup outExport, bool readChecksumBit = true, bool isDeltaRead = false)
         {
             outExport = null;
 
@@ -1681,14 +1678,17 @@ namespace Unreal.Core
             Channels[channelIndex].Group.Add(group.PathName);
 #endif
 
-            if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
+            if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
             {
-                if (ignoreChannel)
+                if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
                 {
-                    Channels[channelIndex].IgnoreChannel = ignoreChannel;
-                }
+                    if (ignoreChannel)
+                    {
+                        Channels[channelIndex].IgnoreChannel = ignoreChannel;
+                    }
 
-                return false;
+                    return false;
+                }
             }
 
             if (readChecksumBit)
@@ -1802,8 +1802,8 @@ namespace Unreal.Core
 
             }
 
-            //Delta updates skips the function that reads the checksum bits. Those will be updated differently
-            if (hasData && readChecksumBit)
+            //Delta structures are handled differently
+            if (hasData && !isDeltaRead)
             {
                 OnExportRead(channelIndex, exportGroup);
             }

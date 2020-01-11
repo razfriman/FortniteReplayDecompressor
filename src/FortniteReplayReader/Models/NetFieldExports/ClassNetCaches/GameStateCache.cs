@@ -13,7 +13,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
         [NetFieldExportRPCProperty("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier", false)]
         public object ActiveGameplayModifiers { get; set; }
 
-        //[NetFieldExportRPCProperty("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
+        [NetFieldExportRPCProperty("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo", false)]
         public object GameMemberInfoArray { get; set; }
 
         [NetFieldExportRPCProperty("CurrentPlaylistInfo", "CurrentPlaylistInfo")]

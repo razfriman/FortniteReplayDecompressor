@@ -11,13 +11,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
     [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo", ParseType.Debug)]
     public class GameMemberInfo : INetFieldExportGroup
     {
-        [NetFieldExport("SquadId", RepLayoutCmdType.Property)]
-        public DebuggingObject SquadId { get; set; }
+        [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte)]
+        public byte SquadId { get; set; }
 
-        [NetFieldExport("TeamIndex", RepLayoutCmdType.Property)]
-        public DebuggingObject TeamIndex { get; set; }
+        [NetFieldExport("TeamIndex", RepLayoutCmdType.Enum)]
+        public int TeamIndex { get; set; }
 
-        [NetFieldExport("MemberUniqueId", RepLayoutCmdType.Property)]
-        public DebuggingObject MemberUniqueId { get; set; }
+        [NetFieldExport("MemberUniqueId", RepLayoutCmdType.PropertyNetId)]
+        public string MemberUniqueId { get; set; }
     }
 }

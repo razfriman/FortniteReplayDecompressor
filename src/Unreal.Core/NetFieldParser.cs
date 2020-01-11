@@ -135,15 +135,15 @@ namespace Unreal.Core
             return _playerControllers.Contains(name);
         }
 
-        public static string GetClassNetPropertyPathname(string netCache, string property, out bool deltaSerialize)
+        public static string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
         {
-            deltaSerialize = false;
+            readChecksumBit = false;
 
             if(_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
                 if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
                 {
-                    deltaSerialize = rpcAttribute.Attribute.NetDeltaSerialization;
+                    readChecksumBit = rpcAttribute.Attribute.ReadChecksumBit;
 
                     return rpcAttribute.Attribute.TypePathName;
                 }
@@ -572,6 +572,7 @@ namespace Unreal.Core
         }
     }
 
+#if DEBUG
     public class UnknownFieldInfo
     {
         public string PropertyName { get; set; }
@@ -609,4 +610,5 @@ namespace Unreal.Core
             return PropertyName.GetHashCode();
         }
     }
+#endif
 }

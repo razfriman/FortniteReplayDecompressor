@@ -4,6 +4,7 @@ using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
 using System;

@@ -763,6 +763,9 @@ namespace FortniteReplayReader.Models
             {
                 UpdateNetDeltaFortInventory(deltaUpdate);
             }
+
+            //GameMemberInfoArray
+            //Can be used to get remaining teams/players in game
         }
 
         private void HandleQueuedPlayerPawns(Player player)

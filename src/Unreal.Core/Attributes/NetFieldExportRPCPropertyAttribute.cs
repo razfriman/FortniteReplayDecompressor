@@ -9,16 +9,15 @@ namespace Unreal.Core.Attributes
     {
         public string Name { get; private set; }
         public string TypePathName { get; private set; }
-        public bool NetDeltaSerialization { get; private set; }
+        public bool ReadChecksumBit { get; private set; }
         public bool IsFunction { get; private set; }
         public bool CustomStructure { get; private set; }
 
-        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool netDeltaSerialize = true, bool customStructure = false)
+        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool readChecksumBit = true)
         {
             Name = name;
             TypePathName = typePathname;
-            NetDeltaSerialization = netDeltaSerialize;
-            CustomStructure = customStructure;
+            ReadChecksumBit = readChecksumBit;
 
             if (typePathname.Length > name.Length)
             {
