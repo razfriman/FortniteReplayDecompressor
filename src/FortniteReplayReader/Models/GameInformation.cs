@@ -397,6 +397,8 @@ namespace FortniteReplayReader.Models
             switch (playerpawn)
             {
                 case Player playerActor:
+                    playerActor.LastTransformUpdate = playerPawnC.ReplayLastTransformUpdateTimeStamp ?? playerActor.LastTransformUpdate;
+
                     if(playerPawnC.ReplicatedMovement != null) //Update location
                     {
                         playerActor.Locations.Add(new PlayerLocation

@@ -22,6 +22,7 @@ namespace Unreal.Core
         private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCStructureTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
         private static CompiledLinqCache _linqCache = new CompiledLinqCache();
         private static Dictionary<string, string> _partialPathNames = new Dictionary<string, string>(); //Maps partial paths to an export group path name
+        private static HashSet<string> _playerControllers = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
 
 #if DEBUG
         public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
@@ -38,6 +39,12 @@ namespace Unreal.Core
             foreach (Type type in netFields)
             {
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+                PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
+
+                if(playerController != null)
+                {
+                    _playerControllers.Add(playerController.Name);
+                }
 
                 NetFieldGroupInfo info = new NetFieldGroupInfo();
 
@@ -118,6 +125,11 @@ namespace Unreal.Core
             {
                 _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
             }
+        }
+
+        public static bool IsPlayerController(string name)
+        {
+            return _playerControllers.Contains(name);
         }
 
         public static string GetClassNetPropertyPathname(string netCache, string property, out bool deltaSerialize)

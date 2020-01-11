@@ -52,6 +52,7 @@ namespace FortniteReplayReader.Models
         internal KillFeedEntry LastKnockedEntry { get; set; }
         internal List<InventoryItem> InventoryBeforeDeletes { get; set; } = new List<InventoryItem>();
         internal int InventoryBaseReplicationKey { get; set; }
+        internal float LastTransformUpdate { get; set; }
     }
 
     public class PlayerLocation

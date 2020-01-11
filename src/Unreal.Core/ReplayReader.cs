@@ -113,6 +113,8 @@ namespace Unreal.Core
             }
 
             var s = builder.ToString();
+
+            var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
 #endif
 
             InReliable = new int?[DefaultMaxChannelSize];
@@ -1188,18 +1190,12 @@ namespace Unreal.Core
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
                     var guid = bunch.Archive.ReadIntPacked();
+
+                    //TODO Make sure all guids are loaded. Queue bunches that aren't fully loaded
                 }
             }
 
-            /*
-            // if actor == null
-            var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
-            if (!actor && bunch.bOpen)
-            {
-
-            }*/
-
-            //_logger?.LogError($"Processing new bunch. MustBeMappedGUIDs {bunch.bHasMustBeMappedGUIDs}");
+            //TODO Map guid to channel (peek)
 
             ProcessBunch(bunch);
         }
@@ -1215,8 +1211,6 @@ namespace Unreal.Core
 
             if (channel?.IgnoreChannel == true)
             {
-                //_logger?.LogInformation($"Channel {bunch.ChIndex} broken. Ignoring bunch");
-
                 return;
             }
 
@@ -1306,9 +1300,19 @@ namespace Unreal.Core
                 #endregion
 
                 channel.Actor = inActor;
-                //ChannelActors[bunch.ChIndex] = true;
 
                 OnChannelActorRead(channel.ChannelIndex, inActor);
+
+
+                if(Channels[bunch.ChIndex].Actor.Archetype != null && 
+                    GuidCache.NetGuidToPathName.TryGetValue(Channels[bunch.ChIndex].Actor.Archetype.Value, out string pathName))
+                {
+                    if (NetFieldParser.IsPlayerController(pathName))
+                    {
+                        byte netPlayerIndex = bunch.Archive.ReadByte();
+                    }
+                }
+
                 //ChannelNetGuids[bunch.ChIndex] = inActor.ActorNetGUID.Value;
             }
 
@@ -1317,11 +1321,9 @@ namespace Unreal.Core
             //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
             //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
 
-
             //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
             {
-                //FNetBitReader Reader(Bunch.PackageMap, 0 );
                 var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var reader);
 
                 if(bObjectDeleted)
@@ -1334,6 +1336,7 @@ namespace Unreal.Core
                     ++TotalFailedBunches;
 
                     _logger?.LogError($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. Bunch Info: {bunch}");
+
                     break;
                 }
 
@@ -1403,7 +1406,6 @@ namespace Unreal.Core
 
             while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport fieldCache, out FBitArchive reader))
             {
-
                 if (fieldCache == null)
                 {
                     _logger?.LogInformation($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
@@ -1640,16 +1642,8 @@ namespace Unreal.Core
 
             INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
 
-            if(exportGroup == null)
+            if(exportGroup == null || exportGroup is DebuggingExportGroup)
             {
-                //Something went wrong ...
-                if(ParseType != ParseType.Debug)
-                {
-                    _logger.LogError($"Null export group in non-debug mode");
-
-                    return false;
-                }
-
                 exportGroup = new DebuggingExportGroup
                 {
                     ExportGroup = group
@@ -1738,7 +1732,7 @@ namespace Unreal.Core
                     {
                         ++FailedToRead;
 
-                        _logger?.LogWarning($"Property {export.Name} {group.PathName} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                        _logger?.LogWarning($"Property {export.Name} ({export.Handle}) in {group.PathName} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
 
                         continue;
                     }
