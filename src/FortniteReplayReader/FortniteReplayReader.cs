@@ -94,7 +94,7 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
-                case FishingBarrel container:
+                case AmmoBox container:
                     break;
                 case GameplayCueExecuted cueExecuted:
                     //Fall damage should be in here
