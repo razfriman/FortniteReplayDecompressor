@@ -1427,14 +1427,14 @@ namespace Unreal.Core
 
                 if (rpcGroupFound)
                 {
-                    bool isFunction = netFieldInfo.Attribute.IsFunction;
-                    string pathName = netFieldInfo.Attribute.TypePathName;
-                    bool customSerialization = netFieldInfo.IsCustomStructure;
-
                     if(!willParse)
                     {
                         return true;
                     }
+
+                    bool isFunction = netFieldInfo.Attribute.IsFunction;
+                    string pathName = netFieldInfo.Attribute.TypePathName;
+                    bool customSerialization = netFieldInfo.IsCustomStructure;
 
                     NetFieldExportGroup exportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
@@ -1554,7 +1554,8 @@ namespace Unreal.Core
 
             if (!readProperties)
             {
-                return false;
+                //Return true to prevent any warnings about failed readings
+                return true;
             }
 
             FFastArraySerializerHeader header = ReadDeltaHeader(reader);

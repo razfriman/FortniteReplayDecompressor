@@ -9,7 +9,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
     [NetFieldExportRPC("PlayerPawn_Athena_C_ClassNetCache", ParseType.Normal)]
     public class PlayerPawnCache
     {
-        [NetFieldExportRPCProperty("FastSharedReplication", "/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
+        //This isn't a FRepMovement. FSharedRepMovement
+        //[NetFieldExportRPCProperty("FastSharedReplication", "/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
         public object FastSharedReplication { get; set; }
 
         [NetFieldExportRPCProperty("ClientObservedStats", "/Script/FortniteGame.FortClientObservedStat", false)]

@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
 {
-    [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo", ParseType.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo", ParseType.Normal)]
     public class GameMemberInfo : INetFieldExportGroup
     {
         [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte)]
