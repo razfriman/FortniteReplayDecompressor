@@ -93,6 +93,9 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case GameplayCueExecuted cueExecuted:
+                    //Fall damage should be in here
+                    break;
                 case CurrentPlaylistInfo playlistInfo:
                     Replay.GameInformation.UpdatePlaylistInfo(channel, playlistInfo);
                     break;

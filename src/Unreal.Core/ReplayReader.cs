@@ -41,8 +41,8 @@ namespace Unreal.Core
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
-        private int packetIndex = 0;
         private int externalDataIndex = 0;
+        private int packetIndex = 0;
         private int bunchIndex = 0;
 
         private int InPacketId;
@@ -52,6 +52,7 @@ namespace Unreal.Core
         //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
+        private bool isReading = false;
 
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
@@ -62,15 +63,6 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
-        private bool isReading = false;
-
-        //public Dictionary<uint, List<INetFieldExportGroup>> ExportGroups { get; private set; } = new Dictionary<uint, List<INetFieldExportGroup>>();
-
-        //private List<string> UnknownFields = new List<string>();
-
-        /// <summary>
-        /// Tracks channels that we should ignore when handling special demo data.
-        /// </summary>
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
@@ -1184,18 +1176,12 @@ namespace Unreal.Core
         {
             if (bunch.bHasMustBeMappedGUIDs)
             {
-                ++TotalMappedGUIDs;
-
                 var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
                     var guid = bunch.Archive.ReadIntPacked();
-
-                    //TODO Make sure all guids are loaded. Queue bunches that aren't fully loaded
                 }
             }
-
-            //TODO Map guid to channel (peek)
 
             ProcessBunch(bunch);
         }

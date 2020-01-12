@@ -23,6 +23,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 
         [NetFieldExportRPCProperty("NetMulticast_InvokeGameplayCueExecuted_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueExecuted_WithParams")]
         public object NetMulticastInvokeGameplayCueExecutedWithParams { get; set; }
+
+        [NetFieldExportRPCProperty("NetMulticast_InvokeGameplayCueExecuted_FromSpec", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueExecuted_FromSpec")]
+        public object NetMulticastInvokeGameplayCueExecuted { get; set; }
     }
 
     [NetFieldExportRPC("BP_PlayerPawn_Athena_Phoebe_C_ClassNetCache", ParseType.Normal)]
