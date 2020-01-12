@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
 {
     [NetFieldExportGroup("/Script/FortniteGame.FortMovementSet", ParseType.Normal)]
     [RedirectPath("MovementSet")]
-    public class MovementSet : DebuggingExportGroup
+    public class MovementSet : IHandleNetFieldExportGroup
     {
         /*
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]

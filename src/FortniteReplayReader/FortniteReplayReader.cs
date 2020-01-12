@@ -94,7 +94,8 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
-                case AmmoBox container:
+                case SearchableContainer searchableContainer:
+                    Replay.GameInformation.UpdateSearchableContainer(channel, searchableContainer);
                     break;
                 case GameplayCueExecuted cueExecuted:
                     //Fall damage should be in here
@@ -155,7 +156,6 @@ namespace FortniteReplayReader
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
                     if (debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later
                     {
-
                     }
                     break;
             }

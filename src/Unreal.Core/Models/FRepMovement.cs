@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Enums;
+﻿using Unreal.Core.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -6,7 +7,7 @@ namespace Unreal.Core.Models
     /// Replicated movement data of our RootComponent.
     /// see  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3005
     /// </summary>
-    public class FRepMovement
+    public class FRepMovement : IProperty
     {
         /// <summary>
         /// Velocity of component in world space
@@ -52,6 +53,33 @@ namespace Unreal.Core.Models
         /// Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts.
         /// </summary>
         public RotatorQuantization RotationQuantizationLevel { get; set;}
+
+        public void Serialize(NetBitReader reader)
+        {
+            SerializeRepMovement(reader);
+        }
+
+        protected FRepMovement SerializeRepMovement(NetBitReader reader,
+            VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
+            RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
+            VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
+        {
+            var repMovement = new FRepMovement();
+            var flags = reader.ReadBitsToInt(2);
+            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
+
+            repMovement.Location = reader.SerializeQuantizedVector(locationQuantizationLevel);
+            repMovement.Rotation = reader.ReadRotation();
+            repMovement.LinearVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+
+            if (repMovement.bRepPhysics)
+            {
+                repMovement.AngularVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+            }
+
+            return repMovement;
+        }
 
         public override string ToString()
         {

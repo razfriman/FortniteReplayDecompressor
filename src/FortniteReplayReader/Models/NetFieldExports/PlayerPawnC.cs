@@ -263,8 +263,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsWaitingForEmoteInteraction", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsWaitingForEmoteInteraction { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("GroupEmoteLookTarget", RepLayoutCmdType.PropertyUInt32)]
-		public uint? GroupEmoteLookTarget { get; set; } //Type:  Bits: 16
+		[NetFieldExport("GroupEmoteLookTarget", RepLayoutCmdType.Property)]
+		public NetworkGUID GroupEmoteLookTarget { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("bIsSkydiving", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsSkydiving { get; set; } //Type: bool Bits: 1
@@ -296,8 +296,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsInsideSafeZone", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsInsideSafeZone { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("Zipline", RepLayoutCmdType.PropertyUInt32)]
-		public uint? Zipline { get; set; } //Type:  Bits: 16
+		[NetFieldExport("Zipline", RepLayoutCmdType.Property)]
+		public NetworkGUID Zipline { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("PetState", RepLayoutCmdType.Property)]
 		public ActorGUID PetState { get; set; } //Type: AFortPlayerPetRepState* Bits: 8
@@ -464,5 +464,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("PlayRespawnFXOnSpawn", RepLayoutCmdType.PropertyBool)]
 		public bool? PlayRespawnFXOnSpawn { get; set; } //Type:  Bits: 1
 
-	}
+        [NetFieldExport("AuthoritativeRootMotion", RepLayoutCmdType.Ignore)]
+        public FRootMotionSourceGroup AuthoritativeRootMotion { get; set; }
+
+        [NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Property)]
+        public DebuggingObject AnimRootMotionTranslationScale { get; set; }
+
+        [NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
+        public bool? bReplicatedIsInVortex { get; set; }
+
+        [NetFieldExport("PitchAlpha", RepLayoutCmdType.PropertyFloat)]
+        public float? PitchAlpha { get; set; }
+
+        [NetFieldExport("StreamerCharacter", RepLayoutCmdType.Property)]
+        public NetworkGUID StreamerCharacter { get; set; }
+    }
 }

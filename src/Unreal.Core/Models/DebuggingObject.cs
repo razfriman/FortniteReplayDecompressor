@@ -36,7 +36,7 @@ namespace Unreal.Core.Models
         public FRotator RotatorByte => AsRotator(RotatorType.Byte);
         public FRotator RotatorShort => AsRotator(RotatorType.Short);
 
-        public FRepMovement RepMovement => AsRepMovement();
+        //public FRepMovement RepMovement => AsRepMovement();
         public string AsciiString => Encoding.ASCII.GetString(Bytes);
         public string UnicodeString => Encoding.ASCII.GetString(Bytes);
 
@@ -144,6 +144,7 @@ namespace Unreal.Core.Models
             return tVector;
         }
 
+        /*
         private FRepMovement AsRepMovement()
         {
             _reader.Reset();
@@ -157,6 +158,7 @@ namespace Unreal.Core.Models
 
             return repMovement;
         }
+        */
 
         private string AsStaticName()
         {

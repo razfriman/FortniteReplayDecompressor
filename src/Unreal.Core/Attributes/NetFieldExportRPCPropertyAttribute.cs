@@ -13,11 +13,12 @@ namespace Unreal.Core.Attributes
         public bool IsFunction { get; private set; }
         public bool CustomStructure { get; private set; }
 
-        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool readChecksumBit = true)
+        public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool readChecksumBit = true, bool customStructure = false)
         {
             Name = name;
             TypePathName = typePathname;
             ReadChecksumBit = readChecksumBit;
+            CustomStructure = customStructure;
 
             if (typePathname.Length > name.Length)
             {

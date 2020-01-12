@@ -42,7 +42,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
             //var replayFile = "Replays/12-5.replay";
-            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
             //var replayFile = "Replays/creative.replay";
@@ -58,7 +58,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/123.replay";
             //var replayFile = "Replays/WCReplay.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
-            //var replayFile = "Replays/creative2.replay";
+            var replayFile = "Replays/creative.replay";
            // var replayFile = "Replays/weapons2.replay";
             //var replayFile = "Replays/iceblocks2.replay";
             Stopwatch sw = new Stopwatch();
@@ -67,10 +67,15 @@ namespace ConsoleReader
 
             foreach (string path in Directory.GetFiles("Replays"))
             {
+                if(path != @"Replays\weapons.replay")
+                {
+                    continue;
+                }
+
                 sw.Restart();
 
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                var replay = reader.ReadReplay(path, ParseType.Debug);
 
                 sw.Stop();
 
@@ -94,6 +99,7 @@ namespace ConsoleReader
                 var c = replay.GameInformation.Players.Where(x => x.CurrentInventory.Count > 0);
                 //var a = NetFieldParser.UnknownNetFields;
 
+                Console.WriteLine(path);
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");

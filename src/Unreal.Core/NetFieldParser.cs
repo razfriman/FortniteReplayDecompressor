@@ -103,7 +103,8 @@ namespace Unreal.Core
                         info.PathNames.TryAdd(propertyAttribute.Name, new NetRPCFieldInfo
                         {
                             PropertyInfo = property,
-                            Attribute = propertyAttribute
+                            Attribute = propertyAttribute,
+                            IsCustomStructure = propertyAttribute.CustomStructure
                         });
                     }
                 }
@@ -139,7 +140,7 @@ namespace Unreal.Core
         {
             readChecksumBit = false;
 
-            if(_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
+            if (_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
                 if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
                 {
@@ -160,11 +161,10 @@ namespace Unreal.Core
             return null;
         }
 
-        public static bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out string pathName, out bool isFunction, out bool willParse)
+        public static bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
         {
-            pathName = null;
-            isFunction = false;
             willParse = false;
+            netFieldInfo = null;
 
             if (_netRPCStructureTypes.TryGetValue(classNetPathName, out NetRPCFieldGroupInfo groups))
             {
@@ -177,8 +177,7 @@ namespace Unreal.Core
 
                 if(groups.PathNames.TryGetValue(property, out NetRPCFieldInfo netFieldExportRPCPropertyAttribute))
                 {
-                    pathName = netFieldExportRPCPropertyAttribute.Attribute.TypePathName;
-                    isFunction = netFieldExportRPCPropertyAttribute.Attribute.IsFunction;
+                    netFieldInfo = netFieldExportRPCPropertyAttribute;
 
                     return true;
                 }
@@ -280,6 +279,7 @@ namespace Unreal.Core
             switch (replayout)
             {
                 case RepLayoutCmdType.Property:
+                case RepLayoutCmdType.RepMovement:
                     data = _linqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
                     break;
@@ -320,9 +320,6 @@ namespace Unreal.Core
                     break;
                 case RepLayoutCmdType.PropertyVectorQ:
                     data = netBitReader.SerializePropertyQuantizeVector();
-                    break;
-                case RepLayoutCmdType.RepMovement:
-                    data = netBitReader.SerializeRepMovement();
                     break;
                 case RepLayoutCmdType.Enum:
                     data = netBitReader.SerializeEnum();
@@ -568,21 +565,22 @@ namespace Unreal.Core
 
             public PropertyInfo PropertyInfo { get; set; }
         }
-
-        private class NetRPCFieldInfo
-        {
-            public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
-            public PropertyInfo PropertyInfo { get; set; }
-        }
-
-        private class NetRPCFieldGroupInfo
-        {
-            public ParseType ParseType { get; set; }
-            public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
-        }
     }
 
 #if DEBUG
+    public class NetRPCFieldInfo
+    {
+        public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
+        public bool IsCustomStructure { get; set; }
+    }
+
+    public class NetRPCFieldGroupInfo
+    {
+        public ParseType ParseType { get; set; }
+        public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
+    }
+
     public class UnknownFieldInfo
     {
         public string PropertyName { get; set; }

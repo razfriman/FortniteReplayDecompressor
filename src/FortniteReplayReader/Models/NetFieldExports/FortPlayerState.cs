@@ -36,7 +36,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bOnlySpectator", RepLayoutCmdType.PropertyBool)]
 		public bool? bOnlySpectator { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("StartTime", RepLayoutCmdType.PropertyInt)]
+        [NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
+        public bool? bInGliderRedeploy { get; set; } //Type: uint8 Bits: 1
+
+        [NetFieldExport("bIsSpectator", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsSpectator { get; set; } //Type:  Bits: 1
+
+        [NetFieldExport("StartTime", RepLayoutCmdType.PropertyInt)]
 		public int? StartTime { get; set; } //Type: int32 Bits: 32
 
 		[NetFieldExport("UniqueId", RepLayoutCmdType.PropertyNetId)]
@@ -210,5 +216,15 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId)]
 		public string BotUniqueId { get; set; } //Type:  Bits: 128
 
-	}
+        [NetFieldExport("PlayerNameCustomOverride", RepLayoutCmdType.Property)]
+        public FText PlayerNameCustomOverride { get; set; } 
+        
+        [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Property)]
+        public DebuggingObject SimulatedAttributes { get; set; }
+
+        [NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
+        public int? KickedFromSessionReason { get; set; } 
+
+
+    }
 }

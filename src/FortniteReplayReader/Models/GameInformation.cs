@@ -5,6 +5,7 @@ using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Unreal.Core.Models;
 
@@ -41,8 +42,9 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id (player pawn) to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
         private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
-        private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
+        private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to 
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
+        private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
@@ -75,6 +77,11 @@ namespace FortniteReplayReader.Models
             newLlama.Opened = supplyDropLlama.Looted ?? newLlama.Opened;
             newLlama.Destroyed = supplyDropLlama.bDestroyed ?? newLlama.Destroyed;
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
+        }
+
+        internal void UpdateSearchableContainer(uint channel, SearchableContainer searchableContainer)
+        {
+
         }
 
         internal void UpdatePlaylistInfo(uint channel, CurrentPlaylistInfo playlistInfo)

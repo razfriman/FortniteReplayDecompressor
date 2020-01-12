@@ -35,5 +35,20 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Containers
 
         [NetFieldExport("EffectContext", RepLayoutCmdType.Property)]
         public FGameplayEffectContextHandle EffectContext { get; set; }
+
+        [NetFieldExport("ChosenRandomUpgrade", RepLayoutCmdType.PropertyInt)]
+        public int? ChosenRandomUpgrade { get; set; }
+
+        [NetFieldExport("bMirrored", RepLayoutCmdType.PropertyBool)]
+        public bool? bMirrored { get; set; }
+
+        [NetFieldExport("ReplicatedDrawScale3D", RepLayoutCmdType.PropertyVector100)]
+        public FVector ReplicatedDrawScale3D { get; set; }
+
+        [NetFieldExport("bIsInitiallyBuilding", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsInitiallyBuilding { get; set; }
+
+        [NetFieldExport("bForceReplayRollback", RepLayoutCmdType.PropertyBool)]
+        public bool? bForceReplayRollback { get; set; }
     }
 }

@@ -11,10 +11,21 @@ namespace FortniteReplayReader.Models.Items.Weapons
     {
     }
 
-    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Generic_Athena.B_RocketLauncher_Generic_Athena_C", ParseType.Normal)]
-    public class RocketLauncher : Explosives
+    public class Launcher : Explosives
     {
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        public FRepMovementWholeNumber ReplicatedMovement { get; set; }
 
+        [NetFieldExport("GravityScale", RepLayoutCmdType.PropertyFloat)]
+        public float? GravityScale { get; set; }
+
+        [NetFieldExport("Team", RepLayoutCmdType.Enum)]
+        public int? Team { get; set; }
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Generic_Athena.B_RocketLauncher_Generic_Athena_C", ParseType.Normal)]
+    public class RocketLauncher : Launcher
+    {
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Generic_Athena_HighTier.B_RocketLauncher_Generic_Athena_HighTier_C", ParseType.Normal)]
@@ -23,17 +34,17 @@ namespace FortniteReplayReader.Models.Items.Weapons
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Military_Athena.B_RocketLauncher_Military_Athena_C", ParseType.Normal)]
-    public class QuadLauncher : Explosives
+    public class QuadLauncher : Launcher
     {
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_GrenadeLaunchers/Blueprints/B_GrenadeLauncher_Generic_Athena.B_GrenadeLauncher_Generic_Athena_C", ParseType.Normal)]
-    public class GrenadeLauncher : Explosives
+    public class GrenadeLauncher : Launcher
     {
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_Prj_Pumpkin_RPG_Athena_LowTier.B_Prj_Pumpkin_RPG_Athena_LowTier_C", ParseType.Normal)]
-    public class PumpkinLauncher : Explosives
+    public class PumpkinLauncher : Launcher
     {
     }
 
@@ -43,7 +54,7 @@ namespace FortniteReplayReader.Models.Items.Weapons
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_GrenadeLaunchers/Blueprints/B_GrenadeLauncher_Prox_Athena.B_GrenadeLauncher_Prox_Athena_C", ParseType.Normal)]
-    public class ProximityLauncher : Explosives
+    public class ProximityLauncher : Launcher
     {
     }
 

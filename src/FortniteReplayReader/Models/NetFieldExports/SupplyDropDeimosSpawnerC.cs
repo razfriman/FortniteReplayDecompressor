@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 	public class SupplyDropDeimosSpawnerC : INetFieldExportGroup
 	{
 		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-		public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 83
+		public FRepMovementWholeNumber ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 83
 
 		[NetFieldExport("bEditorPlaced", RepLayoutCmdType.PropertyBool)]
 		public bool? bEditorPlaced { get; set; } //Type: uint8 Bits: 1

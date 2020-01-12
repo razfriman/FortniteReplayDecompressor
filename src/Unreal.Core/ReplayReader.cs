@@ -1423,10 +1423,14 @@ namespace Unreal.Core
                 }
                 
                 //Find export group
-                bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out string pathName, out bool isFunction, out bool willParse);
+                bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out NetRPCFieldInfo netFieldInfo, out bool willParse);
 
                 if (rpcGroupFound)
                 {
+                    bool isFunction = netFieldInfo.Attribute.IsFunction;
+                    string pathName = netFieldInfo.Attribute.TypePathName;
+                    bool customSerialization = netFieldInfo.IsCustomStructure;
+
                     if(!willParse)
                     {
                         return true;
@@ -1438,7 +1442,7 @@ namespace Unreal.Core
                     {
                         if (exportGroup == null)
                         {
-                            _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                            _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name} {classNetCache.PathName}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
                             return false;
                         }
@@ -1450,20 +1454,20 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        if (exportGroup != null)
+                        if(customSerialization)
+                        {
+                            if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
+                            {
+                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
+                            }
+                        }
+                        else if (exportGroup != null)
                         {
                             if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
                             {
                                 _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
                                 return false;
-                            }
-                        }
-                        else //Custom serialization
-                        {
-                            if(!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
-                            {
-                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
                             }
                         }
                     }
@@ -1584,7 +1588,7 @@ namespace Unreal.Core
             for (int i = 0; i < header.NumChanged; i++)
             {
                 int elementIndex = reader.ReadInt32();
-
+                
                 if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
                     OnNetDeltaRead(new NetDeltaUpdate
@@ -1712,7 +1716,8 @@ namespace Unreal.Core
 
                 if (group.NetFieldExports.Length <= handle)
                 {
-                    _logger.LogError($"NetFieldExport length ({group.NetFieldExports.Length}) < handle ({handle})");
+                    //Need to figure these out
+                    //_logger.LogError($"NetFieldExport length ({group.NetFieldExports.Length}) < handle ({handle}) {group.PathName}");
 
                     return false;
                 }
