@@ -16,8 +16,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]
-        public uint? Owner { get; set; } //Type:  Bits: 16
+        [NetFieldExport("Owner", RepLayoutCmdType.Property)]
+        public NetworkGUID Owner { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public object Role { get; set; } //Type:  Bits: 2
@@ -30,6 +30,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bIsReloadingWeapon", RepLayoutCmdType.PropertyBool)]
         public bool? bIsReloadingWeapon { get; set; } //Type:  Bits: 1
+
+        [NetFieldExport("bIsMuzzleTraceNearWall", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsMuzzleTraceNearWall { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("WeaponData", RepLayoutCmdType.Property)]
         public ItemDefinitionGUID WeaponData { get; set; } //Type:  Bits: 16

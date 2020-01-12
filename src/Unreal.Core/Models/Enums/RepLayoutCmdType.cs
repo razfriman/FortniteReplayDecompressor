@@ -32,7 +32,8 @@
         PropertySoftObject = 22,
         PropertyWeakObject = 23,
 
-        Debug = 96,
+        Debug = 95,
+        PropertyInt16 = 96,
         PropertyUInt16 = 97,
         Enum = 99,
         Ignore = 100

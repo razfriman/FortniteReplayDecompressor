@@ -277,6 +277,7 @@ namespace Unreal.Core
                 {
                     //Failing to read checkpoints properly
                     //ReadCheckpoint(archive);
+                    archive.Seek(chunkSize, SeekOrigin.Current);
                 }
 
                 else if (chunkType == ReplayChunkType.Event)
@@ -301,7 +302,7 @@ namespace Unreal.Core
 
                 if (archive.Position != offset + chunkSize)
                 {
-                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not incorrectly read...");
+                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not correctly read...");
                     archive.Seek(offset + chunkSize, SeekOrigin.Begin);
                 }
             }

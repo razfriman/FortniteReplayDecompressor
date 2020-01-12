@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Sets
 {
     [NetFieldExportGroup("/Script/FortniteGame.FortRegenHealthSet", ParseType.Normal)]
     [RedirectPath("HealthSet")]
-    public class HealthSet : INetFieldExportGroup
+    public class HealthSet : IHandleNetFieldExportGroup
     {
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]
         public float? HealthBaseValue { get; set; }
@@ -19,7 +20,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
 
         [NetFieldExportHandle(3, RepLayoutCmdType.PropertyFloat)]
         public float? HealthMaxValue { get; set; }
-        
+
+        [NetFieldExportHandle(7, RepLayoutCmdType.PropertyFloat)]
+        public float? HealthUnclampedBaseValue { get; set; }
+
+        [NetFieldExportHandle(8, RepLayoutCmdType.PropertyFloat)]
+        public float? HealthUnclampedCurrentValue { get; set; }
+
         [NetFieldExportHandle(18, RepLayoutCmdType.PropertyFloat)]
         public float? ShieldBaseValue { get; set; }
 

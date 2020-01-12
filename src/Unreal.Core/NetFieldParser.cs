@@ -231,6 +231,13 @@ namespace Unreal.Core
             if ((!netGroupInfo.UsesHandles && !netGroupInfo.Properties.TryGetValue(fixedExportName, out netFieldInfo)) ||
                 (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo)))
             {
+                //Clean this up
+                if (obj is IHandleNetFieldExportGroup handleGroup)
+                {
+                    DebuggingObject data = (DebuggingObject)ReadDataType(RepLayoutCmdType.Property, netBitReader, typeof(DebuggingObject));
+                    handleGroup.UnknownHandles.Add(handle, data);
+                }
+
                 return;
             }
 
@@ -328,6 +335,9 @@ namespace Unreal.Core
                     break;
                 case RepLayoutCmdType.PropertyUInt64:
                     data = netBitReader.ReadUInt64();
+                    break;
+                case RepLayoutCmdType.PropertyInt16:
+                    data = netBitReader.ReadInt16();
                     break;
                 case RepLayoutCmdType.PropertyUInt16:
                     data = netBitReader.ReadUInt16();

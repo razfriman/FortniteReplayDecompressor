@@ -157,6 +157,11 @@ namespace Unreal.Core.Models
             {
                 AbilityLevel = reader.ReadBitsToInt(NUM_LEVEL_BITS);
             }
+
+            if(!reader.AtEnd())
+            {
+
+            }
         }
     }
 }

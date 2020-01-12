@@ -12,7 +12,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     public class GameplayCue : INetFieldExportGroup
     {
         [NetFieldExport("GameplayCueTag", RepLayoutCmdType.Property)]
-        public FGameplayTag GameplayCueTag { get; set; } //Type:  Bits: 1
+        public FGameplayTag GameplayCueTag { get; set; }
+
+        [NetFieldExport("PredictionKey", RepLayoutCmdType.Property)]
+        public FPredictionKey PredictionKey { get; set; }
+
+        [NetFieldExport("Parameters", RepLayoutCmdType.Ignore)]
+        public FGameplayCueParameters Parameters { get; set; }
     }
 
 
@@ -59,8 +65,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueExecuted_WithParams", ParseType.Normal)]
     public class GameplayCueExecutedWithParams : GameplayCue
     {
-        [NetFieldExport("GameplayCueParameters", RepLayoutCmdType.Property)]
-        public FGameplayCueParameters GameplayCueParameters { get; set; } //Type:  Bits: 1
+        [NetFieldExport("GameplayCueParameters", RepLayoutCmdType.Ignore)]
+        public FGameplayCueParameters GameplayCueParameters { get; set; }
     }
-
 }

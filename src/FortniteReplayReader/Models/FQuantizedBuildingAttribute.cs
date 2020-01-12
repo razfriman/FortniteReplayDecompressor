@@ -13,6 +13,11 @@ namespace FortniteReplayReader.Models
         public void Serialize(NetBitReader reader)
         {
             DebugData = reader.ReadBytes(2);
+
+            if(reader.IsError || !reader.AtEnd())
+            {
+
+            }
         }
     }
 }

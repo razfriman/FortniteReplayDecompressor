@@ -19,43 +19,34 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public int? Role { get; set; }
 
-        [NetFieldExport("ForceMetadataRelevant", RepLayoutCmdType.PropertyObject)]
-        public DebuggingObject ForceMetadataRelevant { get; set; }
-
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool? bDestroyed { get; set; }
 
-        [NetFieldExport("StaticMesh", RepLayoutCmdType.Property)]
-        public DebuggingObject StaticMesh { get; set; }
-
-        [NetFieldExport("AltMeshIdx", RepLayoutCmdType.Property)]
-        public DebuggingObject WeaponData { get; set; }
-
         [NetFieldExport("BuildTime", RepLayoutCmdType.Property)]
-        public DebuggingObject BuildTime { get; set; }
+        public FQuantizedBuildingAttribute BuildTime { get; set; }
 
         [NetFieldExport("RepairTime", RepLayoutCmdType.Property)]
-        public DebuggingObject RepairTime { get; set; }
+        public FQuantizedBuildingAttribute RepairTime { get; set; }
 
-        [NetFieldExport("Health", RepLayoutCmdType.Property)]
-        public DebuggingObject Health { get; set; }
+        [NetFieldExport("Health", RepLayoutCmdType.PropertyInt16)]
+        public short? Health { get; set; }
 
-        [NetFieldExport("MaxHealth", RepLayoutCmdType.Property)]
-        public DebuggingObject MaxHealth { get; set; }
+        [NetFieldExport("MaxHealth", RepLayoutCmdType.PropertyInt16)]
+        public short? MaxHealth { get; set; }
 
-        [NetFieldExport("SearchedMesh", RepLayoutCmdType.Ignore)]
-        public uint? SearchedMesh { get; set; }
+        [NetFieldExport("ReplicatedLootTier", RepLayoutCmdType.PropertyInt)]
+        public int? ReplicatedLootTier { get; set; }
 
-        [NetFieldExport("ReplicatedLootTier", RepLayoutCmdType.Property)]
-        public DebuggingObject ReplicatedLootTier { get; set; }
+        [NetFieldExport("SearchAnimationCount", RepLayoutCmdType.PropertyUInt32)]
+        public uint? SearchAnimationCount { get; set; }
 
         [NetFieldExport("bAlreadySearched", RepLayoutCmdType.PropertyBool)]
         public bool? bAlreadySearched { get; set; }
 
-        [NetFieldExport("BounceNormal", RepLayoutCmdType.Property)]
-        public DebuggingObject BounceNormal { get; set; }
+        [NetFieldExport("ResourceType", RepLayoutCmdType.Enum)]
+        public int? ResourceType { get; set; }
 
-        [NetFieldExport("SearchAnimationCount", RepLayoutCmdType.Property)]
-        public DebuggingObject SearchAnimationCount { get; set; }
+        [NetFieldExport("BounceNormal", RepLayoutCmdType.PropertyVector)]
+        public FVector BounceNormal { get; set; }
     }
 }

@@ -107,8 +107,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Position", RepLayoutCmdType.PropertyFloat)]
 		public float? Position { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("Acceleration", RepLayoutCmdType.PropertyFloat)]
-		public float? Acceleration { get; set; } //Type:  Bits: 46
+		[NetFieldExport("Acceleration", RepLayoutCmdType.PropertyVector10)]
+		public FVector Acceleration { get; set; } //Type:  Bits: 46
 
 		[NetFieldExport("LinearVelocity", RepLayoutCmdType.PropertyVector10)]
 		public FVector LinearVelocity { get; set; } //Type: FVector_NetQuantize10 Bits: 26

@@ -5,6 +5,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
+using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
 using System;
@@ -93,6 +94,8 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case FishingBarrel container:
+                    break;
                 case GameplayCueExecuted cueExecuted:
                     //Fall damage should be in here
                     break;

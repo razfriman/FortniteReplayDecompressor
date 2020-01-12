@@ -17,6 +17,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public object Role { get; set; } //Type:  Bits: 2
 
+        [NetFieldExport("Owner", RepLayoutCmdType.Property)]
+        public NetworkGUID Owner { get; set; }
+
         [NetFieldExport("PropertyScopedName", RepLayoutCmdType.PropertyString)]
         public string PropertyScopedName { get; set; }
 

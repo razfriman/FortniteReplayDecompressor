@@ -10,7 +10,7 @@ namespace Unreal.Core.Models
     //Purely for debugging. It's not optimized
     public class DebuggingObject : IProperty
     {
-        private enum VectorType { Normal, Vector10, Vector100, Quantize };
+        private enum VectorType { Normal, Vector10, Vector100, Quantize, Single };
         private enum RotatorType { Byte, Short };
 
         public byte[] Bytes => AsByteArray();
@@ -30,6 +30,7 @@ namespace Unreal.Core.Models
 
         public FVector QuantizeVector => AsVector(VectorType.Quantize);
         public FVector VectorNormal => AsVector(VectorType.Normal);
+        public FVector VectorSingle => AsVector(VectorType.Single);
         public FVector Vector10 => AsVector(VectorType.Vector10);
         public FVector Vector100 => AsVector(VectorType.Vector100);
         public FRotator RotatorByte => AsRotator(RotatorType.Byte);
@@ -129,6 +130,9 @@ namespace Unreal.Core.Models
                     break;
                 case VectorType.Quantize:
                     tVector = _reader.SerializePropertyQuantizeVector();
+                    break;
+                case VectorType.Single:
+                    tVector = _reader.SerializePropertyVector();
                     break;
             }
 
