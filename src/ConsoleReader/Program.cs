@@ -67,11 +67,6 @@ namespace ConsoleReader
 
             foreach (string path in Directory.GetFiles("Replays"))
             {
-                if(path != @"Replays\weapons.replay")
-                {
-                    continue;
-                }
-
                 sw.Restart();
 
                 var reader = new ReplayReader(logger);

@@ -567,7 +567,6 @@ namespace Unreal.Core
         }
     }
 
-#if DEBUG
     public class NetRPCFieldInfo
     {
         public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
@@ -581,6 +580,7 @@ namespace Unreal.Core
         public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
     }
 
+#if DEBUG
     public class UnknownFieldInfo
     {
         public string PropertyName { get; set; }
