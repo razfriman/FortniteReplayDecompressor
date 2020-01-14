@@ -3,12 +3,21 @@ using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Attributes;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Items.Weapons
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 {
     public class Sniper : BaseWeapon
     { 
+    }
+
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Sniper/Blueprints/B_Prj_Bullet_Sniper.B_Prj_Bullet_Sniper_C", ParseType.Normal)]
+    public class SniperProjectile : BaseProjectile
+    {
+        [NetFieldExport("FireStartLoc", RepLayoutCmdType.PropertyVector10)]
+        public FVector FireStartLoc { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/B_Rifle_Sniper_Athena.B_Rifle_Sniper_Athena_C", ParseType.Normal)]

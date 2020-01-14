@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;

@@ -5,7 +5,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Items.Weapons
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 {
     //Melee weapons have individual types for each skin
     public class Melee : BaseWeapon

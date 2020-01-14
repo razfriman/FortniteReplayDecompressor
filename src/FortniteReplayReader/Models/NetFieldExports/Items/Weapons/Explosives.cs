@@ -5,7 +5,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Items.Weapons
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 {
     public class Explosives : BaseWeapon
     {
@@ -13,33 +13,28 @@ namespace FortniteReplayReader.Models.Items.Weapons
 
     public class Launcher : Explosives
     {
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        public FRepMovementWholeNumber ReplicatedMovement { get; set; }
 
-        [NetFieldExport("GravityScale", RepLayoutCmdType.PropertyFloat)]
-        public float? GravityScale { get; set; }
-
-        [NetFieldExport("Team", RepLayoutCmdType.Enum)]
-        public int? Team { get; set; }
     }
 
+    #region RocketLauncher
     [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Generic_Athena.B_RocketLauncher_Generic_Athena_C", ParseType.Normal)]
     public class RocketLauncher : Launcher
     {
     }
+
 
     [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Generic_Athena_HighTier.B_RocketLauncher_Generic_Athena_HighTier_C", ParseType.Normal)]
     public class RocketLauncherHighTier : RocketLauncher
     {
     }
 
-    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Military_Athena.B_RocketLauncher_Military_Athena_C", ParseType.Normal)]
-    public class QuadLauncher : Launcher
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_Prj_Ranged_Rocket_Athena_LowTier.B_Prj_Ranged_Rocket_Athena_LowTier_C", ParseType.Normal)]
+    public class RocketLauncherProjectile : BaseLauncherProjectile
     {
     }
 
-    [NetFieldExportGroup("/Game/Weapons/FORT_GrenadeLaunchers/Blueprints/B_GrenadeLauncher_Generic_Athena.B_GrenadeLauncher_Generic_Athena_C", ParseType.Normal)]
-    public class GrenadeLauncher : Launcher
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_Prj_Ranged_Rocket_Athena.B_Prj_Ranged_Rocket_Athena_C", ParseType.Normal)]
+    public class RocketLauncherProjectileHighTier : RocketLauncherProjectile
     {
     }
 
@@ -52,14 +47,59 @@ namespace FortniteReplayReader.Models.Items.Weapons
     public class PumpkinLauncherHighTier : PumpkinLauncher
     {
     }
+    #endregion
+
+    #region QuadLauncher
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_RocketLauncher_Military_Athena.B_RocketLauncher_Military_Athena_C", ParseType.Normal)]
+    public class QuadLauncher : Launcher
+    {
+    }
+
+    #endregion
+
+    #region GrenadeLauncher
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_GrenadeLaunchers/Blueprints/B_GrenadeLauncher_Generic_Athena.B_GrenadeLauncher_Generic_Athena_C", ParseType.Normal)]
+    public class GrenadeLauncher : Launcher
+    {
+    }
+
+    #endregion
+
+    #region ProximityLauncher
 
     [NetFieldExportGroup("/Game/Weapons/FORT_GrenadeLaunchers/Blueprints/B_GrenadeLauncher_Prox_Athena.B_GrenadeLauncher_Prox_Athena_C", ParseType.Normal)]
     public class ProximityLauncher : Launcher
     {
     }
 
+    #endregion
+
+    #region Frag Grenades
+
     [NetFieldExportGroup("/Game/Abilities/Player/Generic/UtilityItems/B_Grenade_Frag_Athena.B_Grenade_Frag_Athena_C", ParseType.Normal)]
     public class FragGrenade : Explosives
     {
     }
+
+    
+    [NetFieldExportGroup("/Game/Athena/Items/Consumables/Grenade/B_Prj_Athena_FragGrenade.B_Prj_Athena_FragGrenade_C", ParseType.Normal)]
+    public class FragGrenadeProjectile : BaseExplosiveProjectile
+    {
+    }
+
+    #endregion
+
+    #region MotorBoat
+
+    [NetFieldExportGroup("/Game/Athena/Items/Weapons/Vehicles/MeatballWeapon/B_Prj_Meatball_Missile.B_Prj_Meatball_Missile_C", ParseType.Normal)]
+    public class MotorBoatProjectile : BaseLauncherProjectile
+    {
+        //Possibly part of base?
+        [NetFieldExport("SurfaceType", RepLayoutCmdType.Enum)]
+        public int? SurfaceType { get; set; }
+    }
+
+    #endregion
 }

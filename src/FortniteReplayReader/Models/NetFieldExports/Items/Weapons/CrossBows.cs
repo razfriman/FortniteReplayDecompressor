@@ -6,7 +6,7 @@ using Unreal.Core.Attributes;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.Items.Weapons
+namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 {
     public class CrossBows : BaseWeapon
     {

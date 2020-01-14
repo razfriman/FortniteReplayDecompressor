@@ -6,6 +6,7 @@ using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
+using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
 using System;
