@@ -21,7 +21,7 @@ namespace Unreal.Core.Models
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
-
+        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
 
         public void ClearCache()
         {
@@ -31,7 +31,8 @@ namespace Unreal.Core.Models
             NetGuidToPathName.Clear();
             _archTypeToExportGroup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
-            _cleanedPaths.Clear(); 
+            _cleanedPaths.Clear();
+            _failedPaths.Clear();
         }
 
         public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
@@ -170,13 +171,13 @@ namespace Unreal.Core.Models
                     }
                 }
 
-
-                //Try fixing ...
-                /*if(path.EndsWith("Set", StringComparison.Ordinal) || path.EndsWith("Component", StringComparison.Ordinal)) //Need to deal with later
+                //Don't need to recheck
+                if (_failedPaths.Contains(path))
                 {
                     return null;
-                }*/
+                }
 
+                //Try fixing ...
                 var cleanedPath = CleanPathSuffix(path);
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
@@ -194,6 +195,8 @@ namespace Unreal.Core.Models
                         }
                     }
                 }
+
+                _failedPaths.Add(path);
 
                 return null;
             }

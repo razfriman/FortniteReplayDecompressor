@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,10 +60,10 @@ namespace ConsoleReader
 
             long totalTime = 0;
 
+
             foreach (string path in Directory.GetFiles("Replays"))
             {
                 sw.Restart();
-
                 var reader = new ReplayReader(logger);
                 var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
