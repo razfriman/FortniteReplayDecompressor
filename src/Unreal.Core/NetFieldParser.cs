@@ -17,7 +17,7 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        private Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
+        private static Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
 
         private NetFieldParserInfo _parserInfo;
 
