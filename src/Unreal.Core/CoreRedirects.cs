@@ -7,10 +7,6 @@ using Unreal.Core.Attributes;
 
 namespace Unreal.Core
 {
-    /// <summary>
-    /// Core Redirects enable remapping classes, enums, functions, packages, properties, and structs at load time.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreRedirects.cpp
-    /// </summary>
     public static class CoreRedirects
     {
         public static Dictionary<string, string> PartialRedirects { get; private set; } = new Dictionary<string, string>();
@@ -25,8 +21,6 @@ namespace Unreal.Core
             foreach(Type type in netFields)
             {
                 NetFieldExportGroupAttribute exportGroupAttribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-
-
                 PartialNetFieldExportGroup partialAttribute = type.GetCustomAttribute<PartialNetFieldExportGroup>();
                 IEnumerable<RedirectPathAttribute> redirectAttributes = type.GetCustomAttributes<RedirectPathAttribute>();
 

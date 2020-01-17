@@ -15,7 +15,7 @@ using Unreal.Encryption;
 
 namespace Unreal.Core
 {
-    public abstract class ReplayReader<T> where T : Replay
+    public abstract class ReplayReader<T> where T : Replay, new ()
     {
         private const int DefaultMaxChannelSize = 32767;
 
@@ -51,8 +51,8 @@ namespace Unreal.Core
         public UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
         //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
-
         private bool isReading = false;
+        private NetFieldParser _netFieldParser;
 
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
@@ -63,6 +63,12 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
+        protected ReplayReader(ILogger logger)
+        {
+            _logger = logger;
+            Replay = new T();
+            _netFieldParser = new NetFieldParser(GetType().Assembly);
+        }
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
@@ -367,7 +373,7 @@ namespace Unreal.Core
 
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_EXTRA_VERSION)
             {
-                _logger.LogError($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
+                _logger?.LogError($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
                 throw new InvalidReplayException($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
             }
 
@@ -482,7 +488,7 @@ namespace Unreal.Core
             else if (bufferSize > 2048)
             {
                 //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
-                _logger.LogError("UDemoNetDriver::ReadPacket: OutBufferSize > 2048");
+                _logger?.LogError("UDemoNetDriver::ReadPacket: OutBufferSize > 2048");
 
                 packet.State = PacketState.Error;
 
@@ -491,7 +497,7 @@ namespace Unreal.Core
             else if (bufferSize < 0)
             {
                 //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
-                _logger.LogError("UDemoNetDriver::ReadPacket: OutBufferSize < 0");
+                _logger?.LogError("UDemoNetDriver::ReadPacket: OutBufferSize < 0");
 
                 packet.State = PacketState.Error;
 
@@ -731,7 +737,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    _logger.LogInformation("ReceiveNetFieldExports: Unable to find NetFieldExportGroup for export.");
+                    _logger?.LogInformation("ReceiveNetFieldExports: Unable to find NetFieldExportGroup for export.");
                 }
             }
         }
@@ -885,7 +891,7 @@ namespace Unreal.Core
         {
             if (internalLoadObjectRecursionCount > 16)
             {
-                _logger.LogWarning("InternalLoadObject: Hit recursion limit.");
+                _logger?.LogWarning("InternalLoadObject: Hit recursion limit.");
 
                 return new NetworkGUID();
             }
@@ -949,7 +955,7 @@ namespace Unreal.Core
             const int MAX_GUID_COUNT = 2048;
             if (numGUIDsInBunch > MAX_GUID_COUNT)
             {
-                _logger.LogError($"UPackageMapClient::ReceiveNetGUIDBunch: NumGUIDsInBunch > MAX_GUID_COUNT({numGUIDsInBunch})");
+                _logger?.LogError($"UPackageMapClient::ReceiveNetGUIDBunch: NumGUIDsInBunch > MAX_GUID_COUNT({numGUIDsInBunch})");
                 return;
             }
 
@@ -1295,7 +1301,7 @@ namespace Unreal.Core
                 if(Channels[bunch.ChIndex].Actor.Archetype != null && 
                     GuidCache.NetGuidToPathName.TryGetValue(Channels[bunch.ChIndex].Actor.Archetype.Value, out string pathName))
                 {
-                    if (NetFieldParser.IsPlayerController(pathName))
+                    if (_netFieldParser.IsPlayerController(pathName))
                     {
                         byte netPlayerIndex = bunch.Archive.ReadByte();
                     }
@@ -1424,7 +1430,7 @@ namespace Unreal.Core
                 }
                 
                 //Find export group
-                bool rpcGroupFound = NetFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out NetRPCFieldInfo netFieldInfo, out bool willParse);
+                bool rpcGroupFound = _netFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out NetRPCFieldInfo netFieldInfo, out bool willParse);
 
                 if (rpcGroupFound)
                 {
@@ -1547,11 +1553,11 @@ namespace Unreal.Core
                 return false;
             }
 
-            string pathName = NetFieldParser.GetClassNetPropertyPathname(netFieldExportGroup.PathName, netFieldExportGroup.NetFieldExports[handle].Name, out bool readChecksumBit);
+            string pathName = _netFieldParser.GetClassNetPropertyPathname(netFieldExportGroup.PathName, netFieldExportGroup.NetFieldExports[handle].Name, out bool readChecksumBit);
 
             NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
-            bool readProperties = propertyExportGroup != null ? (NetFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool _) || ParseType == ParseType.Debug) : false;
+            bool readProperties = propertyExportGroup != null ? (_netFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool _) || ParseType == ParseType.Debug) : false;
 
             if (!readProperties)
             {
@@ -1635,7 +1641,7 @@ namespace Unreal.Core
 
         private bool ReceiveCustomProperty(FBitArchive reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
         {
-            if (NetFieldParser.TryCreateRPCPropertyType(classNetCache.PathName, fieldCache.Name, out IProperty customProperty))
+            if (_netFieldParser.TryCreateRPCPropertyType(classNetCache.PathName, fieldCache.Name, out IProperty customProperty))
             {
                 NetBitReader netreader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
                 {
@@ -1673,7 +1679,7 @@ namespace Unreal.Core
 
             if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
             {
-                if (ParseType != ParseType.Debug && !NetFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
+                if (ParseType != ParseType.Debug && !_netFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
                 {
                     if (ignoreChannel)
                     {
@@ -1691,7 +1697,7 @@ namespace Unreal.Core
 
             //Debug("types", $"\n{group.PathName}");
 
-            INetFieldExportGroup exportGroup = NetFieldParser.CreateType(group.PathName);
+            INetFieldExportGroup exportGroup = _netFieldParser.CreateType(group.PathName);
 
             if(exportGroup == null || exportGroup is DebuggingExportGroup)
             {
@@ -1758,7 +1764,7 @@ namespace Unreal.Core
                         NetworkVersion = Replay.Header.NetworkVersion
                     };
 
-                    NetFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+                    _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
 
                     if (cmdReader.IsError)
                     {
@@ -1769,7 +1775,7 @@ namespace Unreal.Core
 #if DEBUG
                         cmdReader.Reset();
 
-                        NetFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+                        _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
 #endif
                         continue;
                     }
@@ -2101,7 +2107,7 @@ namespace Unreal.Core
 
                         if (bitReader.IsError)
                         {
-                            _logger.LogError("Channel name serialization failed.");
+                            _logger?.LogError("Channel name serialization failed.");
 
                             return;
                         }

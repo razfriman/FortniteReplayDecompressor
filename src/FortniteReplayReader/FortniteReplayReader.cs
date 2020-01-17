@@ -26,10 +26,9 @@ namespace FortniteReplayReader
     {
         public int TotalPropertiesRead { get; private set; }
 
-        public ReplayReader(ILogger logger = null)
+        public ReplayReader(ILogger logger = null) : base(logger)
         {
-            Replay = new FortniteReplay();
-            _logger = logger;
+
         }
 
         public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)

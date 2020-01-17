@@ -17,32 +17,55 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private static Dictionary<string, NetRPCFieldGroupInfo> _netRPCStructureTypes = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
-        private static HashSet<string> _playerControllers = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
-        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
 
-#if DEBUG
-        public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
+        private NetFieldParserInfo _parserInfo;
 
-        public static bool HasNewNetFields => UnknownNetFields.Count > 0;
-#endif
-
-        static NetFieldParser()
+        public NetFieldParser(Assembly callingAssembly)
         {
-            Assembly[] currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            if(_parserInfoDict.ContainsKey(callingAssembly))
+            {
+                //Already intialized data
+                _parserInfo = _parserInfoDict[callingAssembly];
 
-            IEnumerable<Type> netFields = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
+                return;
+            }
 
+            Type[] executingAssemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
+            Type[] callingAssemblyTypes = callingAssembly.GetTypes();
+
+            List<Type> netFields = new List<Type>();
+            List<Type> classNetCaches = new List<Type>();
+            List<Type> propertyTypes = new List<Type>();
+
+            //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
+            netFields.AddRange(callingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
+            classNetCaches.AddRange(callingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            propertyTypes.AddRange(callingAssemblyTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+            //Loads all types from Unreal.Core assembly.
+            netFields.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
+            classNetCaches.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            propertyTypes.AddRange(executingAssemblyTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+            _parserInfo = new NetFieldParserInfo();
+            _parserInfoDict.Add(callingAssembly, _parserInfo);
+
+            LoadNetFields(netFields);
+            LoadClassNetCaches(classNetCaches);
+            LoadPropertyTypes(propertyTypes);
+        }
+
+        private void LoadNetFields(List<Type> netFields)
+        {
             foreach (Type type in netFields)
             {
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
                 PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
 
-                if(playerController != null)
+                if (playerController != null)
                 {
-                    _playerControllers.Add(playerController.Name);
+                    _parserInfo.PlayerControllers.Add(playerController.Name);
                 }
 
                 NetFieldGroupInfo info = new NetFieldGroupInfo();
@@ -50,7 +73,7 @@ namespace Unreal.Core
                 info.Type = type;
                 info.Attribute = attribute;
 
-                _netFieldGroups[attribute.Path] = info;
+                _parserInfo.NetFieldGroups[attribute.Path] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
@@ -82,17 +105,17 @@ namespace Unreal.Core
                     }
                 }
             }
+        }
 
-            //Class net cache
-            IEnumerable<Type> netCache = currentAssemblies.SelectMany(x => x.GetTypes()).Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null);
-
-            foreach (Type type in netCache)
+        private void LoadClassNetCaches(List<Type> classNetCaches)
+        {
+            foreach (Type type in classNetCaches)
             {
                 NetFieldExportRPCAttribute attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
                 NetRPCFieldGroupInfo info = new NetRPCFieldGroupInfo();
                 info.ParseType = attribute.MinimumParseType;
 
-                _netRPCStructureTypes[attribute.PathName] = info;
+                _parserInfo.NetRPCStructureTypes[attribute.PathName] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
@@ -109,38 +132,38 @@ namespace Unreal.Core
                     }
                 }
             }
+        }
 
+        private void LoadPropertyTypes(List<Type> propertyTypes)
+        {
             //Type layout for dynamic arrays
-            _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
-            _primitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
-            _primitiveTypeLayout.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
-            _primitiveTypeLayout.Add(typeof(int), RepLayoutCmdType.PropertyInt);
-            _primitiveTypeLayout.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
-            _primitiveTypeLayout.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
-            _primitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
-            _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
-            _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
-
-            IEnumerable<Type> iPropertyTypes = currentAssemblies.SelectMany(x => x.GetTypes())
-                .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(int), RepLayoutCmdType.PropertyInt);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
 
             //Allows deserializing IProperty type arrays
-            foreach (var iPropertyType in iPropertyTypes)
+            foreach (var iPropertyType in propertyTypes)
             {
-                _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
+                _parserInfo.PrimitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
             }
         }
 
-        public static bool IsPlayerController(string name)
+        public bool IsPlayerController(string name)
         {
-            return _playerControllers.Contains(name);
+            return _parserInfo.PlayerControllers.Contains(name);
         }
 
-        public static string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
+        public string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
         {
             readChecksumBit = false;
 
-            if (_netRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
                 if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
                 {
@@ -161,12 +184,12 @@ namespace Unreal.Core
             return null;
         }
 
-        public static bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
+        public bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
         {
             willParse = false;
             netFieldInfo = null;
 
-            if (_netRPCStructureTypes.TryGetValue(classNetPathName, out NetRPCFieldGroupInfo groups))
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(classNetPathName, out NetRPCFieldGroupInfo groups))
             {
                 willParse = parseType >= groups.ParseType;
 
@@ -186,13 +209,13 @@ namespace Unreal.Core
             return false;
         }
 
-        public static bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
+        public bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
             ignoreChannel = false;
 
-            if (_netFieldGroups.ContainsKey(group))
+            if (_parserInfo.NetFieldGroups.ContainsKey(group))
             {
-                if (parseType >= _netFieldGroups[group].Attribute.MinimumParseType)
+                if (parseType >= _parserInfo.NetFieldGroups[group].Attribute.MinimumParseType)
                 {
                     return true;
                 }
@@ -206,7 +229,7 @@ namespace Unreal.Core
             return false;
         }
 
-        public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        public void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             string group = exportGroup.PathName;
 
@@ -220,7 +243,7 @@ namespace Unreal.Core
                 fixedExportName = "Handles";
             }
 
-            if (!_netFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
+            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
             {
                 return;
             }
@@ -243,7 +266,7 @@ namespace Unreal.Core
             SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
         }
 
-        private static void SetType(object obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        private void SetType(object obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             object data;
 
@@ -272,7 +295,7 @@ namespace Unreal.Core
             }
         }
 
-        private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
+        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
         {
             object data = null;
 
@@ -280,7 +303,7 @@ namespace Unreal.Core
             {
                 case RepLayoutCmdType.Property:
                 case RepLayoutCmdType.RepMovement:
-                    data = _linqCache.CreateObject(objectType);
+                    data = _parserInfo.LinqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
                     break;
                 case RepLayoutCmdType.PropertyBool:
@@ -349,7 +372,7 @@ namespace Unreal.Core
                     netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
                 case RepLayoutCmdType.Debug:
-                    data = _linqCache.CreateObject(typeof(DebuggingObject));
+                    data = _parserInfo.LinqCache.CreateObject(typeof(DebuggingObject));
                     (data as IProperty).Serialize(netBitReader);
                     break;
             }
@@ -357,7 +380,7 @@ namespace Unreal.Core
             return data;
         }
 
-        private static Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
+        private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
 
@@ -369,7 +392,7 @@ namespace Unreal.Core
             {
                 groupInfo = null;
 
-                if (!_primitiveTypeLayout.TryGetValue(elementType, out replayout))
+                if (!_parserInfo.PrimitiveTypeLayout.TryGetValue(elementType, out replayout))
                 {
                     replayout = RepLayoutCmdType.Ignore;
                 }
@@ -411,7 +434,7 @@ namespace Unreal.Core
 
                 if (isGroupType)
                 {
-                    data = _linqCache.CreateObject(elementType);
+                    data = _parserInfo.LinqCache.CreateObject(elementType);
                 }
 
                 while (true)
@@ -466,14 +489,14 @@ namespace Unreal.Core
             }
         }
 
-        public static INetFieldExportGroup CreateType(string group)
+        public INetFieldExportGroup CreateType(string group)
         {
-            if (!_netFieldGroups.ContainsKey(group))
+            if (!_parserInfo.NetFieldGroups.ContainsKey(group))
             {
                 return null;
             }
 
-            return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
+            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(_parserInfo.NetFieldGroups[group].Type);
         }
 
         /// <summary>
@@ -482,15 +505,15 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
+        public bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
         {
             property = null;
 
-            if (_netRPCStructureTypes.TryGetValue(group, out NetRPCFieldGroupInfo groupInfo))
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(group, out NetRPCFieldGroupInfo groupInfo))
             {
                 if(groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
                 {
-                    property = (IProperty)_linqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
+                    property = (IProperty)_parserInfo.LinqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
 
                     return true;
                 }
@@ -499,7 +522,7 @@ namespace Unreal.Core
             return false;
         }
 
-        private static unsafe string FixInvalidNames(string str)
+        private unsafe string FixInvalidNames(string str)
         {
             int len = str.Length;
             char* newChars = stackalloc char[len];
@@ -523,33 +546,6 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
-#if DEBUG
-        private static void AddUnknownField(string group, UnknownFieldInfo fieldInfo)
-        {
-            HashSet<UnknownFieldInfo> fields = new HashSet<UnknownFieldInfo>();
-
-            if (!UnknownNetFields.TryAdd(group, fields))
-            {
-                UnknownNetFields.TryGetValue(group, out fields);
-            }
-
-            fields.Add(fieldInfo);
-        }
-
-        private static void AddUnknownField(string exportName, string exportType, string group, uint handle, NetBitReader netBitReader)
-        {
-            HashSet<UnknownFieldInfo> fields = new HashSet<UnknownFieldInfo>();
-
-            if (!UnknownNetFields.TryAdd(group, fields))
-            {
-                UnknownNetFields.TryGetValue(group, out fields);
-            }
-
-            fields.Add(new UnknownFieldInfo(exportName, exportType, netBitReader.GetBitsLeft(), handle));
-
-        }
-#endif
-
         private class NetFieldGroupInfo
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
@@ -565,6 +561,20 @@ namespace Unreal.Core
 
             public PropertyInfo PropertyInfo { get; set; }
         }
+
+        /// <summary>
+        /// Holds type info for assembly
+        /// </summary>
+        private class NetFieldParserInfo
+        {
+            public Dictionary<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } =
+            new Dictionary<string, NetFieldGroupInfo>();
+            public Dictionary<Type, RepLayoutCmdType> PrimitiveTypeLayout { get; private set; } =
+            new Dictionary<Type, RepLayoutCmdType>();
+            public Dictionary<string, NetRPCFieldGroupInfo> NetRPCStructureTypes { get; private set; } = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
+            public HashSet<string> PlayerControllers { get; private set; } = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
+            public CompiledLinqCache LinqCache { get; private set; } = new CompiledLinqCache();
+        }
     }
 
     public class NetRPCFieldInfo
@@ -579,44 +589,4 @@ namespace Unreal.Core
         public ParseType ParseType { get; set; }
         public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
     }
-
-#if DEBUG
-    public class UnknownFieldInfo
-    {
-        public string PropertyName { get; set; }
-        public string Type { get; set; }
-        public int BitCount { get; set; }
-        public uint Handle { get; set; }
-
-        public override string ToString()
-        {
-            return PropertyName;
-        }
-
-        public UnknownFieldInfo(string propertyname, string type, int bitCount, uint handle)
-        {
-            PropertyName = propertyname;
-            Type = type;
-            BitCount = bitCount;
-            Handle = handle;
-        }
-
-        public override bool Equals(object obj)
-        {
-            UnknownFieldInfo fieldInfo = obj as UnknownFieldInfo;
-
-            if (fieldInfo == null)
-            {
-                return base.Equals(obj);
-            }
-
-            return fieldInfo.PropertyName == PropertyName;
-        }
-
-        public override int GetHashCode()
-        {
-            return PropertyName.GetHashCode();
-        }
-    }
-#endif
 }
