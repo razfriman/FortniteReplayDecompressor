@@ -138,6 +138,12 @@ namespace Unreal.Core.Models
 
                 var path = NetGuidToPathName[guid];
 
+                //Don't need to recheck. Some export groups are added later though
+                if (_failedPaths.Contains(path))
+                {
+                    return null;
+                }
+
                 path = CoreRedirects.GetRedirect(path);
 
                 if(_partialPathNames.TryGetValue(path, out string redirectPath))
@@ -169,12 +175,6 @@ namespace Unreal.Core.Models
 
                         return NetFieldExportGroupMap[groupPath];
                     }
-                }
-
-                //Don't need to recheck
-                if (_failedPaths.Contains(path))
-                {
-                    return null;
                 }
 
                 //Try fixing ...
