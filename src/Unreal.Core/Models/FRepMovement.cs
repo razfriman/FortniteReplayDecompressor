@@ -59,26 +59,23 @@ namespace Unreal.Core.Models
             SerializeRepMovement(reader);
         }
 
-        protected FRepMovement SerializeRepMovement(NetBitReader reader,
+        protected void SerializeRepMovement(NetBitReader reader,
             VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
             RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
-            var repMovement = new FRepMovement();
             var flags = reader.ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
-            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
+            bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            bRepPhysics = (flags & (1 << 1)) > 0;
 
-            repMovement.Location = reader.SerializeQuantizedVector(locationQuantizationLevel);
-            repMovement.Rotation = reader.ReadRotation();
-            repMovement.LinearVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+            Location = reader.SerializeQuantizedVector(locationQuantizationLevel);
+            Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? reader.ReadRotation() : reader.ReadRotationShort();
+            LinearVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
 
-            if (repMovement.bRepPhysics)
+            if (bRepPhysics)
             {
-                repMovement.AngularVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+                AngularVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
             }
-
-            return repMovement;
         }
 
         public override string ToString()

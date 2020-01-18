@@ -107,7 +107,7 @@ namespace Unreal.Core.Models
             {
                 if(group.StartsWith(partialRedirectKvp.Key))
                 {
-                    _partialPathNames.Add(group, partialRedirectKvp.Value);
+                    _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
                 }
             }
         }

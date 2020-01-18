@@ -124,6 +124,59 @@ namespace Unreal.Core
             GuidCache.ClearCache();
         }
 
+        bool readCheckpoint = false;
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
+        /// </summary>
+        /// <param name="archive"></param>
+        protected virtual void ReadReplayChunks(FArchive archive)
+        {
+            while (!archive.AtEnd())
+            {
+                var chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
+                var chunkSize = archive.ReadInt32();
+                var offset = archive.Position;
+
+                //Console.WriteLine($"Chunk {chunkType}. Size: {chunkSize}. Offset: {offset}");
+
+                if (chunkType == ReplayChunkType.Checkpoint)
+                {
+                    //Failing to read checkpoints properly
+                    //ReadCheckpoint(archive);
+                    archive.Seek(chunkSize, SeekOrigin.Current);
+
+                    readCheckpoint = true;
+                }
+
+                else if (chunkType == ReplayChunkType.Event)
+                {
+                    ReadEvent(archive);
+                }
+                else if (chunkType == ReplayChunkType.ReplayData)
+                {
+                    if (ParseType >= ParseType.Minimal)
+                    {
+                        ReadReplayData(archive);
+                    }
+                    else
+                    {
+                        archive.Seek(offset + chunkSize, SeekOrigin.Begin);
+                    }
+                }
+                else if (chunkType == ReplayChunkType.Header)
+                {
+                    ReadReplayHeader(archive);
+                }
+
+                if (archive.Position != offset + chunkSize)
+                {
+                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not correctly read...");
+                    archive.Seek(offset + chunkSize, SeekOrigin.Begin);
+                }
+            }
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
@@ -213,7 +266,6 @@ namespace Unreal.Core
                 GuidCache.NetFieldExportGroupMap.Clear();
                 GuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
-
                 // SerializeNetFieldExportGroupMap 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
 
@@ -227,8 +279,18 @@ namespace Unreal.Core
                     //GuidCache.NetFieldExportGroupPathToIndex[group.PathName] = group.PathNameIndex;
                     GuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group;
                     GuidCache.AddToExportGroupMap(group.PathName, group);
-
                 }
+            }
+
+            //Remove all actors
+            foreach(var channel in Channels)
+            {
+                if(channel == null)
+                {
+                    continue;
+                }
+
+                channel.Actor = null;
             }
 
             // SerializeDemoFrameFromQueuedDemoPackets
@@ -264,55 +326,6 @@ namespace Unreal.Core
             };
 
             throw new UnknownEventException();
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
-        /// </summary>
-        /// <param name="archive"></param>
-        protected virtual void ReadReplayChunks(FArchive archive)
-        {
-            while (!archive.AtEnd())
-            {
-                var chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
-                var chunkSize = archive.ReadInt32();
-                var offset = archive.Position;
-
-                //Console.WriteLine($"Chunk {chunkType}. Size: {chunkSize}. Offset: {offset}");
-
-                if (chunkType == ReplayChunkType.Checkpoint)
-                {
-                    //Failing to read checkpoints properly
-                    //ReadCheckpoint(archive);
-                    archive.Seek(chunkSize, SeekOrigin.Current);
-                }
-
-                else if (chunkType == ReplayChunkType.Event)
-                {
-                    ReadEvent(archive);
-                }
-                else if (chunkType == ReplayChunkType.ReplayData)
-                {
-                    if (ParseType >= ParseType.Minimal)
-                    {
-                        ReadReplayData(archive);
-                    }
-                    else
-                    {
-                        archive.Seek(offset + chunkSize, SeekOrigin.Begin);
-                    }
-                }
-                else if (chunkType == ReplayChunkType.Header)
-                {
-                    ReadReplayHeader(archive);
-                }
-
-                if (archive.Position != offset + chunkSize)
-                {
-                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not correctly read...");
-                    archive.Seek(offset + chunkSize, SeekOrigin.Begin);
-                }
-            }
         }
 
         /// <summary>

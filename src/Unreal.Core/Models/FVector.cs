@@ -51,12 +51,12 @@ namespace Unreal.Core.Models
 
         public static bool operator ==(FVector v1, FVector v2)
         {
-            return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
+            return v1?.X == v2?.X && v1?.Y == v2?.Y && v1?.Z == v2?.Z;
         }
 
         public static bool operator !=(FVector v1, FVector v2)
         {
-            return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
+            return v1?.X != v2?.X || v1?.Y != v2?.Y || v1?.Z != v2?.Z;
         }
     }
 }
