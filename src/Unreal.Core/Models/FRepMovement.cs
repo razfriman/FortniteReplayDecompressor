@@ -69,6 +69,7 @@ namespace Unreal.Core.Models
             bRepPhysics = (flags & (1 << 1)) > 0;
 
             Location = reader.SerializeQuantizedVector(locationQuantizationLevel);
+
             Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? reader.ReadRotation() : reader.ReadRotationShort();
             LinearVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
 

@@ -470,7 +470,11 @@ namespace Unreal.Core
             var y = (float)(dy - bias) / scaleFactor;
             var z = (float)(dz - bias) / scaleFactor;
 
-            return new FVector(x, y, z);
+            FVector vector = new FVector(x, y, z);
+            vector.ScaleFactor = scaleFactor;
+            vector.Bits = (int)bits;
+
+            return vector;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using Unreal.Core.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -26,6 +27,8 @@ namespace Unreal.Core.Models
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
+        public int ScaleFactor { get; set; }
+        public int Bits { get; set; }
 
         public override string ToString()
         {
@@ -57,6 +60,26 @@ namespace Unreal.Core.Models
         public static bool operator !=(FVector v1, FVector v2)
         {
             return v1?.X != v2?.X || v1?.Y != v2?.Y || v1?.Z != v2?.Z;
+        }
+
+        public static FVector operator *(FVector v1, double val)
+        {
+            return new FVector((float)(v1.X * val), (float)(v1.Y * val), (float)(v1.Z * val));
+        }
+
+        public static FVector operator /(FVector v1, double val)
+        {
+            return new FVector((float)(v1.X / val), (float)(v1.Y / val), (float)(v1.Z / val));
+        }
+
+        public double DistanceTo(FVector vector)
+        {
+            return Math.Sqrt(DistanceSquared(vector));
+        }
+
+        private double DistanceSquared(FVector vector)
+        {
+            return Math.Pow(vector.X - this.X, 2) + Math.Pow(vector.Y - this.Y, 2) + Math.Pow(vector.Z - this.Z, 2);
         }
     }
 }
