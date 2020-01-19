@@ -33,8 +33,7 @@ namespace FortniteReplayReader
 
         public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
         {
-            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var archive = new Unreal.Core.BinaryReader(stream);
+            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite); 
             return ReadReplay(stream, parseType);
         }
 
@@ -361,7 +360,7 @@ namespace FortniteReplayReader
 
                 elim.GunType = archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
-                elim.Time = info?.StartTime.MillisecondsToTimeStamp();
+                elim.Timestamp = info.StartTime;
                 return elim;
             }
             catch (Exception ex)

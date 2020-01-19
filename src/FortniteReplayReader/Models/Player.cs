@@ -30,6 +30,7 @@ namespace FortniteReplayReader.Models
         public List<WeaponShot> Shots { get; internal set; } = new List<WeaponShot>();
         public List<WeaponShot> DamageTaken { get; internal set; } = new List<WeaponShot>();
         public FGameplayTag[] DeathTags { get; internal set; }
+        public bool Disconnected { get; set; }
 
         //Extended information
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();

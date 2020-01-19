@@ -322,8 +322,9 @@ namespace FortniteReplayReader.Models
             newPlayer.Placement = playerState.Place ?? newPlayer.Placement;
             newPlayer.TotalKills = playerState.KillScore ?? newPlayer.TotalKills;
             newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
+            newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
 
-            if(playerState.DeathCause != null)
+            if (playerState.DeathCause != null)
             {
                 newPlayer.LastDeathOrKnockTime = GameState.CurrentWorldTime;
 

@@ -51,10 +51,10 @@ namespace FortniteReplayReader.Models
                         ItemType = ItemType.PickAxe;
                         break;
                     case "weapon.ranged.assault.burst":
-                        ItemType = ItemType.Burst;
+                        ItemType = ItemType.BurstRifle;
                         break;
                     case "weapon.ranged.assault.standard":
-                        ItemType = ItemType.Assault;
+                        ItemType = ItemType.AssaultRifle;
                         break;
                     case "weapon.ranged.heavy.rocket_launcher":
                         ItemType = ItemType.Launcher;
@@ -75,9 +75,14 @@ namespace FortniteReplayReader.Models
                     case "weapon.ranged.sniper.bolt":
                         ItemType = ItemType.BoltSniper;
                         break;
+                    case "DeathCause.LoggedOut":
+                        ItemType = ItemType.Logout;
+                        break;
                     case "Gameplay.Damage.Environment":
-                    case "Gameplay.Damage.Environment.Falling":
                         ItemType = ItemType.Environment;
+                        break;
+                    case "Gameplay.Damage.Environment.Falling":
+                        ItemType = ItemType.Falling;
                         break;
                     case "Rarity.Common":
                         ItemRarity = ItemRarity.Common;

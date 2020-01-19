@@ -1,3 +1,4 @@
+using FortniteReplayReader.Extensions;
 using System;
 
 namespace FortniteReplayReader.Models
@@ -7,7 +8,9 @@ namespace FortniteReplayReader.Models
         public string Eliminated { get; internal set; }
         public string Eliminator { get; internal set; }
         public byte GunType { get; internal set; }
-        public string Time { get; internal set; }
+        public string Time => Timestamp.MillisecondsToTimeStamp();
+        public uint Timestamp { get; internal set; }
+
         public bool Knocked { get; internal set; }
 
         public bool Equals(PlayerElimination other)

@@ -90,7 +90,7 @@ namespace Unreal.Core
             return Replay;
         }
 
-        private void Cleanup()
+        protected virtual void Cleanup()
         {
 #if DEBUG
             StringBuilder builder = new StringBuilder();
@@ -124,8 +124,6 @@ namespace Unreal.Core
             GuidCache.ClearCache();
         }
 
-        bool readCheckpoint = false;
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
         /// </summary>
@@ -145,8 +143,6 @@ namespace Unreal.Core
                     //Failing to read checkpoints properly
                     //ReadCheckpoint(archive);
                     archive.Seek(chunkSize, SeekOrigin.Current);
-
-                    readCheckpoint = true;
                 }
 
                 else if (chunkType == ReplayChunkType.Event)

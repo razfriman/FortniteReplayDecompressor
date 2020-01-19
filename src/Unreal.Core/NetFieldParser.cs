@@ -23,7 +23,7 @@ namespace Unreal.Core
 
         public NetFieldParser(Assembly callingAssembly)
         {
-            if(_parserInfoDict.ContainsKey(callingAssembly))
+            if (_parserInfoDict.ContainsKey(callingAssembly))
             {
                 //Already intialized data
                 _parserInfo = _parserInfoDict[callingAssembly];
@@ -31,22 +31,29 @@ namespace Unreal.Core
                 return;
             }
 
-            Type[] executingAssemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
-            Type[] callingAssemblyTypes = callingAssembly.GetTypes();
+            Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+
+            HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+
+            referencedAssemblies.Add(callingAssembly);
+
+            IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
 
             List<Type> netFields = new List<Type>();
             List<Type> classNetCaches = new List<Type>();
             List<Type> propertyTypes = new List<Type>();
 
             //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-            netFields.AddRange(callingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
-            classNetCaches.AddRange(callingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
-            propertyTypes.AddRange(callingAssemblyTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
+            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
 
+            /*
             //Loads all types from Unreal.Core assembly.
             netFields.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
             classNetCaches.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
             propertyTypes.AddRange(executingAssemblyTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+            */
 
             _parserInfo = new NetFieldParserInfo();
             _parserInfoDict.Add(callingAssembly, _parserInfo);
@@ -54,6 +61,30 @@ namespace Unreal.Core
             LoadNetFields(netFields);
             LoadClassNetCaches(classNetCaches);
             LoadPropertyTypes(propertyTypes);
+        }
+
+        private HashSet<Assembly> GetAllReferencedAssemblies(Assembly assembly, Dictionary<string, Assembly> allAssemblies)
+        {
+            HashSet<Assembly> allAssemblyNames = new HashSet<Assembly>();
+
+            foreach (AssemblyName assemblyName in assembly.GetReferencedAssemblies())
+            {
+                Assembly referencedAssembly = null;
+
+                if (!allAssemblies.TryGetValue(assemblyName.FullName, out referencedAssembly))
+                {
+                    continue;
+                }
+
+                allAssemblyNames.Add(allAssemblies[assemblyName.FullName]);
+
+                foreach (Assembly newAssembly in GetAllReferencedAssemblies(referencedAssembly, allAssemblies))
+                {
+                    allAssemblyNames.Add(newAssembly);
+                }
+            }
+
+            return allAssemblyNames;
         }
 
         private void LoadNetFields(List<Type> netFields)
@@ -165,7 +196,7 @@ namespace Unreal.Core
 
             if (_parserInfo.NetRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
             {
-                if(netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
+                if (netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
                 {
                     readChecksumBit = rpcAttribute.Attribute.ReadChecksumBit;
 
@@ -193,12 +224,12 @@ namespace Unreal.Core
             {
                 willParse = parseType >= groups.ParseType;
 
-                if(!willParse)
+                if (!willParse)
                 {
                     return true;
                 }
 
-                if(groups.PathNames.TryGetValue(property, out NetRPCFieldInfo netFieldExportRPCPropertyAttribute))
+                if (groups.PathNames.TryGetValue(property, out NetRPCFieldInfo netFieldExportRPCPropertyAttribute))
                 {
                     netFieldInfo = netFieldExportRPCPropertyAttribute;
 
@@ -511,7 +542,7 @@ namespace Unreal.Core
 
             if (_parserInfo.NetRPCStructureTypes.TryGetValue(group, out NetRPCFieldGroupInfo groupInfo))
             {
-                if(groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
+                if (groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
                 {
                     property = (IProperty)_parserInfo.LinqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
 
