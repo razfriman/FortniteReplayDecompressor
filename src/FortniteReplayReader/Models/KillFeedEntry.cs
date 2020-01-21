@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.Enums;
+using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
@@ -17,7 +19,7 @@ namespace FortniteReplayReader.Models
         public float Distance { get; internal set; }
         public Weapon Weapon { get; internal set; }
 
-        public string[] DeathTags
+        public FGameplayTag[] DeathTags
         {
             get
             {
@@ -26,26 +28,36 @@ namespace FortniteReplayReader.Models
             internal set
             {
                 _deathTags = value;
-                UpdateDeathTagInfo();
+                UpdateWeaponTypes();
             }
         }
 
 
-        private string[] _deathTags;
+        private FGameplayTag[] _deathTags;
 
         public bool KilledSelf => FinisherOrDowner == Player;
         public bool HasError { get; internal set; }
 
-        private void UpdateDeathTagInfo()
+        public void UpdateDeathTags(NetFieldExportGroup networkGameplayTagNodeIndex)
+        { 
+            foreach(FGameplayTag tag in DeathTags.Where(x => x.TagName == null))
+            {
+                tag.UpdateTagName(networkGameplayTagNodeIndex);
+            }
+
+            UpdateWeaponTypes();
+        }
+
+        private void UpdateWeaponTypes()
         {
             if(_deathTags == null)
             {
                 return;
             }
 
-            foreach (string deathTag in DeathTags)
+            foreach (FGameplayTag deathTag in DeathTags)
             {
-                switch (deathTag)
+                switch (deathTag.TagName)
                 {
                     case "Weapon.Melee.Impact.Pickaxe":
                         ItemType = ItemType.PickAxe;
@@ -57,7 +69,7 @@ namespace FortniteReplayReader.Models
                         ItemType = ItemType.AssaultRifle;
                         break;
                     case "weapon.ranged.heavy.rocket_launcher":
-                        ItemType = ItemType.Launcher;
+                        ItemType = ItemType.RocketLauncher;
                         break;
                     case "weapon.ranged.pistol":
                     case "Weapon.Ranged.Pistol.Standard":
@@ -75,14 +87,30 @@ namespace FortniteReplayReader.Models
                     case "weapon.ranged.sniper.bolt":
                         ItemType = ItemType.BoltSniper;
                         break;
+                    case "Abilities.Generic.M80":
+                        ItemType = ItemType.Grenade;
+                        break;
+                    case "Weapon.Ranged.Assault.Heavy":
+                        ItemType = ItemType.HeavyAR;
+                        break;
+                    case "phoebe.items.harpoon":
+                        ItemType = ItemType.Harpoon;
+                        break;
+                    case "Gameplay.Damage.Physical.Energy":
+                        ItemType = ItemType.Storm;
+                        break;
                     case "DeathCause.LoggedOut":
                         ItemType = ItemType.Logout;
                         break;
                     case "Gameplay.Damage.Environment":
+                    case "EnvItem.ReactiveProp.GasPump": //Death by gas pump?
                         ItemType = ItemType.Environment;
                         break;
                     case "Gameplay.Damage.Environment.Falling":
                         ItemType = ItemType.Falling;
+                        break;
+                    case "Item.Trap.DamageTrap":
+                        ItemType = ItemType.Trap;
                         break;
                     case "Rarity.Common":
                         ItemRarity = ItemRarity.Common;
