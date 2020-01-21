@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FortniteReplayReader.Models.Enums;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
@@ -194,10 +195,12 @@ namespace FortniteReplayReader.Models
                 return;
             }
 
-            if (playerState.bResurrectingNow != null)
+            if (playerState.RebootCounter != null)
             {
-                //Rebooted?
-                return;
+                entry.CurrentPlayerState = PlayerState.Revived;
+                entry.Player = channelPlayer;
+                entry.FinisherOrDowner = channelPlayer; //Unknown, so figure this out if possible
+                entry.ItemType = ItemType.RebootVan;
             }
             else
             {
@@ -350,7 +353,7 @@ namespace FortniteReplayReader.Models
             }
             
             //Add to killfeed
-            if (playerState.bResurrectingNow != null || playerState.bDBNO != null || playerState.FinisherOrDowner != null)
+            if (playerState.bDBNO != null || playerState.FinisherOrDowner != null || playerState.RebootCounter != null)
             {
                 UpdateKillFeed(channelId, playerState);
             }

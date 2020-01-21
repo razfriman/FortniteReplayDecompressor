@@ -43,7 +43,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
-            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/season11.11.replay"; //Used for testing
+            var replayFile = "Replays/reboot.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -86,7 +87,7 @@ namespace ConsoleReader
 
                 totalTime += sw.ElapsedMilliseconds;
 
-                var c = replay.GameInformation.Players.Where(x => x.CurrentInventory.Count > 0);
+                var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
                 //var a = NetFieldParser.UnknownNetFields;
 
                 Console.WriteLine(path);
