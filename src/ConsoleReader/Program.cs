@@ -44,7 +44,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
-            var replayFile = "Replays/unknownWeapons2.replay"; //Used for testing
+            var replayFile = "Replays/unknownWeapons.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";

@@ -1438,7 +1438,7 @@ namespace Unreal.Core
                 {
                     continue;
                 }
-                
+
                 //Find export group
                 bool rpcGroupFound = _netFieldParser.TryGetNetFieldGroupRPC(classNetCache.PathName, fieldCache.Name, ParseType, out NetRPCFieldInfo netFieldInfo, out bool willParse);
 
@@ -1471,7 +1471,7 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        if(customSerialization)
+                        if (customSerialization)
                         {
                             if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
                             {

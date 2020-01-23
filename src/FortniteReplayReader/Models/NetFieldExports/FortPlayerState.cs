@@ -84,8 +84,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.Ignore)]
 		public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
 
-		[NetFieldExport("Parts", RepLayoutCmdType.PropertyObject)]
-		public uint? Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
+		[NetFieldExport("Parts", RepLayoutCmdType.Property)]
+		public UObjectGUID Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
 
 		[NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.Ignore)]
 		public uint? WasPartReplicatedFlags { get; set; } //Type:  Bits: 8
@@ -96,8 +96,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.Ignore)]
 		public int[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
 
-		[NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Ignore)]
-		public uint? PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
+		[NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Property)]
+		public ActorGUID PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
 
 		[NetFieldExport("PlatformUniqueNetId", RepLayoutCmdType.PropertyNetId)]
 		public string PlatformUniqueNetId { get; set; } //Type: FUniqueNetIdRepl Bits: 96

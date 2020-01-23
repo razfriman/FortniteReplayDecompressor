@@ -36,6 +36,7 @@ namespace FortniteReplayReader.Models
         public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
         public NetDeltaArray<InventoryItem> CurrentInventory { get; private set; } = new NetDeltaArray<InventoryItem>();
         public List<InventoryItem> InventoryOnDeath { get; private set; } = new List<InventoryItem>();
+        public NetDeltaArray<PrivateTeamInfo> PrivateTeamInfo { get; internal set; }
 
         public Weapon CurrentWeapon { get; internal set; }
         public List<WeaponSwitch> WeaponSwitches { get; private set; } = new List<WeaponSwitch>();
@@ -54,6 +55,7 @@ namespace FortniteReplayReader.Models
         internal List<InventoryItem> InventoryBeforeDeletes { get; set; } = new List<InventoryItem>();
         internal int InventoryBaseReplicationKey { get; set; }
         internal float LastTransformUpdate { get; set; }
+        internal ActorGUID PrivateTeamActorId { get; set; } //Used to set the team data later
     }
 
     public class PlayerLocation

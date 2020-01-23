@@ -43,10 +43,13 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Player> _players = new Dictionary<uint, Player>(); //Channel id to Player
         private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>(); //Channel Id (player pawn) to Actor
         private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
-        private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to 
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
+
+        //Delta updates
+        private Dictionary<uint, NetDeltaArray<PrivateTeamInfo>> _privateTeamInfo = new Dictionary<uint, NetDeltaArray<PrivateTeamInfo>>(); //Channel id to private team info
+        private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>(); //Channel to inventory items
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
@@ -66,13 +69,18 @@ namespace FortniteReplayReader.Models
             _actorToChannel.TryAdd(actor.ActorNetGUID.Value, channel);
         }
 
-        internal void UpdateLlama(uint channel, SupplyDropLlamaC supplyDropLlama)
+        internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo, Actor actor)
+        {
+            _privateTeamInfo.TryAdd(channelId, new NetDeltaArray<PrivateTeamInfo>());
+        }
+
+        internal void UpdateLlama(uint channelId, SupplyDropLlamaC supplyDropLlama)
         {
             Llama newLlama = new Llama();
 
-            if(!_llamas.TryAdd(channel, newLlama))
+            if(!_llamas.TryAdd(channelId, newLlama))
             {
-                _llamas.TryGetValue(channel, out newLlama);
+                _llamas.TryGetValue(channelId, out newLlama);
             }
 
             newLlama.Location = supplyDropLlama.ReplicatedMovement?.Location ?? newLlama.Location;
@@ -81,12 +89,12 @@ namespace FortniteReplayReader.Models
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
         }
 
-        internal void UpdateSearchableContainer(uint channel, SearchableContainer searchableContainer)
+        internal void UpdateSearchableContainer(uint channelId, SearchableContainer searchableContainer)
         {
 
         }
 
-        internal void UpdatePlaylistInfo(uint channel, CurrentPlaylistInfo playlistInfo)
+        internal void UpdatePlaylistInfo(uint channelId, CurrentPlaylistInfo playlistInfo)
         {
             if (NetGUIDToPathName.TryGetValue(playlistInfo.Id.Value, out string playlistId))
             {
@@ -94,13 +102,13 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdateSupplyDrop(uint channel, SupplyDropC supplyDrop)
+        internal void UpdateSupplyDrop(uint channelId, SupplyDropC supplyDrop)
         {
             SupplyDrop newSupplyDrop = new SupplyDrop();
 
-            if (!_supplyDrops.TryAdd(channel, newSupplyDrop))
+            if (!_supplyDrops.TryAdd(channelId, newSupplyDrop))
             {
-                _supplyDrops.TryGetValue(channel, out newSupplyDrop);
+                _supplyDrops.TryGetValue(channelId, out newSupplyDrop);
             }
 
             newSupplyDrop.Location = supplyDrop.LandingLocation ?? newSupplyDrop.Location;
@@ -173,7 +181,7 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdateContainer(uint channel, BaseProp container)
+        internal void UpdateContainer(uint channelId, BaseProp container)
         {
 
         }
@@ -308,6 +316,18 @@ namespace FortniteReplayReader.Models
                 playerState.DeathTags.UpdateTags(networkGameplayTagNode);
             }
 
+            //Attempt to update private team info to correct object
+            if (newPlayer.PrivateTeamActorId != null && newPlayer.PrivateTeamInfo == null)
+            {
+                if(_actorToChannel.TryGetValue(newPlayer.PrivateTeamActorId.Value, out uint teamActorChannel))
+                {
+                    if(_privateTeamInfo.TryGetValue(teamActorChannel, out NetDeltaArray<PrivateTeamInfo> teamInfo))
+                    {
+                        newPlayer.PrivateTeamInfo = teamInfo;
+                    }
+                }
+            }
+
             newPlayer.Actor = actor;
             newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
             newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
@@ -326,6 +346,8 @@ namespace FortniteReplayReader.Models
             newPlayer.TotalKills = playerState.KillScore ?? newPlayer.TotalKills;
             newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
+            newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
+
 
             if (playerState.DeathCause != null)
             {
@@ -625,6 +647,46 @@ namespace FortniteReplayReader.Models
             }
         }
 
+        internal void UpdateNetDeltaPrivateTeamInfo(NetDeltaUpdate deltaUpdate)
+        {
+            if(!_privateTeamInfo.TryGetValue(deltaUpdate.ChannelIndex, out NetDeltaArray<PrivateTeamInfo> teamInfo))
+            {
+                return;
+            }
+
+            if(deltaUpdate.Deleted)
+            {
+                teamInfo.DeleteIndex(deltaUpdate.ElementIndex);
+            }
+            else
+            {
+                FortTeamPrivateInfo privateInfo = deltaUpdate.Export as FortTeamPrivateInfo;
+
+                if(!teamInfo.TryGetItem(deltaUpdate.ElementIndex, out PrivateTeamInfo item))
+                {
+                    item = new PrivateTeamInfo();
+                    teamInfo.TryAddItem(deltaUpdate.ElementIndex, item);
+                }
+
+                item.Value = privateInfo.Value ?? item.Value;
+                item.PlayerId = privateInfo.PlayerID ?? item.PlayerId;
+                item.LastLocation = privateInfo.LastRepLocation ?? item.LastLocation;
+                item.LastYaw = privateInfo.LastRepYaw ?? item.LastYaw;
+                item.PawnStateMask = privateInfo.PawnStateMask ?? item.PawnStateMask;
+
+                if(privateInfo.PlayerState != null)
+                {
+                    if(_actorToChannel.TryGetValue(privateInfo.PlayerState.Value, out uint playerStateChannel))
+                    {
+                        if(_players.TryGetValue(playerStateChannel, out Player player))
+                        {
+                            item.PlayerState = player;
+                        }
+                    }
+                }
+            }
+        }
+
         internal void UpdateFortPickup(uint channelId, FortPickup pickup)
         {
             bool isNewItem = !_floorLoot.TryGetValue(channelId, out InventoryItem newItem);
@@ -774,6 +836,11 @@ namespace FortniteReplayReader.Models
             if (_inventories.ContainsKey(deltaUpdate.ChannelIndex))
             {
                 UpdateNetDeltaFortInventory(deltaUpdate);
+            }
+
+            if(_privateTeamInfo.ContainsKey(deltaUpdate.ChannelIndex))
+            {
+                UpdateNetDeltaPrivateTeamInfo(deltaUpdate);
             }
 
             //GameMemberInfoArray

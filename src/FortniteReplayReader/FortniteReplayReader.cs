@@ -93,6 +93,9 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case FortTeamPrivateInfo privateTeamInfo:
+                    Replay.GameInformation.UpdatePrivateTeamInfo(channel, privateTeamInfo, actor);
+                    break;
                 case SearchableContainer searchableContainer:
                     Replay.GameInformation.UpdateSearchableContainer(channel, searchableContainer);
                     break;
@@ -153,7 +156,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateHealth(channel, healthSet);
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-                    if (debuggingObject.ExportGroup.PathName == "/Game/Playgrounds/Items/BGA_IslandPortal.BGA_IslandPortal_C") //Test for creative map later
+                    if (debuggingObject.ExportGroup.PathName == "/Script/FortniteGame.FortTeamPrivateInfo") //Test for creative map later
                     {
                     }
                     break;
