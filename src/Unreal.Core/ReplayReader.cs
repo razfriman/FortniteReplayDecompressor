@@ -142,6 +142,7 @@ namespace Unreal.Core
                 {
                     //Failing to read checkpoints properly
                     //ReadCheckpoint(archive);
+
                     archive.Seek(chunkSize, SeekOrigin.Current);
                 }
 
@@ -1842,6 +1843,7 @@ namespace Unreal.Core
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
             var netFieldExportHandle = bunch.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
 
+
             if (bunch.IsError)
             {
                 reader = null;
@@ -1873,6 +1875,7 @@ namespace Unreal.Core
             }
 
             reader = new BitReader(bunch.ReadBits(numPayloadBits));
+
             if (bunch.IsError)
             {
                 _logger?.LogError($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");

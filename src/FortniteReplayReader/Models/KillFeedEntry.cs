@@ -19,7 +19,7 @@ namespace FortniteReplayReader.Models
         public float Distance { get; internal set; }
         public Weapon Weapon { get; internal set; }
 
-        public FGameplayTag[] DeathTags
+        public string[] DeathTags
         {
             get
             {
@@ -33,20 +33,10 @@ namespace FortniteReplayReader.Models
         }
 
 
-        private FGameplayTag[] _deathTags;
+        private string[] _deathTags;
 
         public bool KilledSelf => FinisherOrDowner == Player;
         public bool HasError { get; internal set; }
-
-        public void UpdateDeathTags(NetFieldExportGroup networkGameplayTagNodeIndex)
-        { 
-            foreach(FGameplayTag tag in DeathTags.Where(x => x.TagName == null))
-            {
-                tag.UpdateTagName(networkGameplayTagNodeIndex);
-            }
-
-            UpdateWeaponTypes();
-        }
 
         private void UpdateWeaponTypes()
         {
@@ -55,9 +45,9 @@ namespace FortniteReplayReader.Models
                 return;
             }
 
-            foreach (FGameplayTag deathTag in DeathTags)
+            foreach (string  deathTag in DeathTags)
             {
-                switch (deathTag.TagName)
+                switch (deathTag)
                 {
                     case "Weapon.Melee.Impact.Pickaxe":
                         ItemType = ItemType.PickAxe;
@@ -100,6 +90,7 @@ namespace FortniteReplayReader.Models
                         ItemType = ItemType.Storm;
                         break;
                     case "DeathCause.LoggedOut":
+                    case "DeathCause.RemovedFromGame":
                         ItemType = ItemType.Logout;
                         break;
                     case "Gameplay.Damage.Environment":

@@ -33,6 +33,7 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMapPathFixed.Clear();
             _cleanedPaths.Clear();
             _failedPaths.Clear();
+            NetworkGameplayTagNodeIndex = null;
         }
 
         public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)

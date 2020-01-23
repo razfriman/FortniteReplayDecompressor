@@ -182,7 +182,7 @@ namespace FortniteReplayReader.Models
         {
             KillFeedEntry entry = new KillFeedEntry();
             entry.DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime;
-            entry.DeathTags = playerState.DeathTags?.Tags;
+            entry.DeathTags = playerState.DeathTags?.Tags.Select(x => x.TagName).ToArray();
             entry.Distance = playerState.Distance ?? 0;
 
             if(!_players.TryGetValue(channelId, out Player channelPlayer))
@@ -555,7 +555,7 @@ namespace FortniteReplayReader.Models
             if(inventory.ReplayPawn > 0)
             {
                 //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                _inventories[channelId] = inventory;
+                _inventories.TryAdd(channelId, inventory);
             }
         }
 
