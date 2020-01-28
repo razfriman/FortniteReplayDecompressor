@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.Enums;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
@@ -27,6 +28,7 @@ namespace FortniteReplayReader.Models
         public ICollection<PlayerReboot> Resurrections => _resurrections;
         public ICollection<InventoryItem> FloorLoot => _floorLoot.Values;
         public ICollection<KillFeedEntry> KillFeed => _killFeed;
+        public ICollection<PlayerStructure> PlayerStructures => _playerStructures.Values;
 
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
@@ -46,6 +48,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Weapon> _weapons = new Dictionary<uint, Weapon>(); //Channel to 
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
+        private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
 
         //Delta updates
         private Dictionary<uint, NetDeltaArray<PrivateTeamInfo>> _privateTeamInfo = new Dictionary<uint, NetDeltaArray<PrivateTeamInfo>>(); //Channel id to private team info
@@ -62,6 +65,7 @@ namespace FortniteReplayReader.Models
         {
             _weapons.Remove(channel);
             _floorLoot.Remove(channel);
+            _playerStructures.Remove(channel);
         }
 
         internal void AddActor(uint channel, Actor actor)
@@ -444,7 +448,7 @@ namespace FortniteReplayReader.Models
 
                     if(playerPawnC.ReplicatedMovement != null) //Update location
                     {
-                        playerActor.Locations.Add(new PlayerLocation
+                        playerActor.Locations.Add(new PlayerLocationRepMovement
                         {
                             RepLocation = playerPawnC.ReplicatedMovement,
                             WorldTime = GameState.CurrentWorldTime,
@@ -670,7 +674,7 @@ namespace FortniteReplayReader.Models
 
                 item.Value = privateInfo.Value ?? item.Value;
                 item.PlayerId = privateInfo.PlayerID ?? item.PlayerId;
-                item.LastLocation = privateInfo.LastRepLocation ?? item.LastLocation;
+
                 item.LastYaw = privateInfo.LastRepYaw ?? item.LastYaw;
                 item.PawnStateMask = privateInfo.PawnStateMask ?? item.PawnStateMask;
 
@@ -683,6 +687,17 @@ namespace FortniteReplayReader.Models
                             item.PlayerState = player;
                         }
                     }
+                }
+
+                if (privateInfo.LastRepLocation != null)
+                {
+                    item.LastLocation = privateInfo.LastRepLocation;
+                    item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
+                    {
+                        WorldTime = GameState.CurrentWorldTime,
+                        Location = item.LastLocation,
+                        Yaw = item.LastYaw
+                    });
                 }
             }
         }
@@ -855,6 +870,59 @@ namespace FortniteReplayReader.Models
                 {
                     UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn, playerPawn.Actor);
                 }
+            }
+        }
+
+        internal void UpdateBuild(uint channelId, BaseStructure baseBuild, Actor actor)
+        {
+            PlayerStructure newStructure = new PlayerStructure();
+
+            if (!_playerStructures.TryAdd(channelId, newStructure))
+            {
+                _playerStructures.TryGetValue(channelId, out newStructure);
+            }
+
+            newStructure.Location = actor.Location;
+            newStructure.Rotation = actor.Rotation;
+            newStructure.CurrentHealth = baseBuild.Health ?? newStructure.CurrentHealth;
+            newStructure.MaxHealth = baseBuild.MaxHealth ?? newStructure.MaxHealth;
+
+            if(baseBuild.TeamIndex != null)
+            {
+                if(_teams.TryGetValue(baseBuild.TeamIndex.Value, out Team team))
+                {
+                    newStructure.Team = team;
+                }
+            }
+
+            switch (baseBuild)
+            {
+                case IWoodStructure wood:
+                    newStructure.MaterialType = MaterialType.Wood;
+                    break;
+                case IBrickStructure brick:
+                    newStructure.MaterialType = MaterialType.Brick;
+                    break;
+                case IMetalStructure meta:
+                    newStructure.MaterialType = MaterialType.Metal;
+                    break;
+            }
+
+            //Can do individual edits here later
+            switch (baseBuild)
+            {
+                case BaseWallStructure wall:
+                    newStructure.BaseStructureType = BaseStructureType.Wall;
+                    break;
+                case BaseFloorStructure floor:
+                    newStructure.BaseStructureType = BaseStructureType.Floor;
+                    break;
+                case BaseRoofStructure roof:
+                    newStructure.BaseStructureType = BaseStructureType.Roof;
+                    break;
+                case BaseStairsStructure stairs:
+                    newStructure.BaseStructureType = BaseStructureType.Stairs;
+                    break;
             }
         }
     }

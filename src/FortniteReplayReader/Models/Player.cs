@@ -33,7 +33,8 @@ namespace FortniteReplayReader.Models
         public bool Disconnected { get; set; }
 
         //Extended information
-        public List<PlayerLocation> Locations { get; private set; } = new List<PlayerLocation>();
+        public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();
+        public List<PlayerLocation> PrivateTeamLocations { get; private set; } = new List<PlayerLocation>(); //Locations pulled from FortTeamPrivateInfo
         public NetDeltaArray<InventoryItem> CurrentInventory { get; private set; } = new NetDeltaArray<InventoryItem>();
         public List<InventoryItem> InventoryOnDeath { get; private set; } = new List<InventoryItem>();
         public NetDeltaArray<PrivateTeamInfo> PrivateTeamInfo { get; internal set; }
@@ -60,10 +61,18 @@ namespace FortniteReplayReader.Models
 
     public class PlayerLocation
     {
-        public FVector Location => RepLocation?.Location;
-        public FRepMovement RepLocation { get; set; }
+        public virtual FVector Location { get; set; }
+        public virtual float Yaw { get; set; }
 
         public float WorldTime { get; set; }
+    }
+
+    public class PlayerLocationRepMovement : PlayerLocation
+    {
+        public override FVector Location => RepLocation?.Location;
+        public override float Yaw => RepLocation.Rotation.Yaw;
+
+        public FRepMovement RepLocation { get; set; }
         public float? LastUpdateTime { get; set; }
     }
 

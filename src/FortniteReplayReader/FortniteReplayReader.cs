@@ -2,6 +2,7 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
@@ -93,6 +94,9 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case BaseStructure baseBuild:
+                    Replay.GameInformation.UpdateBuild(channel, baseBuild, actor);
+                    break;
                 case FortTeamPrivateInfo privateTeamInfo:
                     Replay.GameInformation.UpdatePrivateTeamInfo(channel, privateTeamInfo, actor);
                     break;
@@ -156,7 +160,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateHealth(channel, healthSet);
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-                    if (debuggingObject.ExportGroup.PathName == "/Script/FortniteGame.FortTeamPrivateInfo") //Test for creative map later
+                    if (debuggingObject.ExportGroup.PathName.StartsWith("/Game/Building/ActorBlueprints/Player/Wood"))
                     {
                     }
                     break;
