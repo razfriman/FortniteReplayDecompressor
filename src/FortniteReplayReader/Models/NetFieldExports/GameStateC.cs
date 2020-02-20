@@ -339,5 +339,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("VolumeManager", RepLayoutCmdType.Ignore)]
         public uint? VolumeManager { get; set; } //Type:  Bits: 16
+
+        [NetFieldExport("TrackedCosmetics", RepLayoutCmdType.DynamicArray)]
+        public ItemDefinitionGUID[] TrackedCosmetics { get; set; }
+
+        [NetFieldExport("VariantUsageByCosmetic", RepLayoutCmdType.DynamicArray)]
+        public int[] VariantUsageByCosmetic { get; set; }
     }
 }

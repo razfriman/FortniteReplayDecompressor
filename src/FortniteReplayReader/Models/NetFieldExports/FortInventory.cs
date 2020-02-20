@@ -90,5 +90,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject)]
 		public uint? ReplayPawn { get; set; } //Type:  Bits: 16
 
-	}
+        [NetFieldExport("WrapOverride", RepLayoutCmdType.Property)]
+        public DebuggingObject WrapOverride { get; set; } //Type:  Bits: 16
+
+    }
 }
