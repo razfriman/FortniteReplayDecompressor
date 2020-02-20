@@ -1,52 +1,26 @@
 ﻿using FortniteReplayReader.Exceptions;
-using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
-using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Core.Models.Playback;
 
 namespace FortniteReplayReader
 {
-    public class ReplayReader : ReplayReader<FortniteReplay>
+    public class PlaybackFortniteReplayReader : PlaybackReplayReader<FortniteReplay>
     {
-        public int TotalPropertiesRead { get; private set; }
-
-        public ReplayReader(ILogger logger = null) : base(logger)
-        {
-
-        }
-
-        public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
-        {
-            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite); 
-            return ReadReplay(stream, parseType);
-        }
-
-        public FortniteReplay ReadReplay(Stream stream, ParseType parseType = ParseType.Minimal)
-        {
-            using var archive = new Unreal.Core.BinaryReader(stream);
-            var replay = ReadReplay(archive, parseType);
-
-            return replay;
-        }
-
         private string _branch;
         public int Major { get; set; }
         public int Minor { get; set; }
@@ -66,25 +40,31 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnChannelActorRead(uint channel, Actor actor)
+        public PlaybackFortniteReplayReader(ILogger logger) : base(logger)
         {
-            Replay.GameInformation.AddActor(channel, actor);
         }
 
-        protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
+        protected override void Update(ReplayPlaybackEvent playbackEvent)
         {
-            Replay.GameInformation.HandleDeltaNetRead(deltaUpdate);
-        }
-
-        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
-        {
-            ++TotalPropertiesRead;
-#if DEBUG
-            if(Replay.GameInformation.Channels == null)
+            switch (playbackEvent)
             {
-                Replay.GameInformation.Channels = Channels;
+                case ExportGroupPlaybackEvent exportGroupEvent:
+                    ExportGroupRead(exportGroupEvent.Channel, exportGroupEvent.ExportGroup);
+                    break;
+                case ChannelClosedPlaybackEvent channelClosedEvent:
+                    Replay.GameInformation.ChannelClosed(channelClosedEvent.Channel);
+                    break;
+                case NetDeltaPlaybackEvent deltaEvent:
+                    Replay.GameInformation.HandleDeltaNetRead(deltaEvent.DeltaUpdate);
+                    break;
+                case ActorReadPlaybackEvent actorReadEvent:
+                    Replay.GameInformation.AddActor(actorReadEvent.Channel, actorReadEvent.Actor);
+                    break;
             }
-#endif
+        }
+
+        private void ExportGroupRead(uint channel, INetFieldExportGroup exportGroup)
+        { 
             //Used for weapon data and possibly other things
             if (Replay.GameInformation.NetGUIDToPathName == null)
             {
@@ -123,7 +103,7 @@ namespace FortniteReplayReader
                 case PlayerPawnC playerPawn:
                     if (ParseType >= ParseType.Normal)
                     {
-                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
+                        Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn, false);
                     }
                     break;
                 case FortPickup fortPickup:
@@ -139,7 +119,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
                     break;
                 case GameplayCue gameplayCue:
-                    gameplayCue.GameplayCueTag.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
+                    gameplayCue.GameplayCueTag?.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
 
                     Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
                     break;
@@ -158,40 +138,10 @@ namespace FortniteReplayReader
                 case HealthSet healthSet:
                     Replay.GameInformation.UpdateHealth(channel, healthSet);
                     break;
-                case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-                    if (debuggingObject.ExportGroup.PathName.StartsWith("/Game/Building/ActorBlueprints/Player/Wood"))
-                    {
-                    }
-                    break;
             }
         }
 
-        protected override bool ContinueParsingChannel(INetFieldExportGroup exportGroup)
-        {
-            switch (exportGroup)
-            {
-                //Always fully parse these
-                case SupplyDropLlamaC _:
-                case SupplyDropC _:
-                case SafeZoneIndicatorC _:
-                case FortPoiManager _:
-                case GameStateC _:
-                    return true;
-            }
-
-            switch (ParseType)
-            {
-                case ParseType.Minimal:
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
-        protected override void OnChannelClosed(uint channel)
-        {
-            Replay.GameInformation.ChannelClosed(channel);
-        }
+        #region Somehow use a general fortnite reader?
 
         protected override void ReadReplayHeader(FArchive archive)
         {
@@ -218,43 +168,41 @@ namespace FortniteReplayReader
 
             _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
 
-            using var decryptedReader = Decrypt(archive, info.SizeInBytes);
-
             // Every event seems to start with some unknown int
             if (info.Group == ReplayEventTypes.PLAYER_ELIMINATION)
             {
-                var elimination = ParseElimination(decryptedReader, info);
+                var elimination = ParseElimination(archive, info);
                 Replay.Eliminations.Add(elimination);
                 return;
             }
             else if (info.Metadata == ReplayEventTypes.MATCH_STATS)
             {
-                Replay.Stats = ParseMatchStats(decryptedReader, info);
+                Replay.Stats = ParseMatchStats(archive, info);
                 return;
             }
             else if (info.Metadata == ReplayEventTypes.TEAM_STATS)
             {
-                Replay.TeamStats = ParseTeamStats(decryptedReader, info);
+                Replay.TeamStats = ParseTeamStats(archive, info);
                 return;
             }
             else if (info.Metadata == ReplayEventTypes.ENCRYPTION_KEY)
             {
-                Replay.GameInformation.PlayerStateEncryptionKey = ParseEncryptionKeyEvent(decryptedReader, info);
+                Replay.GameInformation.PlayerStateEncryptionKey = ParseEncryptionKeyEvent(archive, info);
                 return;
             }
             else if (info.Metadata == ReplayEventTypes.CHARACTER_SAMPLE)
             {
-                ParseCharacterSample(decryptedReader, info);
+                ParseCharacterSample(archive, info);
                 return;
             }
             else if (info.Group == ReplayEventTypes.ZONE_UPDATE)
             {
-                ParseZoneUpdateEvent(decryptedReader, info);
+                ParseZoneUpdateEvent(archive, info);
                 return;
             }
             else if (info.Group == ReplayEventTypes.BATTLE_BUS)
             {
-                ParseBattleBusFlightEvent(decryptedReader, info);
+                ParseBattleBusFlightEvent(archive, info);
                 return;
             }
             else if (info.Group == "fortBenchEvent")
@@ -385,7 +333,8 @@ namespace FortniteReplayReader
             if (botIndicator == 0x03)
             {
                 return "Bot";
-            } else if (botIndicator == 0x10)
+            }
+            else if (botIndicator == 0x10)
             {
                 return archive.ReadFString();
             }
@@ -395,44 +344,11 @@ namespace FortniteReplayReader
             return archive.ReadGUID(size);
         }
 
-        protected override Unreal.Core.BinaryReader Decrypt(FArchive archive, int size)
+        protected override BinaryReader Decrypt(FArchive archive, int size)
         {
-            if(!this.Replay.Info.Encrypted)
-            {
-                var decryptedReader = new Unreal.Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
-                {
-                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                    NetworkVersion = Replay.Header.NetworkVersion,
-                    ReplayHeaderFlags = Replay.Header.Flags,
-                    ReplayVersion = Replay.Info.FileVersion
-                };
-
-                return decryptedReader;
-            }
-
-            var encryptedBytes = archive.ReadBytes(size);
-            var key = this.Replay.Info.EncryptionKey;
-
-            using RijndaelManaged rDel = new RijndaelManaged
-            {
-                KeySize = (key.Length * 8),
-                Key = key,
-                Mode = CipherMode.ECB,
-                Padding = PaddingMode.PKCS7
-            };
-
-            using ICryptoTransform cTransform = rDel.CreateDecryptor();
-            byte[] decryptedArray = cTransform.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
-
-            var decrypted = new Unreal.Core.BinaryReader(new MemoryStream(decryptedArray))
-            {
-                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                NetworkVersion = Replay.Header.NetworkVersion,
-                ReplayHeaderFlags = Replay.Header.Flags,
-                ReplayVersion = Replay.Info.FileVersion
-            };
-
-            return decrypted;
+            throw new NotImplementedException();
         }
+
+        #endregion
     }
 }

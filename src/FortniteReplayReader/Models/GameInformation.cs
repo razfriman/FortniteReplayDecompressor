@@ -73,7 +73,7 @@ namespace FortniteReplayReader.Models
             _actorToChannel.TryAdd(actor.ActorNetGUID.Value, channel);
         }
 
-        internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo, Actor actor)
+        internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo)
         {
             _privateTeamInfo.TryAdd(channelId, new NetDeltaArray<PrivateTeamInfo>());
         }
@@ -124,24 +124,25 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateSafeZone(SafeZoneIndicatorC safeZone)
         {
-            //Zone shrink updates, ignore
-            if(safeZone.SafeZoneFinishShrinkTime == null)
+            SafeZone newSafeZone = _safeZones.LastOrDefault();
+
+            if (safeZone.SafeZoneFinishShrinkTime != null)
             {
-                return;
+                newSafeZone = new SafeZone();
+
+                _safeZones.Add(newSafeZone);
+
+                newSafeZone.Radius = safeZone.Radius ?? newSafeZone.Radius;
+                newSafeZone.NextNextRadius = safeZone.NextNextRadius ?? newSafeZone.NextNextRadius;
+                newSafeZone.NextRadius = safeZone.NextRadius ?? newSafeZone.NextRadius;
+                newSafeZone.ShringEndTime = safeZone.SafeZoneFinishShrinkTime ?? newSafeZone.ShringEndTime;
+                newSafeZone.ShrinkStartTime = safeZone.SafeZoneStartShrinkTime ?? newSafeZone.ShrinkStartTime;
+                newSafeZone.LastCenter = safeZone.LastCenter ?? newSafeZone.LastCenter;
+                newSafeZone.NextCenter = safeZone.NextCenter ?? newSafeZone.NextCenter;
+                newSafeZone.NextNextCenter = safeZone.NextNextCenter ?? newSafeZone.NextNextCenter;
             }
 
-            SafeZone newSafeZone = new SafeZone();
-
-            newSafeZone.NextNextRadius = safeZone.NextNextRadius ?? newSafeZone.NextNextRadius;
-            newSafeZone.NextRadius = safeZone.NextRadius ?? newSafeZone.NextRadius;
-            newSafeZone.Radius = safeZone.Radius ?? newSafeZone.Radius;
-            newSafeZone.ShringEndTime = safeZone.SafeZoneFinishShrinkTime ?? newSafeZone.ShringEndTime;
-            newSafeZone.ShrinkStartTime = safeZone.SafeZoneStartShrinkTime ?? newSafeZone.ShrinkStartTime;
-            newSafeZone.LastCenter = safeZone.LastCenter ?? newSafeZone.LastCenter;
-            newSafeZone.NextCenter = safeZone.NextCenter ?? newSafeZone.NextCenter;
-            newSafeZone.NextNextCenter = safeZone.NextNextCenter ?? newSafeZone.NextNextCenter;
-
-            _safeZones.Add(newSafeZone);
+            newSafeZone.CurrentRadius = safeZone.Radius ?? newSafeZone.CurrentRadius;
         }
 
         internal void UpdateGameState(GameStateC gameState)
@@ -299,7 +300,7 @@ namespace FortniteReplayReader.Models
             */
         }
 
-        internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, Actor actor, NetFieldExportGroup networkGameplayTagNode)
+        internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)
         {
             if(playerState.bOnlySpectator == true)
             {
@@ -332,7 +333,7 @@ namespace FortniteReplayReader.Models
                 }
             }
 
-            newPlayer.Actor = actor;
+            newPlayer.Actor = playerState.ChannelActor;
             newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
             newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
             newPlayer.Teamindex = playerState.TeamIndex ?? newPlayer.Teamindex;
@@ -401,7 +402,7 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawnC, Actor actor)
+        internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawnC, bool trackLocations = true)
         {
             if(!_playerPawns.TryGetValue(channelId, out PlayerPawn playerpawn))
             {
@@ -428,8 +429,7 @@ namespace FortniteReplayReader.Models
                         playerPawns.Add(new QueuedPlayerPawn
                         {
                             ChannelId = channelId,
-                            PlayerPawn = playerPawnC,
-                            Actor = actor
+                            PlayerPawn = playerPawnC
                         });
 
                         return;
@@ -448,12 +448,19 @@ namespace FortniteReplayReader.Models
 
                     if(playerPawnC.ReplicatedMovement != null) //Update location
                     {
-                        playerActor.Locations.Add(new PlayerLocationRepMovement
+                        var newLocation = new PlayerLocationRepMovement
                         {
                             RepLocation = playerPawnC.ReplicatedMovement,
                             WorldTime = GameState.CurrentWorldTime,
                             LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp
-                        });
+                        };
+
+                        if (trackLocations)
+                        {
+                            playerActor.Locations.Add(newLocation);
+                        }
+
+                        playerActor.LastKnownLocation = newLocation;
                     }
 
                     //Update current weapon
@@ -689,7 +696,7 @@ namespace FortniteReplayReader.Models
                     }
                 }
 
-                if (privateInfo.LastRepLocation != null)
+                if (privateInfo.LastRepLocation != null && item.PlayerState != null) //Ignores issue with playstate actor id not being found at first
                 {
                     item.LastLocation = privateInfo.LastRepLocation;
                     item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
@@ -772,15 +779,15 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void HandleWeapon(uint channelId, BaseWeapon weapon, Actor actor)
+        internal void HandleWeapon(uint channelId, BaseWeapon weapon)
         {
             bool isNewWeapon = !_weapons.TryGetValue(channelId, out Weapon newWeapon);
 
             //Updates the current weapon instead of creating a new one
             if(isNewWeapon)
             {
-                isNewWeapon = !_unknownWeapons.TryGetValue(actor.ActorNetGUID.Value, out newWeapon);
-                _unknownWeapons.Remove(actor.ActorNetGUID.Value);
+                isNewWeapon = !_unknownWeapons.TryGetValue(weapon.ChannelActor.ActorNetGUID.Value, out newWeapon);
+                _unknownWeapons.Remove(weapon.ChannelActor.ActorNetGUID.Value);
 
                 //Pulled from unknown weapons, so add to current weapons
                 if (!isNewWeapon)
@@ -868,12 +875,12 @@ namespace FortniteReplayReader.Models
             {
                 foreach(QueuedPlayerPawn playerPawn in playerPawns)
                 {
-                    UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn, playerPawn.Actor);
+                    UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
                 }
             }
         }
 
-        internal void UpdateBuild(uint channelId, BaseStructure baseBuild, Actor actor)
+        internal void UpdateBuild(uint channelId, BaseStructure baseBuild)
         {
             PlayerStructure newStructure = new PlayerStructure();
 
@@ -882,8 +889,8 @@ namespace FortniteReplayReader.Models
                 _playerStructures.TryGetValue(channelId, out newStructure);
             }
 
-            newStructure.Location = actor.Location;
-            newStructure.Rotation = actor.Rotation;
+            newStructure.Location = baseBuild.ChannelActor.Location;
+            newStructure.Rotation = baseBuild.ChannelActor.Rotation;
             newStructure.CurrentHealth = baseBuild.Health ?? newStructure.CurrentHealth;
             newStructure.MaxHealth = baseBuild.MaxHealth ?? newStructure.MaxHealth;
 

@@ -11,6 +11,8 @@ namespace Unreal.Core.Models
         RecordedTimestamp = 3,
         StreamChunkTimes = 4,
         FriendlyNameEncoding = 5,
+        Encryption = 6,
+
         NewVersion,
         Latest = NewVersion - 1
     }

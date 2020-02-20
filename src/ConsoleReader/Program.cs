@@ -43,8 +43,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
-            //var replayFile = "Replays/season11.11.replay"; //Used for testing
-            var replayFile = "Replays/edits.replay"; //Used for testing
+            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/season12_.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -73,11 +73,6 @@ namespace ConsoleReader
                 Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
                 Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
 
-                /*foreach(var k in reader.ExportGroups)
-                {
-                    Console.WriteLine($"\t\tIgnored: {reader.Channels[k.Key].Ignore} {String.Join(", ", k.Value.Select(x => x.GetType().ToString()).Distinct())} Entries: {k.Value.Count}");
-                }*/
-
                 //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
                 foreach (Llama llama in replay.GameInformation.Llamas)
@@ -89,8 +84,6 @@ namespace ConsoleReader
 
                 var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
                 //var a = NetFieldParser.UnknownNetFields;
-
-                Console.WriteLine(path);
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");
@@ -98,6 +91,13 @@ namespace ConsoleReader
             Console.WriteLine("---- done ----");
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");
             Console.ReadLine();
+        }
+
+        private static void Reader_OnRender(object sender, FortniteReplay e)
+        {
+            var a = sender as PlaybackReplayReader<FortniteReplay>;
+
+            Console.WriteLine($"FPS: {a.AverageFPS}. Last Update Time: {a.LastUpdateTime}.");
         }
     }
 }

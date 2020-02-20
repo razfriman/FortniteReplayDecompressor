@@ -31,6 +31,7 @@ namespace FortniteReplayReader.Models
         public List<WeaponShot> DamageTaken { get; internal set; } = new List<WeaponShot>();
         public FGameplayTag[] DeathTags { get; internal set; }
         public bool Disconnected { get; set; }
+        public PlayerLocationRepMovement LastKnownLocation { get; internal set; }
 
         //Extended information
         public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();

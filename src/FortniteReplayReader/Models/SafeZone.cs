@@ -10,6 +10,7 @@ namespace FortniteReplayReader.Models
         public float Radius { get; internal set; }
         public float ShrinkStartTime { get; internal set; }
         public float ShringEndTime { get; internal set; }
+        public float CurrentRadius { get; internal set; }
 
         public float NextRadius { get; internal set; }
         public float NextNextRadius { get; internal set; }

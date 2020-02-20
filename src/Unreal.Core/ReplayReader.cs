@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -343,7 +344,15 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            using var binaryArchive = Decompress(archive, (int)info.Length);
+            int memorySizeInBytes = (int)info.Length;
+
+            if(archive.ReplayVersion >= ReplayVersionHistory.Encryption)
+            {
+                memorySizeInBytes = archive.ReadInt32();
+            }
+
+            using var decryptedReader = Decrypt(archive, (int)info.Length);
+            using var binaryArchive = Decompress(decryptedReader, memorySizeInBytes);
 
             while (!binaryArchive.AtEnd())
             {
@@ -359,6 +368,8 @@ namespace Unreal.Core
             }
 
             replayDataIndex++;
+
+            binaryArchive?.Dispose();
         }
 
         /// <summary>
@@ -477,6 +488,16 @@ namespace Unreal.Core
             if (fileVersion >= ReplayVersionHistory.Compression)
             {
                 info.IsCompressed = archive.ReadUInt32AsBoolean();
+            }
+
+            if(fileVersion >= ReplayVersionHistory.Encryption)
+            {
+                info.Encrypted = archive.ReadUInt32AsBoolean();
+
+                info.EncryptionKey = archive.ReadArray(archive.ReadByte);
+
+                Console.WriteLine("Key " + BitConverter.ToString(info.EncryptionKey).Replace("-", "").ToLower());
+
             }
 
             Replay.Info = info;
@@ -758,9 +779,11 @@ namespace Unreal.Core
         /// <returns></returns>
         protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
+            var currentLevelIndex = 0;
+
             if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
-                var currentLevelIndex = archive.ReadInt32();
+                currentLevelIndex = archive.ReadInt32();
             }
 
             var timeSeconds = archive.ReadSingle();
@@ -824,6 +847,8 @@ namespace Unreal.Core
                 }
 
                 var packet = ReadPacket(archive);
+                packet.TimeSeconds = timeSeconds;
+                packet.LevelIndex = currentLevelIndex;
                 packet.SeenLevelIndex = seenLevelIndex;
 
                 playbackPackets.Add(packet);
@@ -1718,6 +1743,7 @@ namespace Unreal.Core
             }
 
             outExport = exportGroup;
+            outExport.ChannelActor = Channels[channelIndex].Actor;
 
             bool hasData = false;
 
@@ -2278,6 +2304,7 @@ namespace Unreal.Core
                     ReplayHeaderFlags = Replay.Header.Flags,
                     ReplayVersion = Replay.Info.FileVersion
                 };
+
                 return uncompressed;
             }
 
@@ -2285,7 +2312,7 @@ namespace Unreal.Core
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize);
-            var decompressed = new Core.BinaryReader(new MemoryStream(output))
+            var decompressed = new BinaryReader(new MemoryStream(output))
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                 NetworkVersion = Replay.Header.NetworkVersion,
@@ -2302,5 +2329,6 @@ namespace Unreal.Core
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);
         protected abstract void OnChannelClosed(uint channel); //Allows reuse of channel
+        protected abstract BinaryReader Decrypt(FArchive archive, int size);
     }
 }
