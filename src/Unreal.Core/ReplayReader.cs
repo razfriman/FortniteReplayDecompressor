@@ -495,9 +495,6 @@ namespace Unreal.Core
                 info.Encrypted = archive.ReadUInt32AsBoolean();
 
                 info.EncryptionKey = archive.ReadArray(archive.ReadByte);
-
-                Console.WriteLine("Key " + BitConverter.ToString(info.EncryptionKey).Replace("-", "").ToLower());
-
             }
 
             Replay.Info = info;
