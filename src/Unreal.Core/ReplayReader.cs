@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -300,7 +301,6 @@ namespace Unreal.Core
                 {
                     packetIndex++;
 
-                    //Not accurate currently
                     ReceivedRawPacket(packet);
                 }
             }
@@ -368,8 +368,6 @@ namespace Unreal.Core
             }
 
             replayDataIndex++;
-
-            binaryArchive?.Dispose();
         }
 
         /// <summary>
@@ -495,6 +493,18 @@ namespace Unreal.Core
                 info.Encrypted = archive.ReadUInt32AsBoolean();
 
                 info.EncryptionKey = archive.ReadArray(archive.ReadByte);
+            }
+
+            if (!info.IsLive && info.Encrypted && (info.EncryptionKey.Length == 0))
+            {
+                _logger?.LogError("ReadReplayInfo: Completed replay is marked encrypted but has no key!");
+                throw new InvalidReplayException("Completed replay is marked encrypted but has no key!");
+            }
+
+            if (info.IsLive && info.Encrypted)
+            {
+                _logger?.LogError("ReadReplayInfo: Replay is marked encrypted and but not yet marked as completed!");
+                throw new InvalidReplayException("Replay is marked encrypted and but not yet marked as completed!");
             }
 
             Replay.Info = info;

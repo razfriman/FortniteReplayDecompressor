@@ -44,7 +44,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
-            var replayFile = "Replays/season12_.replay"; //Used for testing
+            var replayFile = "Replays/season12_arena.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -65,13 +65,13 @@ namespace ConsoleReader
             foreach (string path in Directory.GetFiles("Replays"))
             {
                 sw.Restart();
-                var reader = new ReplayReader(logger);
+                var reader = new ReplayReader(null);
                 var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                 sw.Stop();
 
                 Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
-                Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
+                //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
 
                 //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
@@ -83,6 +83,7 @@ namespace ConsoleReader
                 totalTime += sw.ElapsedMilliseconds;
 
                 var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
+                var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
                 //var a = NetFieldParser.UnknownNetFields;
             }
 
