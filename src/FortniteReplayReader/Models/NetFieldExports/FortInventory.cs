@@ -21,8 +21,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Count", RepLayoutCmdType.PropertyInt)]
         public int? Count { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject)]
-        public uint? ItemDefinition { get; set; } 
+        [NetFieldExport("ItemDefinition", RepLayoutCmdType.Property)]
+        public ItemDefinitionGUID ItemDefinition { get; set; } 
 
         [NetFieldExport("OrderIndex", RepLayoutCmdType.PropertyUInt16)]
         public ushort? OrderIndex { get; set; } 

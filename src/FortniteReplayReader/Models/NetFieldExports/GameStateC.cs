@@ -348,5 +348,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("PrioritizedCosmeticIndices", RepLayoutCmdType.DynamicArray)]
         public int[] PrioritizedCosmeticIndices { get; set; }
+
+        [NetFieldExport("EventId", RepLayoutCmdType.PropertyUInt32)]
+        public uint? EventId { get; set; }
+
+        [NetFieldExport("WinningScore", RepLayoutCmdType.PropertyUInt32)]
+        public uint? WinningScore { get; set; }
     }
 }

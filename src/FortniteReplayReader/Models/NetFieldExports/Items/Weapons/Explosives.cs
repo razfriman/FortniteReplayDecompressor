@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Attributes;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
@@ -92,6 +93,16 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     #endregion
 
     #region MotorBoat
+
+    [NetFieldExportGroup("/Game/Athena/Items/Weapons/Vehicles/MeatballWeapon/B_Meatball_Launcher_Athena.B_Meatball_Launcher_Athena_C", ParseType.Normal)]
+    public class MotorBoatWeapon : Launcher
+    {
+        [NetFieldExport("HostVehicleCachedActor", RepLayoutCmdType.Property)]
+        public ActorGUID HostVehicleCachedActor { get; set; }
+
+        [NetFieldExport("HostVehicleSeatIndexCached", RepLayoutCmdType.PropertyUInt32)]
+        public uint? HostVehicleSeatIndexCached { get; set; }
+    }
 
     [NetFieldExportGroup("/Game/Athena/Items/Weapons/Vehicles/MeatballWeapon/B_Prj_Meatball_Missile.B_Prj_Meatball_Missile_C", ParseType.Normal)]
     public class MotorBoatProjectile : BaseLauncherProjectile

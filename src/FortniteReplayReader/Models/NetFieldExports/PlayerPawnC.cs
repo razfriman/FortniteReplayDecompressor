@@ -487,5 +487,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 		[NetFieldExport("RepAnimMontageInfo", RepLayoutCmdType.Property)]
 		public FGameplayAbilityRepAnimMontage RepAnimMontageInfo { get; set; }
+
+		[NetFieldExport("bIsSkydivingFromLaunchPad", RepLayoutCmdType.PropertyBool)]
+		public bool? bIsSkydivingFromLaunchPad { get; set; }
+
+		[NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
+		public bool? bInGliderRedeploy { get; set; }
 	}
 }

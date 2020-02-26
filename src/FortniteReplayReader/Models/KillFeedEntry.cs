@@ -18,6 +18,7 @@ namespace FortniteReplayReader.Models
         public float DeltaGameTimeSeconds { get; internal set; }
         public float Distance { get; internal set; }
         public Weapon Weapon { get; internal set; }
+        public bool DoNotDisplayInKillFeed { get; internal set; }
 
         public string[] DeathTags
         {
@@ -32,7 +33,6 @@ namespace FortniteReplayReader.Models
             }
         }
 
-
         private string[] _deathTags;
 
         public bool KilledSelf => FinisherOrDowner == Player;
@@ -40,15 +40,18 @@ namespace FortniteReplayReader.Models
 
         private void UpdateWeaponTypes()
         {
-            if(_deathTags == null)
+            if(_deathTags == null || _deathTags.Length == 0)
             {
                 return;
             }
 
-            foreach (string  deathTag in DeathTags)
+            foreach (string deathTag in DeathTags)
             {
                 switch (deathTag)
                 {
+                    case "Pawn.Athena.DoNotDisplayInKillFeed":
+                        DoNotDisplayInKillFeed = true;
+                        break;
                     case "Weapon.Melee.Impact.Pickaxe":
                         ItemType = ItemType.PickAxe;
                         break;
@@ -57,6 +60,9 @@ namespace FortniteReplayReader.Models
                         break;
                     case "weapon.ranged.assault.standard":
                         ItemType = ItemType.AssaultRifle;
+                        break;
+                    case "weapon.ranged.assault.silenced":
+                        ItemType = ItemType.SuppressedAR;
                         break;
                     case "weapon.ranged.heavy.rocket_launcher":
                         ItemType = ItemType.RocketLauncher;
@@ -77,6 +83,9 @@ namespace FortniteReplayReader.Models
                     case "weapon.ranged.sniper.bolt":
                         ItemType = ItemType.BoltSniper;
                         break;
+                    case "phoebe.items.SuppressedSniper":
+                        ItemType = ItemType.SuppressedSniper;
+                        break;
                     case "Abilities.Generic.M80":
                         ItemType = ItemType.Grenade;
                         break;
@@ -86,12 +95,22 @@ namespace FortniteReplayReader.Models
                     case "phoebe.items.harpoon":
                         ItemType = ItemType.Harpoon;
                         break;
+                    case "phoebe.weapon.ranged.minigun":
+                        ItemType = ItemType.Minigun;
+                        break;
+                    case "Weapon.Ranged.Heavy.C4":
+                        ItemType = ItemType.C4;
+                        ItemRarity = ItemRarity.Epic; //Doesn't have death tags for it
+                        break;
                     case "Gameplay.Damage.Physical.Energy":
                         ItemType = ItemType.Storm;
                         break;
                     case "DeathCause.LoggedOut":
                     case "DeathCause.RemovedFromGame":
                         ItemType = ItemType.Logout;
+                        break;
+                    case "Asset.Athena.EnvItem.Sentry.Turret.Damage":
+                        ItemType = ItemType.SentryTurret;
                         break;
                     case "Gameplay.Damage.Environment":
                     case "EnvItem.ReactiveProp.GasPump": //Death by gas pump?
@@ -117,6 +136,9 @@ namespace FortniteReplayReader.Models
                         break;
                     case "Rarity.VeryRare":
                         ItemRarity = ItemRarity.Epic;
+                        break;
+                    case "Rarity.Mythic":
+                        ItemRarity = ItemRarity.Mythic;
                         break;
                 }
             }

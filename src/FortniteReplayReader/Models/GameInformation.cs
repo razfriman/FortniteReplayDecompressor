@@ -644,7 +644,7 @@ namespace FortniteReplayReader.Models
                     InventoryItem inventoryItem = new InventoryItem
                     {
                         Count = fortInventory.Count ?? 0,
-                        ItemDefinition = fortInventory.ItemDefinition ?? 0,
+                        ItemDefinition = fortInventory.ItemDefinition?.Value ?? 0,
                         Item = new ItemName(itemName),
                         LoadedAmmo = fortInventory.LoadedAmmo ?? 0,
                         UniqueWeaponId = new UniqueItemId
