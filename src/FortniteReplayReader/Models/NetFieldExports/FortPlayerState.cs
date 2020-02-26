@@ -231,6 +231,20 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
 		public FVector DeathLocation { get; set; }
 
+		[NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
+		public FVector Location { get; set; }
 
+		[NetFieldExport("CategoryBudgets", RepLayoutCmdType.DynamicArray)]
+		public int[] CategoryBudgets { get; set; }
+
+		//3 bits each
+		[NetFieldExport("CategoryNames", RepLayoutCmdType.DynamicArray)]
+		public int[] CategoryNames { get; set; }
+
+		[NetFieldExport("CategoryValues", RepLayoutCmdType.DynamicArray)]
+		public int[] CategoryValues { get; set; }
+
+		[NetFieldExport("NeighborHeatValues", RepLayoutCmdType.PropertyByte)]
+		public byte? NeighborHeatValues { get; set; }
 	}
 }

@@ -48,13 +48,6 @@ namespace Unreal.Core
             classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
             propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
 
-            /*
-            //Loads all types from Unreal.Core assembly.
-            netFields.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
-            classNetCaches.AddRange(executingAssemblyTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
-            propertyTypes.AddRange(executingAssemblyTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
-            */
-
             _parserInfo = new NetFieldParserInfo();
             _parserInfoDict.Add(callingAssembly, _parserInfo);
 
@@ -110,7 +103,6 @@ namespace Unreal.Core
                 {
                     NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
                     NetFieldExportHandleAttribute netFieldExportHandleAttribute = property.GetCustomAttribute<NetFieldExportHandleAttribute>(); //Uses handle id
-
                     if (netFieldExportAttribute == null && netFieldExportHandleAttribute == null)
                     {
                         continue;

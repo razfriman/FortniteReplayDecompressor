@@ -13,6 +13,11 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
     }
 
+    [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_TnTinaBow_Athena.B_TnTinaBow_Athena_C", ParseType.Normal)]
+    public class TnTinabow : CrossBows
+    {
+    }
+
     [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_Hookgun_Athena.B_Hookgun_Athena_C", ParseType.Normal)]
     public class Grappler : CrossBows
     {

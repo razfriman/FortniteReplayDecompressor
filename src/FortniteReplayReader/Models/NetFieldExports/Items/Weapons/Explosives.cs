@@ -83,7 +83,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     {
     }
 
-    
+
     [NetFieldExportGroup("/Game/Athena/Items/Consumables/Grenade/B_Prj_Athena_FragGrenade.B_Prj_Athena_FragGrenade_C", ParseType.Normal)]
     public class FragGrenadeProjectile : BaseExplosiveProjectile
     {
@@ -99,6 +99,15 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         //Possibly part of base?
         [NetFieldExport("SurfaceType", RepLayoutCmdType.Enum)]
         public int? SurfaceType { get; set; }
+    }
+
+    #endregion
+
+    #region C4
+
+    [NetFieldExportGroup("/Game/Abilities/Player/Generic/UtilityItems/B_UtilityItem_Detonator_Athena.B_UtilityItem_Detonator_Athena_C", ParseType.Normal)]
+    public class C4 : Explosives
+    {
     }
 
     #endregion

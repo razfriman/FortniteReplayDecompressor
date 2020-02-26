@@ -63,6 +63,11 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     {
     }
 
+    [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Heavy_SR_Athena.B_Assault_Heavy_SR_Athena_C", ParseType.Normal)]
+    public class HeavyAssaultRifleHighTier : HeavyAssaultRifle
+    {
+    }
+
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Surgical_Athena.B_Assault_Surgical_Athena_C", ParseType.Normal)]
     public class ScopedAssaultRifle : Rifles
     {

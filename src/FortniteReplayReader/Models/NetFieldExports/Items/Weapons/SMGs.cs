@@ -37,8 +37,18 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     {
     }
 
+    [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_MidasDrum_Athena.B_Assault_MidasDrum_Athena_C", ParseType.Normal)]
+    public class MidasDrumGun : DrumGun
+    {
+    }
+
     [NetFieldExportGroup("/Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_BurstFireSMG_Athena.B_Pistol_BurstFireSMG_Athena_C", ParseType.Normal)]
     public class BurstSMG : SMG
+    {
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_RapidFireSMG_Athena.B_Pistol_RapidFireSMG_Athena_C", ParseType.Normal)]
+    public class RapidFireSMG : SMG
     {
     }
 
