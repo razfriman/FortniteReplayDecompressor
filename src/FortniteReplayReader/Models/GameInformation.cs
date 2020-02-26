@@ -483,9 +483,8 @@ namespace FortniteReplayReader.Models
                             else
                             {
                                 //Useful to debug weapons that aren't added
-                                var a = Channels[weaponChannel];
-
-                                Console.WriteLine(a.Group.First());
+                                //var a = Channels[weaponChannel];
+                                //Console.WriteLine(a.Group.First());
                             }
                         }
                         else
