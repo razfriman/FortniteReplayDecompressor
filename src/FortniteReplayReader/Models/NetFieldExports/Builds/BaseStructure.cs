@@ -84,6 +84,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
 
         [NetFieldExport("ReplicatedDrawScale3D", RepLayoutCmdType.PropertyVector100)]
         public FVector ReplicatedDrawScale3D { get; set; }
+
+        [NetFieldExport("bUnderRepair", RepLayoutCmdType.PropertyBool)]
+        public bool? bUnderRepair { get; set; }
     }
 
     public class BaseFloorStructure : BaseStructure

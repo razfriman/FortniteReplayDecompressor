@@ -11,7 +11,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
     public class BatchedDamage : INetFieldExportGroup
     {
-        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
+        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector10)]
         public FVector Location { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("Normal", RepLayoutCmdType.PropertyVectorNormal)]

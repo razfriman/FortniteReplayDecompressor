@@ -493,5 +493,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 		[NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
 		public bool? bInGliderRedeploy { get; set; }
+
+		[NetFieldExport("ExitSocketIndex", RepLayoutCmdType.Property)]
+		public DebuggingObject ExitSocketIndex { get; set; }
 	}
 }

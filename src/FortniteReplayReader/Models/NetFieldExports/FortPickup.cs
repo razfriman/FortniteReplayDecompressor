@@ -139,7 +139,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? PawnWhoDroppedPickup { get; set; } //Type: AFortPawn* Bits: 8
 
         [NetFieldExport("OrderIndex", RepLayoutCmdType.PropertyUInt16)]
-        public ushort? OrderIndex { get; set; } 
+        public ushort? OrderIndex { get; set; }
+
+        [NetFieldExport("WrapOverride", RepLayoutCmdType.PropertyString)]
+        public string WrapOverride { get; set; }
     }
 
 }

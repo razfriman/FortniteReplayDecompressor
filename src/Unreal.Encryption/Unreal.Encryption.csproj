@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OozSharp\OozSharp\OozSharp.csproj" />
+    <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

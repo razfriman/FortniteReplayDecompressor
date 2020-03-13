@@ -92,6 +92,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("WrapOverride", RepLayoutCmdType.Property)]
         public DebuggingObject WrapOverride { get; set; } //Type:  Bits: 16
-
     }
 }

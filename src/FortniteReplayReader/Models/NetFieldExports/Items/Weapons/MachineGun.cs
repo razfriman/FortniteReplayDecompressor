@@ -35,6 +35,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("OverheatState", RepLayoutCmdType.Enum)]
         public int? OverheatState { get; set; }
+
+        [NetFieldExport("TimeOverheatedBegan", RepLayoutCmdType.PropertyFloat)]
+        public float? TimeOverheatedBegan { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_LMG_SAW_Athena.B_Assault_LMG_SAW_Athena_C", ParseType.Normal)]
