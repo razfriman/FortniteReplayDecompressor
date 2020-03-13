@@ -2315,10 +2315,12 @@ namespace Unreal.Core
                 return uncompressed;
             }
 
+            //File.WriteAllBytes("test.dat", archive.ReadBytes(size));
+
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
-            var output = Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize);
+            var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
             var decompressed = new BinaryReader(new MemoryStream(output))
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,

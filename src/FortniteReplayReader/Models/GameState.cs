@@ -34,6 +34,7 @@ namespace FortniteReplayReader.Models
         public int MaxPlayers { get; internal set; }
 
         public float AirCraftStartTime { get; internal set; }
+
         public List<Aircraft> BusPaths { get; internal set; } = new List<Aircraft>();
 
         public bool LargeTeamGame { get; internal set; }

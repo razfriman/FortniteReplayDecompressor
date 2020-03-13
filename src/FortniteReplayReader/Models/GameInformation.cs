@@ -148,6 +148,7 @@ namespace FortniteReplayReader.Models
         internal void UpdateGameState(GameStateC gameState)
         {
             GameState.AirCraftStartTime = gameState.AircraftStartTime ?? GameState.AirCraftStartTime;
+
             GameState.InitialSafeZoneStartTime = gameState.SafeZonesStartTime ?? GameState.InitialSafeZoneStartTime;
             GameState.SessionId = gameState.GameSessionId ?? GameState.SessionId;
             GameState.MatchTime = gameState.UtcTimeStartedMatch?.Time ?? GameState.MatchTime;
@@ -180,7 +181,7 @@ namespace FortniteReplayReader.Models
                     GameState.BusPaths.Add(new Aircraft
                     {
                         FlightRotation = flightPath.FlightStartRotation,
-                        FlightStartLocation = flightPath.FlightStartLocation
+                        FlightStartLocation = flightPath.FlightStartLocation,
                     });
                 }
             }

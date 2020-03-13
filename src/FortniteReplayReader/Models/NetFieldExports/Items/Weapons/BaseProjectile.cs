@@ -39,6 +39,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("PawnHitResult", RepLayoutCmdType.Property)]
         public FHitResult PawnHitResult { get; set; }
+
+        [NetFieldExport("SyncId", RepLayoutCmdType.PropertyUInt16)]
+        public ushort? SyncId { get; set; }
     }
 
     public class BaseExplosiveProjectile : BaseProjectile

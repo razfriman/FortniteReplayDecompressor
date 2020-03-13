@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Unreal.Core;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Encryption;
 
 namespace ConsoleReader
 {
@@ -44,7 +45,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
-            var replayFile = "Replays/season12_arena.replay"; //Used for testing
+            var replayFile = "Replays/botTest.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -62,11 +63,13 @@ namespace ConsoleReader
 
             long totalTime = 0;
 
-            foreach (string path in Directory.GetFiles("Replays"))
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
                 sw.Restart();
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                var replay = reader.ReadReplay(path, ParseType.Debug);
 
                 sw.Stop();
 
@@ -85,6 +88,10 @@ namespace ConsoleReader
                 var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
                 var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
                 //var a = NetFieldParser.UnknownNetFields;
+                var kills = d.FirstOrDefault().Players.Sum(x => x.TotalKills);
+
+                var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
+                var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");

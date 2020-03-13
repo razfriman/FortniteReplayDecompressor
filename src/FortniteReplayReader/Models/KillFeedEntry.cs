@@ -77,8 +77,11 @@ namespace FortniteReplayReader.Models
                     case "Weapon.Ranged.Shotgun.Tactical":
                         ItemType = ItemType.TacticalShotgun;
                         break;
-                    case "Weapon.Ranged.SMG":
+                    case "Item.Weapon.Ranged.SMG.PDW":
                         ItemType = ItemType.SMG;
+                        break;
+                    case "Item.Weapon.Ranged.SMG.Suppressed":
+                        ItemType = ItemType.SuppressedSMG;
                         break;
                     case "weapon.ranged.sniper.bolt":
                         ItemType = ItemType.BoltSniper;
@@ -141,6 +144,11 @@ namespace FortniteReplayReader.Models
                         ItemRarity = ItemRarity.Mythic;
                         break;
                 }
+            }
+
+            if(!DoNotDisplayInKillFeed && ItemRarity == ItemRarity.Uncommon && ItemType == ItemType.SMG)
+            {
+
             }
         }
     }

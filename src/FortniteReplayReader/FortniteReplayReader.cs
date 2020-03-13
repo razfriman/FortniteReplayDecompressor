@@ -93,6 +93,8 @@ namespace FortniteReplayReader
 
             switch (exportGroup)
             {
+                case AircraftC Test:
+                    break;
                 case BaseStructure baseBuild:
                     Replay.GameInformation.UpdateBuild(channel, baseBuild);
                     break;

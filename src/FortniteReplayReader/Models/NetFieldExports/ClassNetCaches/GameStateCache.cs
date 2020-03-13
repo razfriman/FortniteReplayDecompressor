@@ -4,10 +4,11 @@ using System.Text;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using Unreal.Core.Attributes;
+using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches
 {
-    [NetFieldExportRPC("Athena_GameState_C_ClassNetCache")]
+    [NetFieldExportRPC("Athena_GameState_C_ClassNetCache", ParseType.Normal)]
     public class GameStateCache
     {
         [NetFieldExportRPCProperty("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier", false)]
