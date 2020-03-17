@@ -64,6 +64,7 @@ namespace Unreal.Core
         public int PropertyError { get; private set; }
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
+        private bool[] _tempBuffer = new bool[0x10000];
 
         protected ReplayReader(ILogger logger)
         {
@@ -1801,7 +1802,16 @@ namespace Unreal.Core
 
                 try
                 {
-                    var cmdReader = new NetBitReader(archive.ReadBits(numBits))
+                    bool[] buffer = _tempBuffer;
+
+                    if (numBits > _tempBuffer.Length)
+                    {
+                        buffer = new bool[numBits];
+                    }
+
+                    archive.Read(_tempBuffer, (int)numBits);
+
+                    var cmdReader = new NetBitReader(_tempBuffer, (int)numBits)
                     {
                         EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                         NetworkVersion = Replay.Header.NetworkVersion

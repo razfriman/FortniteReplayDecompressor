@@ -145,11 +145,27 @@ namespace Unreal.Core
 
             var result = new bool[bitCount];
 
+            //Buffer.BlockCopy(Bits.Items, _position, result, 0, bitCount);
+
             Bits.AsSpan(_position, bitCount).CopyTo(result);
 
             _position += bitCount;
 
             return result;
+        }
+
+        public override void Read(bool[] buffer, int count)
+        {
+            if (!CanRead(count) || count < 0)
+            {
+                IsError = true;
+
+                return;
+            }
+
+            Buffer.BlockCopy(Bits.Items, _position, buffer, 0, count);
+
+            _position += count;
         }
 
         /// <summary>
@@ -701,7 +717,7 @@ namespace Unreal.Core
         /// <returns></returns>
         public override int GetBitsLeft()
         {
-            return Bits.Length - _position;
+            return LastBit - _position;
         }
 
         /// <summary>

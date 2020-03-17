@@ -61,11 +61,12 @@ namespace ConsoleReader
             //var replayFile = "Replays/iceblocks2.replay";
             Stopwatch sw = new Stopwatch();
 
-            long totalTime = 0;
+            double totalTime = 0;
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
             int count = 0;
+
+            List<double> times = new List<double>();
 
             foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
@@ -73,7 +74,7 @@ namespace ConsoleReader
 
                 sw.Restart();
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                var replay = reader.ReadReplay(replayFile, ParseType.Minimal);
 
                 sw.Stop();
 
@@ -82,10 +83,8 @@ namespace ConsoleReader
 
                 //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
-                if (count > 1)
-                {
-                    totalTime += sw.ElapsedMilliseconds;
-                }
+                totalTime += sw.Elapsed.TotalMilliseconds;
+                times.Add(sw.Elapsed.TotalMilliseconds);
 
                 /*
                 foreach (Llama llama in replay.GameInformation.Llamas)
@@ -101,9 +100,15 @@ namespace ConsoleReader
 
                 var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
                 var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
+
             }
 
-            Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / (count - 1)):0.00}ms");
+            var fastest5 = times.OrderBy(x => x).Take(5);
+
+
+
+            Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / count):0.00}ms");
+            Console.WriteLine($"Fastest 5 Time: {fastest5.Sum()}ms. Average: {(fastest5.Sum() / fastest5.Count()):0.00}ms");
 
             Console.WriteLine("---- done ----");
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");

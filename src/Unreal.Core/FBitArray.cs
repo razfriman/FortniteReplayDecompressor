@@ -8,24 +8,24 @@ namespace Unreal.Core
 {
     public class FBitArray
     {
-        private bool[] _items;
+        public bool[] Items { get; private set; }
 
-        public int Length => _items.Length;
+        public int Length => Items.Length;
         public bool IsReadOnly => false;
         public byte[] ByteArrayUsed;
 
         public FBitArray(bool[] bits)
         {
-            _items = bits;
+            Items = bits;
         }
 
         public unsafe FBitArray(byte[] bytes)
         {
-            _items = new bool[bytes.Length * 8];
+            Items = new bool[bytes.Length * 8];
             ByteArrayUsed = bytes;
 
             fixed (byte* bytePtr = bytes)
-            fixed (bool* itemPtr = _items)
+            fixed (bool* itemPtr = Items)
             {
                 for (int i = 0; i < bytes.Length; i++)
                 {
@@ -47,31 +47,31 @@ namespace Unreal.Core
         { 
             get
             {
-                return _items[index];
+                return Items[index];
             }
             set
             {
-                _items[index] = value;
+                Items[index] = value;
             }
         }
 
         public Span<bool> AsSpan(int start, int count)
         {
-            return _items.AsSpan(start, count);
+            return Items.AsSpan(start, count);
         }
         public void CopyTo(bool[] array, int arrayIndex)
         {
-            _items.CopyTo(array, arrayIndex);
+            Items.CopyTo(array, arrayIndex);
         }
 
         public void Append(bool[] after)
         {
-            bool[] newArray = new bool[_items.Length + after.Length];
+            bool[] newArray = new bool[Items.Length + after.Length];
 
-            Array.Copy(_items, 0, newArray, 0, _items.Length);
-            Array.Copy(after, 0, newArray, _items.Length, after.Length);
+            Array.Copy(Items, 0, newArray, 0, Items.Length);
+            Array.Copy(after, 0, newArray, Items.Length, after.Length);
 
-            _items = newArray;
+            Items = newArray;
         }
     }
 }
