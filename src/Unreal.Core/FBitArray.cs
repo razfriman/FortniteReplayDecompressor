@@ -31,20 +31,20 @@ namespace Unreal.Core
                 {
                     int offset = i * 8;
 
-                    byte b = *(bytePtr + i);
-
-                    for (int z = 0; z < 8; z++)
-                    {
-                        *(itemPtr + offset + z) = (b & 0x01) == 0x01;
-
-                        b >>= 1;
-                    }
+                    *(itemPtr + offset) = ((*(bytePtr + i)) & 0x01) == 0x01;
+                    *(itemPtr + offset + 1) = ((*(bytePtr + i) >> 1) & 0x01) == 0x01;
+                    *(itemPtr + offset + 2) = ((*(bytePtr + i) >> 2) & 0x01) == 0x01;
+                    *(itemPtr + offset + 3) = ((*(bytePtr + i) >> 3) & 0x01) == 0x01;
+                    *(itemPtr + offset + 4) = ((*(bytePtr + i) >> 4) & 0x01) == 0x01;
+                    *(itemPtr + offset + 5) = ((*(bytePtr + i) >> 5) & 0x01) == 0x01;
+                    *(itemPtr + offset + 6) = ((*(bytePtr + i) >> 6) & 0x01) == 0x01;
+                    *(itemPtr + offset + 7) = ((*(bytePtr + i) >> 7) & 0x01) == 0x01;
                 }
             }
         }
 
         public bool this[int index]
-        { 
+        {
             get
             {
                 return Items[index];
