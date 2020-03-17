@@ -202,11 +202,18 @@ namespace Unreal.Core
 
             var pos = _position;
 
-            for (var i = 0; i < 8; i++)
+            if (_position % 8 == 0 && Bits.ByteArrayUsed != null)
             {
-                if (Bits[pos + i])
+                result = Bits.ByteArrayUsed[_position / 8];
+            }
+            else
+            {
+                for (var i = 0; i < 8; i++)
                 {
-                    result |= (byte)(1 << i);
+                    if (Bits[pos + i])
+                    {
+                        result |= (byte)(1 << i);
+                    }
                 }
             }
 
@@ -222,7 +229,7 @@ namespace Unreal.Core
 
         public override byte[] ReadBytes(int byteCount)
         {
-            if(byteCount < 0)
+            if (byteCount < 0)
             {
                 IsError = true;
                 return new byte[0];
@@ -235,21 +242,32 @@ namespace Unreal.Core
             }
 
             var result = new byte[byteCount];
-            bool[] bits = ReadBits(byteCount * 8);
 
-            for(int i = 0; i < bits.Length; i+= 8)
+            if (_position % 8 == 0 && Bits.ByteArrayUsed != null)
             {
-                byte b = new byte();
+                //Pull straight from byte array
+                Buffer.BlockCopy(Bits.ByteArrayUsed, _position / 8, result, 0, byteCount);
 
-                for(int x = 0; x < 8; x++)
+                _position += byteCount * 8;
+            }
+            else
+            {
+                bool[] bits = ReadBits(byteCount * 8);
+
+                for (int i = 0; i < bits.Length; i += 8)
                 {
-                    if (bits[i + x])
-                    {
-                        b |= (byte)(1 << x);
-                    }
-                }
+                    byte b = new byte();
 
-                result[i / 8] = b;
+                    for (int x = 0; x < 8; x++)
+                    {
+                        if (bits[i + x])
+                        {
+                            b |= (byte)(1 << x);
+                        }
+                    }
+
+                    result[i / 8] = b;
+                }
             }
 
             return result;
@@ -364,7 +382,7 @@ namespace Unreal.Core
         public override short ReadInt16()
         {
             var value = ReadBytes(2);
-            return IsError ? (short) 0 : BitConverter.ToInt16(value);
+            return IsError ? (short)0 : BitConverter.ToInt16(value);
         }
 
         public override int ReadInt32()
@@ -554,7 +572,7 @@ namespace Unreal.Core
         {
             byte[] arr = ReadBytes(4);
 
-            if(IsError)
+            if (IsError)
             {
                 return 0;
             }
@@ -583,7 +601,7 @@ namespace Unreal.Core
         {
             byte[] arr = ReadBytes(4);
 
-            if(IsError)
+            if (IsError)
             {
                 return 0;
             }
@@ -605,7 +623,7 @@ namespace Unreal.Core
         {
             byte[] arr = ReadBytes(8);
 
-            if(IsError)
+            if (IsError)
             {
                 return 0;
             }

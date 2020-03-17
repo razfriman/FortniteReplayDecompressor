@@ -44,8 +44,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
-            //var replayFile = "Replays/season11.11.replay"; //Used for testing
-            var replayFile = "Replays/botTest.replay"; //Used for testing
+            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/botTest.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -69,7 +69,7 @@ namespace ConsoleReader
             {
                 sw.Restart();
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(path, ParseType.Debug);
+                var replay = reader.ReadReplay(replayFile, ParseType.Minimal);
 
                 sw.Stop();
 
@@ -78,6 +78,7 @@ namespace ConsoleReader
 
                 //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
+                /*
                 foreach (Llama llama in replay.GameInformation.Llamas)
                 {
                     //Console.WriteLine($"\t -{llama}");
@@ -91,7 +92,7 @@ namespace ConsoleReader
                 var kills = d.FirstOrDefault().Players.Sum(x => x.TotalKills);
 
                 var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-                var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);
+                var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
             }
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");

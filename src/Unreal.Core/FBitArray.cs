@@ -12,6 +12,7 @@ namespace Unreal.Core
 
         public int Length => _items.Length;
         public bool IsReadOnly => false;
+        public byte[] ByteArrayUsed;
 
         public FBitArray(bool[] bits)
         {
@@ -21,6 +22,7 @@ namespace Unreal.Core
         public unsafe FBitArray(byte[] bytes)
         {
             _items = new bool[bytes.Length * 8];
+            ByteArrayUsed = bytes;
 
             fixed (byte* bytePtr = bytes)
             fixed (bool* itemPtr = _items)
