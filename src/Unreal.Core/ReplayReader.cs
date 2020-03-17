@@ -1809,7 +1809,7 @@ namespace Unreal.Core
                         buffer = new bool[numBits];
                     }
 
-                    archive.Read(_tempBuffer, (int)numBits);
+                    archive.Read(buffer, (int)numBits);
 
                     var cmdReader = new NetBitReader(_tempBuffer, (int)numBits)
                     {
