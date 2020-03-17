@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FRepMovement SharedRepMovement { get; set; }
     }*/
 
-    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Normal)]
+    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Full)]
 	public class PlayerPawnC : INetFieldExportGroup
 	{
 		[NetFieldExport("Owner", RepLayoutCmdType.Property)]

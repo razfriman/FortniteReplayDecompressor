@@ -65,11 +65,15 @@ namespace ConsoleReader
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
+            int count = 0;
+
             foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
+                ++count;
+
                 sw.Restart();
                 var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Minimal);
+                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                 sw.Stop();
 
@@ -78,13 +82,17 @@ namespace ConsoleReader
 
                 //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
 
+                if (count > 1)
+                {
+                    totalTime += sw.ElapsedMilliseconds;
+                }
+
                 /*
                 foreach (Llama llama in replay.GameInformation.Llamas)
                 {
                     //Console.WriteLine($"\t -{llama}");
                 }
 
-                totalTime += sw.ElapsedMilliseconds;
 
                 var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
                 var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
@@ -95,7 +103,7 @@ namespace ConsoleReader
                 var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
             }
 
-            Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / Directory.GetFiles("Replays").Length):0.00}ms");
+            Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / (count - 1)):0.00}ms");
 
             Console.WriteLine("---- done ----");
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");

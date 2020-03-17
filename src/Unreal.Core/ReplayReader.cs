@@ -1895,7 +1895,6 @@ namespace Unreal.Core
                 return false;
             }
 
-            // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
             outField = group.NetFieldExports[(int)netFieldExportHandle];
 
             var numPayloadBits = bunch.ReadIntPacked();

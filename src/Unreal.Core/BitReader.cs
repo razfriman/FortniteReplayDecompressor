@@ -202,7 +202,7 @@ namespace Unreal.Core
 
             var pos = _position;
 
-            if (_position % 8 == 0 && Bits.ByteArrayUsed != null)
+            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
             {
                 result = Bits.ByteArrayUsed[_position / 8];
             }
@@ -243,7 +243,7 @@ namespace Unreal.Core
 
             var result = new byte[byteCount];
 
-            if (_position % 8 == 0 && Bits.ByteArrayUsed != null)
+            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
             {
                 //Pull straight from byte array
                 Buffer.BlockCopy(Bits.ByteArrayUsed, _position / 8, result, 0, byteCount);
