@@ -236,9 +236,9 @@ namespace Unreal.Core
         {
             ignoreChannel = false;
 
-            if (_parserInfo.NetFieldGroups.ContainsKey(group))
+            if (_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo groupInfo))
             {
-                if (parseType >= _parserInfo.NetFieldGroups[group].Attribute.MinimumParseType)
+                if (parseType >= groupInfo.Attribute.MinimumParseType)
                 {
                     return true;
                 }
@@ -302,7 +302,6 @@ namespace Unreal.Core
                     data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
                     break;
             }
-
 
             if (obj is DebuggingExportGroup debugGroup)
             {
@@ -519,12 +518,12 @@ namespace Unreal.Core
 
         public INetFieldExportGroup CreateType(string group)
         {
-            if (!_parserInfo.NetFieldGroups.ContainsKey(group))
+            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo exportGroup))
             {
                 return null;
             }
 
-            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(_parserInfo.NetFieldGroups[group].Type);
+            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
         }
 
         /// <summary>
