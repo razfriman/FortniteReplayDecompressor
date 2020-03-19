@@ -250,8 +250,6 @@ namespace Unreal.Core
                     Flags = binaryArchive.ReadByte()
                 };
 
-                GuidCache.ObjectLookup[guid] = cacheObject;
-
                 // TODO DemoNetDriver 5319
                 // GuidCache->ObjectLookup.Add(Guid, CacheObject);
             }

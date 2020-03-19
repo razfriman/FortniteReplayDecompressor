@@ -8,7 +8,6 @@ namespace Unreal.Core.Models
 {
     public class NetGuidCache
     {
-        public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
@@ -23,9 +22,10 @@ namespace Unreal.Core.Models
         private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
         private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
 
+        private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new Dictionary<string, NetFieldExportGroup>();
+
         public void ClearCache()
         {
-            ObjectLookup.Clear();
             NetFieldExportGroupMap.Clear();
             NetFieldExportGroupIndexToGroup.Clear();
             NetGuidToPathName.Clear();
@@ -35,65 +35,6 @@ namespace Unreal.Core.Models
             _failedPaths.Clear();
             NetworkGameplayTagNodeIndex = null;
         }
-
-        public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
-        {
-            if(!netGuid.IsValid())
-            {
-                return null;
-            }
-
-            if(!netGuid.IsDefault())
-            {
-                return null;
-            }
-
-            if(!ObjectLookup.TryGetValue(netGuid.Value, out NetGuidCacheObject cacheObject))
-            {
-                return null;
-            }
-
-            if(cacheObject.IsBroken)
-            {
-                return null;
-            }
-
-            if (cacheObject.IsPending)
-            {
-                return null;
-            }
-
-            if (String.IsNullOrEmpty(cacheObject.PathName))
-            {
-                return null;
-            }
-
-            if(cacheObject.OuterGuid.IsValid())
-            {
-                if (!ObjectLookup.TryGetValue(cacheObject.OuterGuid.Value, out NetGuidCacheObject outerCacheObject))
-                {
-                    return null;
-                }
-
-                if(outerCacheObject.IsBroken)
-                {
-                    cacheObject.IsBroken = true;
-
-                    return null;
-                }
-
-                UObject objOuter = GetObjectFromNetGUID(outerCacheObject.OuterGuid, ignoreMustBeMapped);
-
-                if(objOuter == null)
-                {
-                    return null;
-                }
-            }
-
-
-            return null;
-        }
-
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
             if (NetworkGameplayTagNodeIndex == null && group == "NetworkGameplayTagNodeIndex")
@@ -104,9 +45,9 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMap[group] = exportGroup;
 
             //Check if partial path
-            foreach(KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
+            foreach (KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
             {
-                if(group.StartsWith(partialRedirectKvp.Key))
+                if (group.StartsWith(partialRedirectKvp.Key))
                 {
                     _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
                 }
@@ -115,12 +56,12 @@ namespace Unreal.Core.Models
 
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
         {
-            if(String.IsNullOrEmpty(pathName))
+            if (String.IsNullOrEmpty(pathName))
             {
                 return null;
             }
 
-            if(NetFieldExportGroupMap.TryGetValue(pathName, out NetFieldExportGroup netFieldExportGroup))
+            if (NetFieldExportGroupMap.TryGetValue(pathName, out NetFieldExportGroup netFieldExportGroup))
             {
                 return netFieldExportGroup;
             }
@@ -132,7 +73,7 @@ namespace Unreal.Core.Models
         {
             if (!_archTypeToExportGroup.ContainsKey(guid))
             {
-                if(!NetGuidToPathName.ContainsKey(guid))
+                if (!NetGuidToPathName.ContainsKey(guid))
                 {
                     return null;
                 }
@@ -145,55 +86,54 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
+                
+
                 path = CoreRedirects.GetRedirect(path);
 
-                if(_partialPathNames.TryGetValue(path, out string redirectPath))
+                if (_partialPathNames.TryGetValue(path, out string redirectPath))
                 {
                     path = redirectPath;
                 }
 
-                if (NetFieldExportGroupMapPathFixed.ContainsKey(guid))
+                if (NetFieldExportGroupMapPathFixed.TryGetValue(guid, out var exportGroup) || _pathToExportGroup.TryGetValue(path, out exportGroup))
                 {
-                    _archTypeToExportGroup[guid] = NetFieldExportGroupMapPathFixed[guid];
+                    _archTypeToExportGroup[guid] = exportGroup;
 
-                    return NetFieldExportGroupMapPathFixed[guid];
+                    return exportGroup;
                 }
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
                     var groupPath = groupPathKvp.Key;
 
-                    if (!_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
+                    if (groupPathKvp.Value.CleanedPath == null)
                     {
-                        groupPathFixed = RemoveAllPathPrefixes(groupPath);
-                        _cleanedPaths[groupPathKvp.Value.PathNameIndex] = groupPathFixed;
+                        groupPathKvp.Value.CleanedPath = RemoveAllPathPrefixes(groupPath);
                     }
 
-                    if (path.Contains(groupPathFixed, StringComparison.Ordinal))
+                    if (path.Contains(groupPathKvp.Value.CleanedPath, StringComparison.Ordinal))
                     {
-                        NetFieldExportGroupMapPathFixed[guid] = NetFieldExportGroupMap[groupPath];
-                        _archTypeToExportGroup[guid] = NetFieldExportGroupMap[groupPath];
+                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
+                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
+                        _pathToExportGroup[path] = groupPathKvp.Value;
 
-                        return NetFieldExportGroupMap[groupPath];
+                        return groupPathKvp.Value;
                     }
                 }
 
                 //Try fixing ...
+
                 var cleanedPath = CleanPathSuffix(path);
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
-                    var groupPath = groupPathKvp.Key;
-
-                    if (_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
+                    if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath, StringComparison.Ordinal))
                     {
-                        if (groupPathFixed.Contains(cleanedPath, StringComparison.Ordinal))
-                        {
-                            NetFieldExportGroupMapPathFixed[guid] = NetFieldExportGroupMap[groupPath];
-                            _archTypeToExportGroup[guid] = NetFieldExportGroupMap[groupPath];
+                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
+                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
+                        _pathToExportGroup[path] = groupPathKvp.Value;
 
-                            return NetFieldExportGroupMap[groupPath];
-                        }
+                        return groupPathKvp.Value;
                     }
                 }
 
@@ -227,7 +167,7 @@ namespace Unreal.Core.Models
         {
             path = RemovePathPrefix(path, "Default__");
 
-            for(int i = path.Length - 1; i >= 0; i--)
+            for (int i = path.Length - 1; i >= 0; i--)
             {
                 switch (path[i])
                 {
@@ -243,14 +183,14 @@ namespace Unreal.Core.Models
 
         private string RemovePathPrefix(string path, string toRemove)
         {
-            if(toRemove.Length > path.Length)
+            if (toRemove.Length > path.Length)
             {
                 return path;
             }
 
-            for(int i = 0; i < toRemove.Length; i++)
+            for (int i = 0; i < toRemove.Length; i++)
             {
-                if(path[i] != toRemove[i])
+                if (path[i] != toRemove[i])
                 {
                     return path;
                 }
@@ -282,12 +222,12 @@ namespace Unreal.Core.Models
         //Removes all numbers and underscores from suffix
         private string CleanPathSuffix(string path)
         {
-            for(int i = path.Length - 1; i >= 0; i--)
+            for (int i = path.Length - 1; i >= 0; i--)
             {
                 bool isDigit = (path[i] ^ '0') <= 9;
                 bool isUnderscore = path[i] == '_';
 
-                if(!isDigit && !isUnderscore)
+                if (!isDigit && !isUnderscore)
                 {
                     return path.Substring(0, i + 1);
                 }

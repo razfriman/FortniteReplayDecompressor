@@ -19,8 +19,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         [NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]
         public bool bHidden { get; set; }
 
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        public FRepMovementWholeNumber ReplicatedMovement { get; set; }
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovementWholeNumber)]
+        public FRepMovement ReplicatedMovement { get; set; }
 
         [NetFieldExport("Owner", RepLayoutCmdType.Property)]
         public NetworkGUID Owner { get; set; }

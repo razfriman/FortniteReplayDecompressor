@@ -32,6 +32,7 @@
         PropertySoftObject = 22,
         PropertyWeakObject = 23,
 
+        RepMovementWholeNumber = 94,
         Debug = 95,
         PropertyInt16 = 96,
         PropertyUInt16 = 97,

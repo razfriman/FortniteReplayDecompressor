@@ -99,6 +99,7 @@ namespace Unreal.Core
         /// <seealso cref="PeekBit"/>
         public override bool ReadBit()
         {
+
             if (_position >= LastBit || IsError)
             {
                 IsError = true;

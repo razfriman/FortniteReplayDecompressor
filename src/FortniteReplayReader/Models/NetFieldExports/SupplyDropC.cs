@@ -12,8 +12,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
 		public object RemoteRole { get; set; } //Type:  Bits: 2
 
-		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-		public FRepMovementWholeNumber ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 109
+		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovementWholeNumber)]
+		public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 109
 
 		[NetFieldExport("Role", RepLayoutCmdType.Ignore)]
 		public object Role { get; set; } //Type:  Bits: 2

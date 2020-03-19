@@ -325,9 +325,14 @@ namespace Unreal.Core
             switch (replayout)
             {
                 case RepLayoutCmdType.Property:
-                case RepLayoutCmdType.RepMovement:
                     data = _parserInfo.LinqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
+                    break;
+                case RepLayoutCmdType.RepMovement:
+                    data = netBitReader.SerializeRepMovement();
+                    break;
+                case RepLayoutCmdType.RepMovementWholeNumber:
+                    data = netBitReader.SerializeRepMovement(VectorQuantization.RoundWholeNumber, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber);
                     break;
                 case RepLayoutCmdType.PropertyBool:
                     data = netBitReader.SerializePropertyBool();

@@ -68,47 +68,49 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
+                    var reader = new ReplayReader(logger);
             foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
-                ++count;
-
-                sw.Restart();
-                var reader = new ReplayReader(logger);
-                var replay = reader.ReadReplay(replayFile, ParseType.Debug);
-
-                sw.Stop();
-
-                Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
-                //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
-
-                //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
-
-                totalTime += sw.Elapsed.TotalMilliseconds;
-                times.Add(sw.Elapsed.TotalMilliseconds);
-
-                /*
-                foreach (Llama llama in replay.GameInformation.Llamas)
+                for (int i = 0; i < 5; i++)
                 {
-                    //Console.WriteLine($"\t -{llama}");
+                    ++count;
+
+                    sw.Restart();
+                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+
+                    sw.Stop();
+
+                    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
+                    //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
+
+                    //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
+
+                    totalTime += sw.Elapsed.TotalMilliseconds;
+                    times.Add(sw.Elapsed.TotalMilliseconds);
+
+                    /*
+                    foreach (Llama llama in replay.GameInformation.Llamas)
+                    {
+                        //Console.WriteLine($"\t -{llama}");
+                    }
+
+
+                    var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
+                    var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
+                    //var a = NetFieldParser.UnknownNetFields;
+                    var kills = d.FirstOrDefault().Players.Sum(x => x.TotalKills);
+
+                    var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
+                    var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
                 }
-
-
-                var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
-                var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-                //var a = NetFieldParser.UnknownNetFields;
-                var kills = d.FirstOrDefault().Players.Sum(x => x.TotalKills);
-
-                var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-                var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
-
             }
 
-            var fastest5 = times.OrderBy(x => x).Take(5);
+            var fastest5 = times.OrderBy(x => x).Take(10);
 
 
 
             Console.WriteLine($"Total Time: {totalTime}ms. Average: {((double)totalTime / count):0.00}ms");
-            Console.WriteLine($"Fastest 5 Time: {fastest5.Sum()}ms. Average: {(fastest5.Sum() / fastest5.Count()):0.00}ms");
+            Console.WriteLine($"Fastest 10 Time: {fastest5.Sum()}ms. Average: {(fastest5.Sum() / fastest5.Count()):0.00}ms");
 
             Console.WriteLine("---- done ----");
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");

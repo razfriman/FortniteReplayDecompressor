@@ -27,8 +27,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
     [NetFieldExportGroup("/Game/Athena/Items/Consumables/FloppingRabbit/B_Athena_FloppingRabbit_Wire.B_Athena_FloppingRabbit_Wire_C", ParseType.Normal)]
     public class FishingRodWire : Consumable
     {
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        public FRepMovementWholeNumber ReplicatedMovement { get; set; }
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovementWholeNumber)]
+        public FRepMovement ReplicatedMovement { get; set; }
 
         [NetFieldExport("Projectile", RepLayoutCmdType.Property)]
         public NetworkGUID Projectile { get; set; }
