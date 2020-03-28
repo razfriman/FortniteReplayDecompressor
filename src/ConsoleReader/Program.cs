@@ -44,7 +44,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/12-5.replay";
             //var replayFile = "Replays/season11.31.replay";
-            var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/botTest.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
@@ -76,7 +76,7 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(path, ParseType.Debug);
 
                     sw.Stop();
 

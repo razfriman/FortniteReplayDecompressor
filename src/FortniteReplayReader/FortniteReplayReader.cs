@@ -80,8 +80,6 @@ namespace FortniteReplayReader
         {
             ++TotalPropertiesRead;
 
-            return;
-
 #if DEBUG
             if(Replay.GameInformation.Channels == null)
             {

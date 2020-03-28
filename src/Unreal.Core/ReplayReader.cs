@@ -69,16 +69,17 @@ namespace Unreal.Core
         protected ReplayReader(ILogger logger)
         {
             _logger = logger;
-            Replay = new T();
             _netFieldParser = new NetFieldParser(GetType().Assembly);
         }
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
-            if(isReading)
+            if (isReading)
             {
                 throw new InvalidOperationException("Multithreaded reading currently isn't supported");
             }
+
+            Replay = new T();
 
             ParseType = parseType;
             isReading = true;
