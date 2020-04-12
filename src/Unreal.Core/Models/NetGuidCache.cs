@@ -42,6 +42,12 @@ namespace Unreal.Core.Models
                 NetworkGameplayTagNodeIndex = exportGroup;
             }
 
+            //Easiest way to do this update
+            if(group.EndsWith("ClassNetCache"))
+            {
+                exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
+            }
+
             NetFieldExportGroupMap[group] = exportGroup;
 
             //Check if partial path
@@ -147,11 +153,19 @@ namespace Unreal.Core.Models
             }
         }
 
-        public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
+        public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group, bool fullPath = false)
         {
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
             {
-                classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                if (fullPath)
+                {
+                    classNetCachePath = $"{group}_ClassNetCache";
+                }
+                else
+                {
+                    classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                }
+
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 

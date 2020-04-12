@@ -1,5 +1,6 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.Enums;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
@@ -292,9 +293,26 @@ namespace FortniteReplayReader
 
                 if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
                 {
-                    archive.SkipBytes(85);
-                    elim.Eliminated = ParsePlayer(archive);
-                    elim.Eliminator = ParsePlayer(archive);
+                    archive.SkipBytes(9);
+
+                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    {
+                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                    };
+
+                    archive.ReadSingle(); //?
+
+                    elim.EliminatorInfo = new PlayerEliminationInfo
+                    {
+                        Unknown1 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Location = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                        Unknown2 = new FVector(archive.ReadSingle(), archive.ReadSingle(), archive.ReadSingle()),
+                    };
+
+                    ParsePlayer(archive, elim.EliminatedInfo);
+                    ParsePlayer(archive, elim.EliminatorInfo);
                 }
                 else
                 {
@@ -310,13 +328,22 @@ namespace FortniteReplayReader
                     {
                         archive.SkipBytes(45);
                     }
-                    elim.Eliminated = archive.ReadFString();
-                    elim.Eliminator = archive.ReadFString();
+
+                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    {
+                        Id = archive.ReadFString()
+                    };
+
+                    elim.EliminatorInfo = new PlayerEliminationInfo
+                    {
+                        Id = archive.ReadFString()
+                    };
                 }
 
                 elim.GunType = archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
                 elim.Timestamp = info.StartTime;
+
                 return elim;
             }
             catch (Exception ex)
@@ -326,22 +353,22 @@ namespace FortniteReplayReader
             }
         }
 
-        protected virtual string ParsePlayer(FArchive archive)
+        protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info)
         {
-            // TODO player type enum
-            var botIndicator = archive.ReadByte();
-            if (botIndicator == 0x03)
-            {
-                return "Bot";
-            }
-            else if (botIndicator == 0x10)
-            {
-                return archive.ReadFString();
-            }
+            info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
 
-            // 0x11
-            var size = archive.ReadByte();
-            return archive.ReadGUID(size);
+            switch (info.PlayerType)
+            {
+                case PlayerTypes.Bot:
+
+                    break;
+                case PlayerTypes.NamedBot:
+                    info.Id = archive.ReadFString();
+                    break;
+                case PlayerTypes.Player:
+                    info.Id = archive.ReadGUID(archive.ReadByte());
+                    break;
+            }
         }
 
         protected override BinaryReader Decrypt(FArchive archive, int size)

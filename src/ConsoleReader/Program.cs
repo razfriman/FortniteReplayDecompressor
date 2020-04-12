@@ -41,10 +41,9 @@ namespace ConsoleReader
             //    var replay = reader.ReadReplay(replayFile);
             //}
 
-            //var replayFile = "Replays/shootergame.replay";
-            //var replayFile = "Replays/12-5.replay";
+            //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay";
-            //var replayFile = "Replays/season11.11.replay"; //Used for testing
+            var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/botTest.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
@@ -56,9 +55,12 @@ namespace ConsoleReader
             //var replayFile = "Replays/123.replay";
             //var replayFile = "Replays/WCReplay.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
-            //var replayFile = "Replays/creative.replay";
+            //var replayFile = "Replays/season12_arena.replay";
+            //var replayFile = "Replays/1.replay";
             //var replayFile = "Replays/weapons2.replay";
             //var replayFile = "Replays/iceblocks2.replay";
+            //var replayFile = "Replays/creativeShooting.replay";
+
             Stopwatch sw = new Stopwatch();
 
             double totalTime = 0;
@@ -68,7 +70,8 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-                    var reader = new ReplayReader(logger);
+            var reader = new ReplayReader(null);
+
             foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
                 for (int i = 0; i < 5; i++)
@@ -76,7 +79,7 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(path, ParseType.Debug);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                     sw.Stop();
 
