@@ -42,9 +42,10 @@ namespace ConsoleReader
             //}
 
             //var replayFile = "Replays/season12_arena.replay";
-            //var replayFile = "Replays/season11.31.replay";
-            var replayFile = "Replays/season11.11.replay"; //Used for testing
-            //var replayFile = "Replays/botTest.replay"; //Used for testing
+            //var replayFile = "Replays/season11.31.replay
+            var replayFile = "Replays/EncryptionTest.replay"; //Used for testing
+            //var replayFile = "Replays/season11.11.replay"; //Used for testing
+            //var replayFile = "Replays/Test.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
             //var replayFile = "Replays/tournament2.replay";
             //var replayFile = "Replays/creative-season11.21.replay";
@@ -84,6 +85,10 @@ namespace ConsoleReader
                     sw.Stop();
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
+
+
+                    var a = replay.GameInformation.Players.Where(x => x.EpicId == "D7C0CF2764AD4CD8ACAB234D8A13C2DE");
+
                     //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
 
                     //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");

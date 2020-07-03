@@ -203,7 +203,8 @@ namespace Unreal.Core
                 return;
             }
 
-            using var binaryArchive = Decompress(archive, info.SizeInBytes);
+            using var decrypted = Decrypt(archive, info.SizeInBytes);
+            using var binaryArchive = Decompress(decrypted, (int)decrypted.BaseStream.Length);
 
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916

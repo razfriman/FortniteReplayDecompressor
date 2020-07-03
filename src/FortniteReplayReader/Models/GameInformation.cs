@@ -335,6 +335,7 @@ namespace FortniteReplayReader.Models
             }
 
             newPlayer.Actor = playerState.ChannelActor;
+
             newPlayer.EpicId = playerState.UniqueId ?? newPlayer.EpicId;
             newPlayer.Platform = playerState.Platform ?? newPlayer.Platform;
             newPlayer.Teamindex = playerState.TeamIndex ?? newPlayer.Teamindex;
