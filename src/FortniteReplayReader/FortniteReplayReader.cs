@@ -29,9 +29,11 @@ namespace FortniteReplayReader
     {
         public int TotalPropertiesRead { get; private set; }
 
-        public ReplayReader(ILogger logger = null) : base(logger)
-        {
+        private FortniteReplaySettings _fortniteSettings = new FortniteReplaySettings();
 
+        public ReplayReader(ILogger logger = null, FortniteReplaySettings settings = null) : base(logger)
+        {
+            _fortniteSettings = settings ?? new FortniteReplaySettings();
         }
 
         public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
@@ -93,6 +95,11 @@ namespace FortniteReplayReader
                 Replay.GameInformation.NetGUIDToPathName = GuidCache.NetGuidToPathName;
             }
 
+            if (Replay.GameInformation.Settings == null)
+            {
+                Replay.GameInformation.Settings = _fortniteSettings;
+            }
+
             switch (exportGroup)
             {
                 case AircraftC Test:
@@ -133,14 +140,21 @@ namespace FortniteReplayReader
                 case FortPickup fortPickup:
                     if (ParseType >= ParseType.Normal)
                     {
-                        Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
+                        if (!_fortniteSettings.IgnoreFloorLoot)
+                        {
+                            Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
+                        }
                     }
                     break;
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
                     break;
                 case BatchedDamage batchedDamage:
-                    Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
+                    if (!_fortniteSettings.IgnoreShots)
+                    {
+                        Replay.GameInformation.UpdateBatchedDamage(channel, batchedDamage);
+                    }
+
                     break;
                 case GameplayCue gameplayCue:
                     gameplayCue.GameplayCueTag.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
@@ -154,13 +168,23 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdatePoiManager(poiManager, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case FortInventory inventory:
-                    Replay.GameInformation.UpdateFortInventory(channel, inventory);
+                    if (!_fortniteSettings.IgnoreInventory)
+                    {
+                        Replay.GameInformation.UpdateFortInventory(channel, inventory);
+                    }
                     break;
                 case BaseProp prop:
-                    Replay.GameInformation.UpdateContainer(channel, prop);
+
+                    if (!_fortniteSettings.IgnoreContainers)
+                    {
+                        Replay.GameInformation.UpdateContainer(channel, prop);
+                    }
                     break;
                 case HealthSet healthSet:
-                    Replay.GameInformation.UpdateHealth(channel, healthSet);
+                    if (!_fortniteSettings.IgnoreHealth)
+                    {
+                        Replay.GameInformation.UpdateHealth(channel, healthSet);
+                    }
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
                     if (debuggingObject.ExportGroup.PathName.StartsWith("/Game/Building/ActorBlueprints/Player/Wood"))

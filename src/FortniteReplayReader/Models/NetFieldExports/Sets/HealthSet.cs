@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -35,5 +35,41 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
 
         [NetFieldExportHandle(21, RepLayoutCmdType.PropertyFloat)]
         public float? ShieldMaxValue { get; set; }
+
+        public override bool ManualRead(string property, object value)
+        {
+            switch (property)
+            {
+                case "HealthBaseValue":
+                    HealthBaseValue = (float)value;
+                    break;
+                case "HealthCurrentValue":
+                    HealthCurrentValue = (float)value;
+                    break;
+                case "HealthMaxValue":
+                    HealthMaxValue = (float)value;
+                    break;
+                case "HealthUnclampedBaseValue":
+                    HealthUnclampedBaseValue = (float)value;
+                    break;
+                case "HealthUnclampedCurrentValue":
+                    HealthUnclampedCurrentValue = (float)value;
+                    break;
+                case "ShieldBaseValue":
+                    ShieldBaseValue = (float)value;
+                    break;
+                case "ShieldCurrentValue":
+                    ShieldCurrentValue = (float)value;
+                    break;
+                case "ShieldMaxValue":
+                    ShieldMaxValue = (float)value;
+                    break;
+                default:
+                    base.ManualRead(property, value);
+                    break;
+            }
+
+            return true;
+        }
     }
 }

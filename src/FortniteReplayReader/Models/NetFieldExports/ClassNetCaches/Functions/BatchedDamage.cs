@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -52,5 +52,59 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 
         [NetFieldExport("NonPlayerHitActor", RepLayoutCmdType.PropertyObject)]
         public uint NonPlayerHitActor { get; set; } //Type:  Bits: 1
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "Location":
+					Location = (FVector)value;
+					break;
+				case "Normal":
+					Normal = (FVector)value;
+					break;
+				case "Magnitude":
+					Magnitude = (float)value;
+					break;
+				case "bWeaponActivate":
+					bWeaponActivate = (bool)value;
+					break;
+				case "bIsFatal":
+					bIsFatal = (bool)value;
+					break;
+				case "bIsCritical":
+					bIsCritical = (bool)value;
+					break;
+				case "bIsShield":
+					bIsShield = (bool)value;
+					break;
+				case "bIsShieldDestroyed":
+					bIsShieldDestroyed = (bool)value;
+					break;
+				case "bIsBallistic":
+					bIsBallistic = (bool)value;
+					break;
+				case "bIsShieldApplied":
+					bIsShieldApplied = (bool)value;
+					break;
+				case "NonPlayerbIsFatal":
+					NonPlayerbIsFatal = (bool)value;
+					break;
+				case "NonPlayerbIsCritical":
+					NonPlayerbIsCritical = (bool)value;
+					break;
+				case "HitActor":
+					HitActor = (uint)value;
+					break;
+				case "NonPlayerHitActor":
+					NonPlayerHitActor = (uint)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

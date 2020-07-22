@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -16,5 +16,23 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 
         [NetFieldExport("HitResults", RepLayoutCmdType.DynamicArray)]
         public FHitResult[] HitResults { get; set; } //Type: bool Bits: 1
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "HitActors":
+					HitActors = (NetworkGUID[])value;
+					break;
+				case "HitResults":
+					HitResults = (FHitResult[])value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

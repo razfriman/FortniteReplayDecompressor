@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
@@ -102,6 +102,24 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("HostVehicleSeatIndexCached", RepLayoutCmdType.PropertyUInt32)]
         public uint? HostVehicleSeatIndexCached { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "HostVehicleCachedActor":
+					HostVehicleCachedActor = (ActorGUID)value;
+					break;
+				case "HostVehicleSeatIndexCached":
+					HostVehicleSeatIndexCached = (uint)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     [NetFieldExportGroup("/Game/Athena/Items/Weapons/Vehicles/MeatballWeapon/B_Prj_Meatball_Missile.B_Prj_Meatball_Missile_C", ParseType.Normal)]
@@ -110,6 +128,21 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         //Possibly part of base?
         [NetFieldExport("SurfaceType", RepLayoutCmdType.Enum)]
         public int? SurfaceType { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "SurfaceType":
+					SurfaceType = (int)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     #endregion

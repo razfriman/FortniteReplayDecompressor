@@ -32,6 +32,7 @@ namespace FortniteReplayReader.Models
 
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
+        public FortniteReplaySettings Settings { get; internal set; }
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
@@ -49,6 +50,8 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
+
+        private Player _replayPlayer;
 
         //Delta updates
         private Dictionary<uint, NetDeltaArray<PrivateTeamInfo>> _privateTeamInfo = new Dictionary<uint, NetDeltaArray<PrivateTeamInfo>>(); //Channel id to private team info
@@ -355,6 +358,10 @@ namespace FortniteReplayReader.Models
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
             newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
 
+            if(newPlayer.IsPlayersReplay)
+            {
+                _replayPlayer = newPlayer;
+            }
 
             if (playerState.DeathCause != null)
             {
@@ -448,7 +455,7 @@ namespace FortniteReplayReader.Models
                 case Player playerActor:
                     playerActor.LastTransformUpdate = playerPawnC.ReplayLastTransformUpdateTimeStamp ?? playerActor.LastTransformUpdate;
 
-                    if(playerPawnC.ReplicatedMovement != null) //Update location
+                    if (playerPawnC.ReplicatedMovement != null && !IgnoreLocationUpdate(playerActor)) //Update location
                     {
                         var newLocation = new PlayerLocationRepMovement
                         {
@@ -466,7 +473,7 @@ namespace FortniteReplayReader.Models
                     }
 
                     //Update current weapon
-                    if(playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
+                    if(!Settings.IgnoreWeaponSwitches && playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
                     {
                         if(_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
                         {
@@ -700,7 +707,8 @@ namespace FortniteReplayReader.Models
                     }
                 }
 
-                if (privateInfo.LastRepLocation != null && item.PlayerState != null) //Ignores issue with playstate actor id not being found at first
+                //Ignores issue with playstate actor id not being found at first
+                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState) && privateInfo.LastRepLocation != null) 
                 {
                     item.LastLocation = privateInfo.LastRepLocation;
                     item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
@@ -861,6 +869,11 @@ namespace FortniteReplayReader.Models
         {
             if (_inventories.ContainsKey(deltaUpdate.ChannelIndex))
             {
+                if(Settings.IgnoreInventory)
+                {
+                    return;
+                }
+
                 UpdateNetDeltaFortInventory(deltaUpdate);
             }
 
@@ -882,6 +895,57 @@ namespace FortniteReplayReader.Models
                     UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
                 }
             }
+        }
+
+        private bool IgnoreLocationUpdate(Player player)
+        {
+            bool isPlayer = player.IsPlayersReplay == true;
+            bool isTeammate = _replayPlayer?.Teamindex == player.Teamindex;
+
+            bool shouldIgnore = false;
+
+            switch (Settings.PlayerLocationType)
+            {
+                case LocationTypes.Team:
+                    shouldIgnore = !isTeammate || !isPlayer;
+                    break;
+                case LocationTypes.User:
+                    shouldIgnore = !isPlayer;
+                    break;
+                case LocationTypes.None:
+                    shouldIgnore = true;
+                    break;
+            }
+
+            if(shouldIgnore)
+            {
+                return shouldIgnore;
+            }
+
+            //Check to see if should update
+            PlayerLocationRepMovement lastLocation = player.Locations.LastOrDefault();
+            PlayerLocation privateTeamLocation = player.PrivateTeamLocations.LastOrDefault();
+
+            if(lastLocation == null && privateTeamLocation == null)
+            {
+                return shouldIgnore;
+            }
+
+            double lastLocationTime = lastLocation?.WorldTime ?? privateTeamLocation.WorldTime;
+
+            if(privateTeamLocation != null && lastLocationTime < privateTeamLocation?.WorldTime)
+            {
+                lastLocationTime = privateTeamLocation.WorldTime;
+            }
+
+            double delta = (double)Settings.LocationChangeDeltaMS / 1000;
+
+            if(delta != 0 && GameState.CurrentWorldTime - lastLocationTime < delta)
+            {
+                return true;
+            }
+
+            return shouldIgnore;
         }
 
         internal void UpdateBuild(uint channelId, BaseStructure baseBuild)

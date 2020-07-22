@@ -15,5 +15,23 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bEditorPlaced", RepLayoutCmdType.PropertyBool)]
 		public bool? bEditorPlaced { get; set; } //Type: uint8 Bits: 1
 
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "ReplicatedMovement":
+					ReplicatedMovement = (FRepMovement)value;
+					break;
+				case "bEditorPlaced":
+					bEditorPlaced = (bool)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }

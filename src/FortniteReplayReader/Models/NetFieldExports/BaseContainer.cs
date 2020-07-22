@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -48,5 +48,56 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("BounceNormal", RepLayoutCmdType.PropertyVector)]
         public FVector BounceNormal { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "bHidden":
+					bHidden = (bool)value;
+					break;
+				case "RemoteRole":
+					RemoteRole = (int)value;
+					break;
+				case "Role":
+					Role = (int)value;
+					break;
+				case "bDestroyed":
+					bDestroyed = (bool)value;
+					break;
+				case "BuildTime":
+					BuildTime = (FQuantizedBuildingAttribute)value;
+					break;
+				case "RepairTime":
+					RepairTime = (FQuantizedBuildingAttribute)value;
+					break;
+				case "Health":
+					Health = (short)value;
+					break;
+				case "MaxHealth":
+					MaxHealth = (short)value;
+					break;
+				case "ReplicatedLootTier":
+					ReplicatedLootTier = (int)value;
+					break;
+				case "SearchAnimationCount":
+					SearchAnimationCount = (uint)value;
+					break;
+				case "bAlreadySearched":
+					bAlreadySearched = (bool)value;
+					break;
+				case "ResourceType":
+					ResourceType = (int)value;
+					break;
+				case "BounceNormal":
+					BounceNormal = (FVector)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

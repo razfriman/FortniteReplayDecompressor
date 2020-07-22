@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -42,12 +42,72 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("SyncId", RepLayoutCmdType.PropertyUInt16)]
         public ushort? SyncId { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "bHidden":
+					bHidden = (bool)value;
+					break;
+				case "ReplicatedMovement":
+					ReplicatedMovement = (FRepMovement)value;
+					break;
+				case "Owner":
+					Owner = (NetworkGUID)value;
+					break;
+				case "Instigator":
+					Instigator = (NetworkGUID)value;
+					break;
+				case "Team":
+					Team = (int)value;
+					break;
+				case "ReplicatedMaxSpeed":
+					ReplicatedMaxSpeed = (float)value;
+					break;
+				case "GravityScale":
+					GravityScale = (float)value;
+					break;
+				case "PawnHitResult":
+					PawnHitResult = (FHitResult)value;
+					break;
+				case "SyncId":
+					SyncId = (ushort)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     public class BaseExplosiveProjectile : BaseProjectile
     {
         [NetFieldExport("bHasExploded", RepLayoutCmdType.PropertyBool)]
         public bool bHasExploded { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "bHasExploded":
+					bHasExploded = (bool)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     public class BaseLauncherProjectile : BaseExplosiveProjectile
@@ -60,5 +120,26 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector)]
         public FVector DecalLocation { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "bIsBeingKilled":
+					bIsBeingKilled = (bool)value;
+					break;
+				case "StopLocation":
+					StopLocation = (FVector)value;
+					break;
+				case "DecalLocation":
+					DecalLocation = (FVector)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -60,5 +60,68 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.PropertyFloat)]
         public float? LastFireTimeVerified { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "bHidden":
+					bHidden = (bool)value;
+					break;
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Owner":
+					Owner = (NetworkGUID)value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "Instigator":
+					Instigator = (ActorGUID)value;
+					break;
+				case "bIsEquippingWeapon":
+					bIsEquippingWeapon = (bool)value;
+					break;
+				case "bIsReloadingWeapon":
+					bIsReloadingWeapon = (bool)value;
+					break;
+				case "bIsMuzzleTraceNearWall":
+					bIsMuzzleTraceNearWall = (bool)value;
+					break;
+				case "WeaponData":
+					WeaponData = (ItemDefinitionGUID)value;
+					break;
+				case "A":
+					A = (uint)value;
+					break;
+				case "B":
+					B = (uint)value;
+					break;
+				case "C":
+					C = (uint)value;
+					break;
+				case "D":
+					D = (uint)value;
+					break;
+				case "WeaponLevel":
+					WeaponLevel = (uint)value;
+					break;
+				case "AmmoCount":
+					AmmoCount = (uint)value;
+					break;
+				case "AppliedAlterations":
+					AppliedAlterations = (ItemDefinitionGUID[])value;
+					break;
+				case "LastFireTimeVerified":
+					LastFireTimeVerified = (float)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

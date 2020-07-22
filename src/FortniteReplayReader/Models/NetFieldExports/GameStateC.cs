@@ -354,5 +354,359 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("WinningScore", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningScore { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "GameModeClass":
+					GameModeClass = (uint)value;
+					break;
+				case "SpectatorClass":
+					SpectatorClass = (uint)value;
+					break;
+				case "FortTimeOfDayManager":
+					FortTimeOfDayManager = (uint)value;
+					break;
+				case "PoiManager":
+					PoiManager = (uint)value;
+					break;
+				case "FeedbackManager":
+					FeedbackManager = (uint)value;
+					break;
+				case "MissionManager":
+					MissionManager = (uint)value;
+					break;
+				case "AnnouncementManager":
+					AnnouncementManager = (uint)value;
+					break;
+				case "WorldManager":
+					WorldManager = (uint)value;
+					break;
+				case "MusicManagerSubclass":
+					MusicManagerSubclass = (uint)value;
+					break;
+				case "MusicManagerBank":
+					MusicManagerBank = (uint)value;
+					break;
+				case "PawnForReplayRelevancy":
+					PawnForReplayRelevancy = (uint)value;
+					break;
+				case "RecorderPlayerState":
+					RecorderPlayerState = (uint)value;
+					break;
+				case "GlobalEnvironmentAbilityActor":
+					GlobalEnvironmentAbilityActor = (uint)value;
+					break;
+				case "UIMapManager":
+					UIMapManager = (uint)value;
+					break;
+				case "CreativePlotManager":
+					CreativePlotManager = (uint)value;
+					break;
+				case "PlayspaceManager":
+					PlayspaceManager = (uint)value;
+					break;
+				case "ItemCollector":
+					ItemCollector = (uint)value;
+					break;
+				case "SpecialActorData":
+					SpecialActorData = (uint)value;
+					break;
+				case "SupplyDropWaveStartedSoundCue":
+					SupplyDropWaveStartedSoundCue = (uint)value;
+					break;
+				case "TeamXPlayersLeft":
+					TeamXPlayersLeft = (DebuggingObject)value;
+					break;
+				case "SafeZoneIndicator":
+					SafeZoneIndicator = (uint)value;
+					break;
+				case "MapInfo":
+					MapInfo = (uint)value;
+					break;
+				case "GoldenPoiLocationTags":
+					GoldenPoiLocationTags = (DebuggingObject)value;
+					break;
+				case "DefaultBattleBus":
+					DefaultBattleBus = (uint)value;
+					break;
+				case "bReplicatedHasBegunPlay":
+					bReplicatedHasBegunPlay = (bool)value;
+					break;
+				case "ReplicatedWorldTimeSeconds":
+					ReplicatedWorldTimeSeconds = (float)value;
+					break;
+				case "MatchState":
+					MatchState = (FName)value;
+					break;
+				case "ElapsedTime":
+					ElapsedTime = (int)value;
+					break;
+				case "WorldLevel":
+					WorldLevel = (int)value;
+					break;
+				case "CraftingBonus":
+					CraftingBonus = (int)value;
+					break;
+				case "TeamCount":
+					TeamCount = (int)value;
+					break;
+				case "TeamSize":
+					TeamSize = (int)value;
+					break;
+				case "GameFlagData":
+					GameFlagData = (int)value;
+					break;
+				case "AdditionalPlaylistLevelsStreamed":
+					AdditionalPlaylistLevelsStreamed = (FName[])value;
+					break;
+				case "WorldDaysElapsed":
+					WorldDaysElapsed = (int)value;
+					break;
+				case "GameplayState":
+					GameplayState = (int)value;
+					break;
+				case "GameSessionId":
+					GameSessionId = (string)value;
+					break;
+				case "SpawnPointsCap":
+					SpawnPointsCap = (int)value;
+					break;
+				case "SpawnPointsAllocated":
+					SpawnPointsAllocated = (int)value;
+					break;
+				case "PlayerSharedMaxTrapAttributes":
+					PlayerSharedMaxTrapAttributes = (object[])value;
+					break;
+				case "TotalPlayerStructures":
+					TotalPlayerStructures = (int)value;
+					break;
+				case "ServerGameplayTagIndexHash":
+					ServerGameplayTagIndexHash = (uint)value;
+					break;
+				case "GameDifficulty":
+					GameDifficulty = (float)value;
+					break;
+				case "bAllowLayoutRequirementsFeature":
+					bAllowLayoutRequirementsFeature = (bool)value;
+					break;
+				case "ServerStability":
+					ServerStability = (int)value;
+					break;
+				case "RoundTimeAccumulated":
+					RoundTimeAccumulated = (int)value;
+					break;
+				case "RoundTimeCriticalThreshold":
+					RoundTimeCriticalThreshold = (int)value;
+					break;
+				case "ServerChangelistNumber":
+					ServerChangelistNumber = (int)value;
+					break;
+				case "CreativeRealEstatePlotManager":
+					CreativeRealEstatePlotManager = (uint)value;
+					break;
+				case "WarmupCountdownStartTime":
+					WarmupCountdownStartTime = (float)value;
+					break;
+				case "WarmupCountdownEndTime":
+					WarmupCountdownEndTime = (float)value;
+					break;
+				case "bSafeZonePaused":
+					bSafeZonePaused = (bool)value;
+					break;
+				case "AircraftStartTime":
+					AircraftStartTime = (float)value;
+					break;
+				case "bSkyTubesShuttingDown":
+					bSkyTubesShuttingDown = (bool)value;
+					break;
+				case "SafeZonesStartTime":
+					SafeZonesStartTime = (float)value;
+					break;
+				case "bSkyTubesDisabled":
+					bSkyTubesDisabled = (bool)value;
+					break;
+				case "PlayersLeft":
+					PlayersLeft = (int)value;
+					break;
+				case "ReplOverrideData":
+					ReplOverrideData = (uint)value;
+					break;
+				case "EndGameStartTime":
+					EndGameStartTime = (float)value;
+					break;
+				case "TeamsLeft":
+					TeamsLeft = (int)value;
+					break;
+				case "EndGameKickPlayerTime":
+					EndGameKickPlayerTime = (float)value;
+					break;
+				case "ServerToClientPreloadList":
+					ServerToClientPreloadList = (object[])value;
+					break;
+				case "ClientVehicleClassesToLoad":
+					ClientVehicleClassesToLoad = (int[])value;
+					break;
+				case "bAllowUserPickedCosmeticBattleBus":
+					bAllowUserPickedCosmeticBattleBus = (bool)value;
+					break;
+				case "TeamFlightPaths":
+					TeamFlightPaths = (GameStateC[])value;
+					break;
+				case "StormCapState":
+					StormCapState = (int)value;
+					break;
+				case "WinningPlayerList":
+					WinningPlayerList = (int[])value;
+					break;
+				case "FlightStartLocation":
+					FlightStartLocation = (FVector)value;
+					break;
+				case "FlightStartRotation":
+					FlightStartRotation = (FRotator)value;
+					break;
+				case "FlightSpeed":
+					FlightSpeed = (float)value;
+					break;
+				case "TimeTillFlightEnd":
+					TimeTillFlightEnd = (float)value;
+					break;
+				case "TimeTillDropStart":
+					TimeTillDropStart = (float)value;
+					break;
+				case "TimeTillDropEnd":
+					TimeTillDropEnd = (float)value;
+					break;
+				case "UtcTimeStartedMatch":
+					UtcTimeStartedMatch = (FDateTime)value;
+					break;
+				case "SafeZonePhase":
+					SafeZonePhase = (byte)value;
+					break;
+				case "GamePhase":
+					GamePhase = (int)value;
+					break;
+				case "Aircrafts":
+					Aircrafts = (DebuggingObject)value;
+					break;
+				case "bAircraftIsLocked":
+					bAircraftIsLocked = (bool)value;
+					break;
+				case "LobbyAction":
+					LobbyAction = (int)value;
+					break;
+				case "WinningPlayerState":
+					WinningPlayerState = (uint)value;
+					break;
+				case "WinningTeam":
+					WinningTeam = (uint)value;
+					break;
+				case "CurrentHighScore":
+					CurrentHighScore = (uint)value;
+					break;
+				case "CurrentHighScoreTeam":
+					CurrentHighScoreTeam = (uint)value;
+					break;
+				case "bStormReachedFinalPosition":
+					bStormReachedFinalPosition = (bool)value;
+					break;
+				case "SpectateAPartyMemberAvailable":
+					SpectateAPartyMemberAvailable = (bool)value;
+					break;
+				case "HopRockDuration":
+					HopRockDuration = (float)value;
+					break;
+				case "bIsLargeTeamGame":
+					bIsLargeTeamGame = (bool)value;
+					break;
+				case "ActiveTeamNums":
+					ActiveTeamNums = (byte[])value;
+					break;
+				case "AirCraftBehavior":
+					AirCraftBehavior = (int)value;
+					break;
+				case "DefaultGliderRedeployCanRedeploy":
+					DefaultGliderRedeployCanRedeploy = (float)value;
+					break;
+				case "DefaultRedeployGliderLateralVelocityMult":
+					DefaultRedeployGliderLateralVelocityMult = (float)value;
+					break;
+				case "DefaultRedeployGliderHeightLimit":
+					DefaultRedeployGliderHeightLimit = (float)value;
+					break;
+				case "EventTournamentRound":
+					EventTournamentRound = (int)value;
+					break;
+				case "PlayerBotsLeft":
+					PlayerBotsLeft = (int)value;
+					break;
+				case "DefaultParachuteDeployTraceForGroundDistance":
+					DefaultParachuteDeployTraceForGroundDistance = (float)value;
+					break;
+				case "DefaultRebootMachineHotfix":
+					DefaultRebootMachineHotfix = (float)value;
+					break;
+				case "SignalInStormRegenSpeed":
+					SignalInStormRegenSpeed = (float)value;
+					break;
+				case "MutatorGenericInt":
+					MutatorGenericInt = (uint)value;
+					break;
+				case "SignalInStormLostSpeed":
+					SignalInStormLostSpeed = (float)value;
+					break;
+				case "StormCNDamageVulnerabilityLevel0":
+					StormCNDamageVulnerabilityLevel0 = (float)value;
+					break;
+				case "StormCNDamageVulnerabilityLevel1":
+					StormCNDamageVulnerabilityLevel1 = (float)value;
+					break;
+				case "StormCNDamageVulnerabilityLevel2":
+					StormCNDamageVulnerabilityLevel2 = (float)value;
+					break;
+				case "StormCNDamageVulnerabilityLevel3":
+					StormCNDamageVulnerabilityLevel3 = (float)value;
+					break;
+				case "bEnabled":
+					bEnabled = (bool)value;
+					break;
+				case "bConnectedToRoot":
+					bConnectedToRoot = (bool)value;
+					break;
+				case "GameServerNodeType":
+					GameServerNodeType = (int)value;
+					break;
+				case "VolumeManager":
+					VolumeManager = (uint)value;
+					break;
+				case "TrackedCosmetics":
+					TrackedCosmetics = (ItemDefinitionGUID[])value;
+					break;
+				case "VariantUsageByCosmetic":
+					VariantUsageByCosmetic = (int[])value;
+					break;
+				case "PrioritizedCosmeticIndices":
+					PrioritizedCosmeticIndices = (int[])value;
+					break;
+				case "EventId":
+					EventId = (uint)value;
+					break;
+				case "WinningScore":
+					WinningScore = (uint)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

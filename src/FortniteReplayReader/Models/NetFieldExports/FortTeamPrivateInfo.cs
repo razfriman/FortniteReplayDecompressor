@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -37,5 +37,44 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("PawnStateMask", RepLayoutCmdType.Enum)]
         public int? PawnStateMask { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = (int)value;
+					break;
+				case "Role":
+					Role = (int)value;
+					break;
+				case "Owner":
+					Owner = (ActorGUID)value;
+					break;
+				case "Value":
+					Value = (float)value;
+					break;
+				case "PlayerID":
+					PlayerID = (string)value;
+					break;
+				case "PlayerState":
+					PlayerState = (ActorGUID)value;
+					break;
+				case "LastRepLocation":
+					LastRepLocation = (FVector)value;
+					break;
+				case "LastRepYaw":
+					LastRepYaw = (float)value;
+					break;
+				case "PawnStateMask":
+					PawnStateMask = (int)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

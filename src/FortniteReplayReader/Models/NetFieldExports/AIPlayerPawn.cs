@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -27,6 +27,32 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("StealthMeterTargetTime5627E99734167FD2903748490D5FC2A57", RepLayoutCmdType.PropertyFloat)]
         public float? StealthMeterTargetTime { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "AlertLevel":
+					AlertLevel = (int)value;
+					break;
+				case "bIsStaggered":
+					bIsStaggered = (bool)value;
+					break;
+				case "StealthMeterTarget":
+				case "StealthMeterTarget4A61BD65840C63E1798329EAE84F4B5C7":
+					StealthMeterTarget = (float)value;
+					break;
+				case "StealthMeterTargetTime":
+				case "StealthMeterTargetTime5627E99734167FD2903748490D5FC2A57":
+					StealthMeterTargetTime = (float)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     [NetFieldExportGroup("/Game/Athena/AI/MANG/BP_MangPlayerPawn_Boss_AdventureGirl.BP_MangPlayerPawn_Boss_AdventureGirl_C", ParseType.Full)]
@@ -42,5 +68,23 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("CurrentBotAlertLevel", RepLayoutCmdType.Enum)]
         public int? CurrentBotAlertLevel { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "BotPawn":
+					BotPawn = (ActorGUID)value;
+					break;
+				case "CurrentBotAlertLevel":
+					CurrentBotAlertLevel = (int)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

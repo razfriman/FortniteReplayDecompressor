@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -23,5 +23,29 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("SpawnLocation", RepLayoutCmdType.PropertyVector)]
         public FVector SpawnLocation { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "PlayerState":
+					PlayerState = (NetworkGUID)value;
+					break;
+				case "SpawnLocation":
+					SpawnLocation = (FVector)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

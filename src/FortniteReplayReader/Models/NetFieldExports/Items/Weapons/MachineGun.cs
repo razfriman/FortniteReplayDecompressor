@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
@@ -38,6 +38,42 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("TimeOverheatedBegan", RepLayoutCmdType.PropertyFloat)]
         public float? TimeOverheatedBegan { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "ChargeStatusPack":
+					ChargeStatusPack = (DebuggingObject)value;
+					break;
+				case "CurrentSpinAudioComponent":
+					CurrentSpinAudioComponent = (NetworkGUID)value;
+					break;
+				case "bIsChargingWeapon":
+					bIsChargingWeapon = (bool)value;
+					break;
+				case "SpinVolumeMultiplier":
+					SpinVolumeMultiplier = (float)value;
+					break;
+				case "bPlayedSpinUpAudio":
+					bPlayedSpinUpAudio = (bool)value;
+					break;
+				case "bPlayedSpinDownAudio":
+					bPlayedSpinDownAudio = (bool)value;
+					break;
+				case "OverheatState":
+					OverheatState = (int)value;
+					break;
+				case "TimeOverheatedBegan":
+					TimeOverheatedBegan = (float)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_LMG_SAW_Athena.B_Assault_LMG_SAW_Athena_C", ParseType.Normal)]

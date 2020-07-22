@@ -63,5 +63,71 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("AttachmentPlacementBlockingActors", RepLayoutCmdType.DynamicArray)]
 		public object[] AttachmentPlacementBlockingActors { get; set; } //Type: TArray Bits: 16
 
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "bHidden":
+					bHidden = (bool)value;
+					break;
+				case "bCanBeDamaged":
+					bCanBeDamaged = (bool)value;
+					break;
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "AttachParent":
+					AttachParent = (uint)value;
+					break;
+				case "LocationOffset":
+					LocationOffset = value;
+					break;
+				case "RelativeScale3D":
+					RelativeScale3D = (FVector)value;
+					break;
+				case "AttachComponent":
+					AttachComponent = (uint)value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "A":
+					A = (int)value;
+					break;
+				case "B":
+					B = (int)value;
+					break;
+				case "C":
+					C = (int)value;
+					break;
+				case "D":
+					D = (int)value;
+					break;
+				case "ReplicatedBuildingAttributeSet":
+					ReplicatedBuildingAttributeSet = (uint)value;
+					break;
+				case "ReplicatedAbilitySystemComponent":
+					ReplicatedAbilitySystemComponent = (uint)value;
+					break;
+				case "bDestroyed":
+					bDestroyed = (bool)value;
+					break;
+				case "bEditorPlaced":
+					bEditorPlaced = (bool)value;
+					break;
+				case "bInstantDeath":
+					bInstantDeath = (bool)value;
+					break;
+				case "AttachmentPlacementBlockingActors":
+					AttachmentPlacementBlockingActors = (object[])value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }

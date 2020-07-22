@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -496,5 +497,497 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 		[NetFieldExport("ExitSocketIndex", RepLayoutCmdType.Property)]
 		public DebuggingObject ExitSocketIndex { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "Owner":
+					Owner = (NetworkGUID)value;
+					break;
+				case "bHidden":
+					bHidden = (bool)value;
+					break;
+				case "bReplicateMovement":
+					bReplicateMovement = (bool)value;
+					break;
+				case "bTearOff":
+					bTearOff = (bool)value;
+					break;
+				case "bCanBeDamaged":
+					bCanBeDamaged = (bool)value;
+					break;
+				case "RemoteRole":
+					RemoteRole = (int)value;
+					break;
+				case "ReplicatedMovement":
+					ReplicatedMovement = (FRepMovement)value;
+					break;
+				case "AttachParent":
+					AttachParent = (ActorGUID)value;
+					break;
+				case "LocationOffset":
+					LocationOffset = (FVector)value;
+					break;
+				case "RelativeScale3D":
+					RelativeScale3D = (FVector)value;
+					break;
+				case "RotationOffset":
+					RotationOffset = (FRotator)value;
+					break;
+				case "AttachSocket":
+					AttachSocket = (FName)value;
+					break;
+				case "AttachComponent":
+					AttachComponent = (UObjectGUID)value;
+					break;
+				case "Role":
+					Role = (int)value;
+					break;
+				case "Instigator":
+					Instigator = (ActorGUID)value;
+					break;
+				case "RemoteViewPitch":
+					RemoteViewPitch = (byte)value;
+					break;
+				case "PlayerState":
+					PlayerState = (ActorGUID)value;
+					break;
+				case "Controller":
+					Controller = (ActorGUID)value;
+					break;
+				case "MovementBase":
+					MovementBase = (UObjectGUID)value;
+					break;
+				case "BoneName":
+					BoneName = (FName)value;
+					break;
+				case "Location":
+					Location = (FVector)value;
+					break;
+				case "Rotation":
+					Rotation = (FRotator)value;
+					break;
+				case "bServerHasBaseComponent":
+					bServerHasBaseComponent = (bool)value;
+					break;
+				case "bRelativeRotation":
+					bRelativeRotation = (bool)value;
+					break;
+				case "bServerHasVelocity":
+					bServerHasVelocity = (bool)value;
+					break;
+				case "ReplayLastTransformUpdateTimeStamp":
+					ReplayLastTransformUpdateTimeStamp = (float)value;
+					break;
+				case "ReplicatedMovementMode":
+					ReplicatedMovementMode = (byte)value;
+					break;
+				case "bIsCrouched":
+					bIsCrouched = (bool)value;
+					break;
+				case "bProxyIsJumpForceApplied":
+					bProxyIsJumpForceApplied = (bool)value;
+					break;
+				case "bIsActive":
+					bIsActive = (bool)value;
+					break;
+				case "Position":
+					Position = (float)value;
+					break;
+				case "Acceleration":
+					Acceleration = (FVector)value;
+					break;
+				case "LinearVelocity":
+					LinearVelocity = (FVector)value;
+					break;
+				case "CurrentMovementStyle":
+					CurrentMovementStyle = (int)value;
+					break;
+				case "bIgnoreNextFallingDamage":
+					bIgnoreNextFallingDamage = (bool)value;
+					break;
+				case "TeleportCounter":
+					TeleportCounter = (byte)value;
+					break;
+				case "PawnUniqueID":
+					PawnUniqueID = (int)value;
+					break;
+				case "bIsDying":
+					bIsDying = (bool)value;
+					break;
+				case "CurrentWeapon":
+					CurrentWeapon = (ActorGUID)value;
+					break;
+				case "bIsInvulnerable":
+					bIsInvulnerable = (bool)value;
+					break;
+				case "bMovingEmote":
+					bMovingEmote = (bool)value;
+					break;
+				case "bWeaponActivated":
+					bWeaponActivated = (bool)value;
+					break;
+				case "bIsDBNO":
+					bIsDBNO = (bool)value;
+					break;
+				case "bWasDBNOOnDeath":
+					bWasDBNOOnDeath = (bool)value;
+					break;
+				case "JumpFlashCount":
+					JumpFlashCount = (byte)value;
+					break;
+				case "bWeaponHolstered":
+					bWeaponHolstered = (bool)value;
+					break;
+				case "FeedbackAudioComponent":
+					FeedbackAudioComponent = (UObjectGUID)value;
+					break;
+				case "VocalChords":
+					VocalChords = (PlayerPawnC[])value;
+					break;
+				case "SpawnImmunityTime":
+					SpawnImmunityTime = (float)value;
+					break;
+				case "JumpFlashCountPacked":
+					JumpFlashCountPacked = (DebuggingObject)value;
+					break;
+				case "LandingFlashCountPacked":
+					LandingFlashCountPacked = (DebuggingObject)value;
+					break;
+				case "bInterruptCurrentLine":
+					bInterruptCurrentLine = (bool)value;
+					break;
+				case "LastReplicatedEmoteExecuted":
+					LastReplicatedEmoteExecuted = (uint)value;
+					break;
+				case "bCanBeInterrupted":
+					bCanBeInterrupted = (bool)value;
+					break;
+				case "bCanQue":
+					bCanQue = (bool)value;
+					break;
+				case "ForwardAlpha":
+					ForwardAlpha = (float)value;
+					break;
+				case "RightAlpha":
+					RightAlpha = (float)value;
+					break;
+				case "TurnDelta":
+					TurnDelta = (float)value;
+					break;
+				case "SteerAlpha":
+					SteerAlpha = (float)value;
+					break;
+				case "GravityScale":
+					GravityScale = (float)value;
+					break;
+				case "WorldLookDir":
+					WorldLookDir = (FVector)value;
+					break;
+				case "bIgnoreForwardInAir":
+					bIgnoreForwardInAir = (bool)value;
+					break;
+				case "bIsHonking":
+					bIsHonking = (bool)value;
+					break;
+				case "bIsJumping":
+					bIsJumping = (bool)value;
+					break;
+				case "bIsSprinting":
+					bIsSprinting = (bool)value;
+					break;
+				case "Vehicle":
+					Vehicle = (ActorGUID)value;
+					break;
+				case "VehicleApexZ":
+					VehicleApexZ = (float)value;
+					break;
+				case "SeatIndex":
+					SeatIndex = (byte)value;
+					break;
+				case "bIsWaterJump":
+					bIsWaterJump = (bool)value;
+					break;
+				case "bIsWaterSprintBoost":
+					bIsWaterSprintBoost = (bool)value;
+					break;
+				case "bIsWaterSprintBoostPending":
+					bIsWaterSprintBoostPending = (bool)value;
+					break;
+				case "StasisMode":
+					StasisMode = value;
+					break;
+				case "BuildingState":
+					BuildingState = (int)value;
+					break;
+				case "bIsTargeting":
+					bIsTargeting = (bool)value;
+					break;
+				case "PawnMontage":
+					PawnMontage = (UObjectGUID)value;
+					break;
+				case "bPlayBit":
+					bPlayBit = (bool)value;
+					break;
+				case "bIsPlayingEmote":
+					bIsPlayingEmote = (bool)value;
+					break;
+				case "FootstepBankOverride":
+					FootstepBankOverride = (UObjectGUID)value;
+					break;
+				case "PackedReplicatedSlopeAngles":
+					PackedReplicatedSlopeAngles = (ushort)value;
+					break;
+				case "bStartedInteractSearch":
+					bStartedInteractSearch = (bool)value;
+					break;
+				case "AccelerationPack":
+					AccelerationPack = (ushort)value;
+					break;
+				case "AccelerationZPack":
+					AccelerationZPack = (byte)value;
+					break;
+				case "bIsWaitingForEmoteInteraction":
+					bIsWaitingForEmoteInteraction = (bool)value;
+					break;
+				case "GroupEmoteLookTarget":
+					GroupEmoteLookTarget = (NetworkGUID)value;
+					break;
+				case "bIsSkydiving":
+					bIsSkydiving = (bool)value;
+					break;
+				case "bIsParachuteOpen":
+					bIsParachuteOpen = (bool)value;
+					break;
+				case "bIsParachuteForcedOpen":
+					bIsParachuteForcedOpen = (bool)value;
+					break;
+				case "bIsSkydivingFromBus":
+					bIsSkydivingFromBus = (bool)value;
+					break;
+				case "bReplicatedIsInSlipperyMovement":
+					bReplicatedIsInSlipperyMovement = (bool)value;
+					break;
+				case "MovementDir":
+					MovementDir = value;
+					break;
+				case "bIsInAnyStorm":
+					bIsInAnyStorm = (bool)value;
+					break;
+				case "bIsSlopeSliding":
+					bIsSlopeSliding = (bool)value;
+					break;
+				case "bIsProxySimulationTimedOut":
+					bIsProxySimulationTimedOut = (bool)value;
+					break;
+				case "bIsInsideSafeZone":
+					bIsInsideSafeZone = (bool)value;
+					break;
+				case "Zipline":
+					Zipline = (NetworkGUID)value;
+					break;
+				case "PetState":
+					PetState = (ActorGUID)value;
+					break;
+				case "bIsZiplining":
+					bIsZiplining = (bool)value;
+					break;
+				case "bJumped":
+					bJumped = (bool)value;
+					break;
+				case "ParachuteAttachment":
+					ParachuteAttachment = (ActorGUID)value;
+					break;
+				case "AuthoritativeValue":
+					AuthoritativeValue = (uint)value;
+					break;
+				case "SocketOffset":
+					SocketOffset = (DebuggingObject)value;
+					break;
+				case "RemoteViewData32":
+					RemoteViewData32 = (uint)value;
+					break;
+				case "bNetMovementPrioritized":
+					bNetMovementPrioritized = (bool)value;
+					break;
+				case "EntryTime":
+					EntryTime = (uint)value;
+					break;
+				case "CapsuleRadiusAthena":
+					CapsuleRadiusAthena = (float)value;
+					break;
+				case "CapsuleHalfHeightAthena":
+					CapsuleHalfHeightAthena = (float)value;
+					break;
+				case "WalkSpeed":
+					WalkSpeed = (float)value;
+					break;
+				case "RunSpeed":
+					RunSpeed = (float)value;
+					break;
+				case "SprintSpeed":
+					SprintSpeed = (float)value;
+					break;
+				case "CrouchedRunSpeed":
+					CrouchedRunSpeed = (float)value;
+					break;
+				case "CrouchedSprintSpeed":
+					CrouchedSprintSpeed = (float)value;
+					break;
+				case "AnimMontage":
+					AnimMontage = (UObjectGUID)value;
+					break;
+				case "PlayRate":
+					PlayRate = (float)value;
+					break;
+				case "BlendTime":
+					BlendTime = (float)value;
+					break;
+				case "ForcePlayBit":
+					ForcePlayBit = (bool)value;
+					break;
+				case "IsStopped":
+					IsStopped = (bool)value;
+					break;
+				case "SkipPositionCorrection":
+					SkipPositionCorrection = (bool)value;
+					break;
+				case "RepAnimMontageStartSection":
+					RepAnimMontageStartSection = (int)value;
+					break;
+				case "SimulatedProxyGameplayCues":
+					SimulatedProxyGameplayCues = (FMinimalGameplayCueReplicationProxy)value;
+					break;
+				case "ItemWraps":
+					ItemWraps = (NetworkGUID[])value;
+					break;
+				case "WeaponActivated":
+					WeaponActivated = (bool)value;
+					break;
+				case "bIsInWaterVolume":
+					bIsInWaterVolume = (bool)value;
+					break;
+				case "BannerIconId":
+					BannerIconId = (string)value;
+					break;
+				case "BannerColorId":
+					BannerColorId = (string)value;
+					break;
+				case "SkyDiveContrail":
+					SkyDiveContrail = (ItemDefinitionGUID)value;
+					break;
+				case "Glider":
+					Glider = (ItemDefinitionGUID)value;
+					break;
+				case "Pickaxe":
+					Pickaxe = (ItemDefinitionGUID)value;
+					break;
+				case "bIsDefaultCharacter":
+					bIsDefaultCharacter = (bool)value;
+					break;
+				case "Character":
+					Character = (ItemDefinitionGUID)value;
+					break;
+				case "CharacterVariantChannels":
+					CharacterVariantChannels = (ItemDefinitionGUID[])value;
+					break;
+				case "DBNOHoister":
+					DBNOHoister = (ActorGUID)value;
+					break;
+				case "DBNOCarryEvent":
+					DBNOCarryEvent = (int)value;
+					break;
+				case "Backpack":
+					Backpack = (ItemDefinitionGUID)value;
+					break;
+				case "LoadingScreen":
+					LoadingScreen = (ItemDefinitionGUID)value;
+					break;
+				case "Dances":
+					Dances = (ItemDefinitionGUID[])value;
+					break;
+				case "MusicPack":
+					MusicPack = (ItemDefinitionGUID)value;
+					break;
+				case "PetSkin":
+					PetSkin = (ItemDefinitionGUID)value;
+					break;
+				case "EncryptedPawnReplayData":
+					EncryptedPawnReplayData = (FAthenaPawnReplayData)value;
+					break;
+				case "GravityFloorAltitude":
+					GravityFloorAltitude = (uint)value;
+					break;
+				case "GravityFloorWidth":
+					GravityFloorWidth = (uint)value;
+					break;
+				case "GravityFloorGravityScalar":
+					GravityFloorGravityScalar = (uint)value;
+					break;
+				case "ReplicatedWaterBody":
+					ReplicatedWaterBody = (DebuggingObject)value;
+					break;
+				case "DBNORevivalStacking":
+					DBNORevivalStacking = (byte)value;
+					break;
+				case "ServerWorldTimeRevivalTime":
+					ServerWorldTimeRevivalTime = (float)value;
+					break;
+				case "ItemSpecialActorID":
+					ItemSpecialActorID = (DebuggingObject)value;
+					break;
+				case "FlySpeed":
+					FlySpeed = (float)value;
+					break;
+				case "NextSectionID":
+					NextSectionID = (DebuggingObject)value;
+					break;
+				case "FastReplicationMinimalReplicationTags":
+					FastReplicationMinimalReplicationTags = (FMinimalGameplayCueReplicationProxy)value;
+					break;
+				case "bIsCreativeGhostModeActivated":
+					bIsCreativeGhostModeActivated = (bool)value;
+					break;
+				case "PlayRespawnFXOnSpawn":
+					PlayRespawnFXOnSpawn = (bool)value;
+					break;
+				case "AuthoritativeRootMotion":
+					AuthoritativeRootMotion = (FRootMotionSourceGroup)value;
+					break;
+				case "AnimRootMotionTranslationScale":
+					AnimRootMotionTranslationScale = (DebuggingObject)value;
+					break;
+				case "bReplicatedIsInVortex":
+					bReplicatedIsInVortex = (bool)value;
+					break;
+				case "PitchAlpha":
+					PitchAlpha = (float)value;
+					break;
+				case "StreamerCharacter":
+					StreamerCharacter = (NetworkGUID)value;
+					break;
+				case "ReplayRepAnimMontageInfo":
+					ReplayRepAnimMontageInfo = (FGameplayAbilityRepAnimMontage)value;
+					break;
+				case "RepAnimMontageInfo":
+					RepAnimMontageInfo = (FGameplayAbilityRepAnimMontage)value;
+					break;
+				case "bIsSkydivingFromLaunchPad":
+					bIsSkydivingFromLaunchPad = (bool)value;
+					break;
+				case "bInGliderRedeploy":
+					bInGliderRedeploy = (bool)value;
+					break;
+				case "ExitSocketIndex":
+					ExitSocketIndex = (DebuggingObject)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }

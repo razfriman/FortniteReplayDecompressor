@@ -45,5 +45,53 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("FallHeight", RepLayoutCmdType.PropertyFloat)]
 		public float? FallHeight { get; set; } //Type: float Bits: 32
 
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "ReplicatedMovement":
+					ReplicatedMovement = (FRepMovement)value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "bDestroyed":
+					bDestroyed = (bool)value;
+					break;
+				case "bEditorPlaced":
+					bEditorPlaced = (bool)value;
+					break;
+				case "bInstantDeath":
+					bInstantDeath = (bool)value;
+					break;
+				case "bHasSpawnedPickups":
+					bHasSpawnedPickups = (bool)value;
+					break;
+				case "Opened":
+					Opened = (bool)value;
+					break;
+				case "BalloonPopped":
+					BalloonPopped = (bool)value;
+					break;
+				case "FallSpeed":
+					FallSpeed = (float)value;
+					break;
+				case "LandingLocation":
+					LandingLocation = (FVector)value;
+					break;
+				case "FallHeight":
+					FallHeight = (float)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }

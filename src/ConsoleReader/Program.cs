@@ -1,6 +1,7 @@
 ﻿using FortniteReplayReader;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -71,7 +72,11 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(null);
+            var reader = new ReplayReader(null, new FortniteReplaySettings
+            {
+                PlayerLocationType = LocationTypes.Team,
+                LocationChangeDeltaMS = 5000
+            });
 
             foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
             {
@@ -80,7 +85,8 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(path, ParseType.Full);
+
 
                     sw.Stop();
 

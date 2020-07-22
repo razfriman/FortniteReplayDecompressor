@@ -39,6 +39,8 @@ namespace Unreal.Core
 
             IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
 
+            //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
+
             List<Type> netFields = new List<Type>();
             List<Type> classNetCaches = new List<Type>();
             List<Type> propertyTypes = new List<Type>();
@@ -55,6 +57,205 @@ namespace Unreal.Core
             LoadClassNetCaches(classNetCaches);
             LoadPropertyTypes(propertyTypes);
         }
+
+#if DEBUG
+        private void UpdateFiles(IEnumerable<Type> types)
+        {
+            Dictionary<string, Type> keyValues = types.ToDictionary(x => x.Name, x => x);
+
+            string[] allFiles = Directory.GetFiles("NetFieldExports", "*.bak", SearchOption.AllDirectories);
+
+            foreach (string file in allFiles)
+            {
+                if(file.Contains("BaseStructure"))
+                {
+
+                }
+
+                List<string> lines = File.ReadAllLines(file).ToList();
+
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    string line = lines[i];
+
+                    Match match = Regex.Match(line, "public( abstract)? class (.*?) ");
+
+                    if (match.Success)
+                    {
+                        if (!keyValues.TryGetValue(match.Groups[2].Value, out Type t))
+                        {
+                            continue;
+                        }
+
+                        PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+                        if (props.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        int insertLine = FindInsertLine(lines, i);
+
+                        if (insertLine == -1)
+                        {
+                            continue;
+                        }
+
+                        string text = InsertManualRead(props, out bool add);
+
+                        if (add)
+                        {
+                            lines.InsertRange(insertLine, text.Split(Environment.NewLine));
+                        }
+
+                        i = insertLine; //Skip ahead
+                    }
+                }
+
+                File.WriteAllLines(file.Replace(".bak", ""), lines);
+            }
+        }
+        
+        private int FindInsertLine(List<string> lines, int startLine)
+        {
+            int braceCount = 0;
+
+            for (int i = startLine; i < lines.Count; i++)
+            {
+                string line = lines[i];
+
+                switch (line.Trim())
+                {
+                    case "public override bool ManualRead(string property, object value)":
+                        return -1;
+                    case "{":
+                        ++braceCount;
+                        break;
+                    case "}":
+                        --braceCount;
+
+                        if (braceCount == 0)
+                        {
+                            return i;
+                        }
+
+                        break;
+                }
+            }
+
+            return -1;
+        }
+
+        private string InsertManualRead(PropertyInfo[] props, out bool addToFile)
+        {
+            static string GetTypeName(Type type)
+            {
+                if(type.Name == "Nullable`1")
+                {
+                    return GetTypeName(type.GenericTypeArguments[0]);
+                }
+
+                if(type == typeof(int))
+                {
+                    return "int";
+                }
+                else if (type == typeof(double))
+                {
+                    return "double";
+                }
+                else if (type == typeof(float))
+                {
+                    return "float";
+                }
+                else if (type == typeof(long))
+                {
+                    return "long";
+                }
+                else if (type == typeof(ulong))
+                {
+                    return "ulong";
+                }
+                else if (type == typeof(byte))
+                {
+                    return "byte";
+                }
+                else if (type == typeof(bool))
+                {
+                    return "bool";
+                }
+                else if (type == typeof(uint))
+                {
+                    return "uint";
+                }
+                else if (type == typeof(short))
+                {
+                    return "short";
+                }
+                else if (type == typeof(ushort))
+                {
+                    return "ushort";
+                }
+                else if (type == typeof(double))
+                {
+                    return "double";
+                }
+                else if (type == typeof(object))
+                {
+                    return "object";
+                }
+                else if(type.IsPrimitive)
+                {
+                    return null;
+                }
+                else if (type == typeof(string))
+                {
+                    return "string";
+                }
+                else if (type.IsArray)
+                {
+                    return $"{GetTypeName(type.GetElementType())}[]";
+                }
+                else
+                {
+                    return type.Name;
+                }
+            }
+
+            addToFile = false;
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine();
+            builder.AppendLine("\t\tpublic override bool ManualRead(string property, object value)");
+            builder.AppendLine("\t\t{");
+            builder.AppendLine("\t\t\tswitch(property)");
+            builder.AppendLine("\t\t\t{");
+
+            foreach(PropertyInfo info in props)
+            {
+                NetFieldExportAttribute export = info.GetCustomAttribute<NetFieldExportAttribute>();
+
+                if(export == null)
+                {
+                    continue;
+                }
+
+                addToFile = true;
+
+                builder.AppendLine($"\t\t\t\tcase \"{export.Name}\":");
+                builder.AppendLine($"\t\t\t\t\t{info.Name} = {(info.PropertyType != typeof(object) ? $"({GetTypeName(info.PropertyType)})" : String.Empty)}value;");
+                builder.AppendLine($"\t\t\t\t\tbreak;");
+            }
+
+            builder.AppendLine("\t\t\t\tdefault:");
+            builder.AppendLine("\t\t\t\t\treturn base.ManualRead(property, value);");
+            builder.AppendLine("\t\t\t}");
+            builder.AppendLine();
+            builder.AppendLine("\t\t\treturn true;");
+            builder.AppendLine("\t\t}");
+
+            return builder.ToString();
+        }
+#endif
 
         private HashSet<Assembly> GetAllReferencedAssemblies(Assembly assembly, Dictionary<string, Assembly> allAssemblies)
         {
@@ -252,7 +453,7 @@ namespace Unreal.Core
             return false;
         }
 
-        public void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        public void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             string group = exportGroup.PathName;
 
@@ -289,7 +490,7 @@ namespace Unreal.Core
             SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
         }
 
-        private void SetType(object obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             object data;
 
@@ -312,8 +513,12 @@ namespace Unreal.Core
 
             if (data != null)
             {
-                TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
-                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
+                if(!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
+                {
+                    TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
+                    typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
+                }
+
             }
         }
 
@@ -504,7 +709,7 @@ namespace Unreal.Core
                     //Uses the same type for the array
                     if (groupInfo != null)
                     {
-                        ReadField(data, export, netfieldExportGroup, handle, cmdReader);
+                        ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, cmdReader);
                     }
                     else //Probably primitive values
                     {

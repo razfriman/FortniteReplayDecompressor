@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -19,5 +19,26 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
 
         [NetFieldExport("MemberUniqueId", RepLayoutCmdType.PropertyNetId)]
         public string MemberUniqueId { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "SquadId":
+					SquadId = (byte)value;
+					break;
+				case "TeamIndex":
+					TeamIndex = (int)value;
+					break;
+				case "MemberUniqueId":
+					MemberUniqueId = (string)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

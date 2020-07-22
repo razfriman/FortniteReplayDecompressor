@@ -48,5 +48,56 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Radius", RepLayoutCmdType.PropertyFloat)]
 		public float? Radius { get; set; } //Type:  Bits: 32
 
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "LastRadius":
+					LastRadius = (float)value;
+					break;
+				case "NextRadius":
+					NextRadius = (float)value;
+					break;
+				case "NextNextRadius":
+					NextNextRadius = (float)value;
+					break;
+				case "LastCenter":
+					LastCenter = (FVector)value;
+					break;
+				case "NextCenter":
+					NextCenter = (FVector)value;
+					break;
+				case "NextNextCenter":
+					NextNextCenter = (FVector)value;
+					break;
+				case "SafeZoneStartShrinkTime":
+					SafeZoneStartShrinkTime = (float)value;
+					break;
+				case "SafeZoneFinishShrinkTime":
+					SafeZoneFinishShrinkTime = (float)value;
+					break;
+				case "bPausedForPreview":
+					bPausedForPreview = (bool)value;
+					break;
+				case "MegaStormDelayTimeBeforeDestruction":
+					MegaStormDelayTimeBeforeDestruction = (float)value;
+					break;
+				case "Radius":
+					Radius = (float)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }

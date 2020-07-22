@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Attributes;
@@ -16,5 +16,23 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
 
         [NetFieldExport("StatValue", RepLayoutCmdType.PropertyUInt32)]
         public uint? StatValue { get; set; }
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "StatName":
+					StatName = (string)value;
+					break;
+				case "StatValue":
+					StatValue = (uint)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
     }
 }

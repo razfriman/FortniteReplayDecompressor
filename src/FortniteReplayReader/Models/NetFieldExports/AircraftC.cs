@@ -54,5 +54,62 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("AircraftIndex", RepLayoutCmdType.PropertyUInt32)]
 		public uint? AircraftIndex { get; set; } //Type:  Bits: 32
 
+
+		public override bool ManualRead(string property, object value)
+		{
+			switch(property)
+			{
+				case "RemoteRole":
+					RemoteRole = value;
+					break;
+				case "Role":
+					Role = value;
+					break;
+				case "JumpFlashCount":
+					JumpFlashCount = (int)value;
+					break;
+				case "FlightStartLocation":
+					FlightStartLocation = (FVector)value;
+					break;
+				case "FlightStartRotation":
+					FlightStartRotation = (FRotator)value;
+					break;
+				case "FlightSpeed":
+					FlightSpeed = (float)value;
+					break;
+				case "TimeTillFlightEnd":
+					TimeTillFlightEnd = (float)value;
+					break;
+				case "TimeTillDropStart":
+					TimeTillDropStart = (float)value;
+					break;
+				case "TimeTillDropEnd":
+					TimeTillDropEnd = (float)value;
+					break;
+				case "FlightStartTime":
+					FlightStartTime = (float)value;
+					break;
+				case "FlightEndTime":
+					FlightEndTime = (float)value;
+					break;
+				case "DropStartTime":
+					DropStartTime = (float)value;
+					break;
+				case "DropEndTime":
+					DropEndTime = (float)value;
+					break;
+				case "ReplicatedFlightTimestamp":
+					ReplicatedFlightTimestamp = (float)value;
+					break;
+				case "AircraftIndex":
+					AircraftIndex = (uint)value;
+					break;
+				default:
+					return base.ManualRead(property, value);
+			}
+
+			return true;
+		}
+
 	}
 }
