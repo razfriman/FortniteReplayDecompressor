@@ -505,3 +505,4 @@ healthchecksdb
 oodle/*
 /src/Unreal.Core/Models/UnusedExports
 *.replay
+/src/ConsoleReader/Replays

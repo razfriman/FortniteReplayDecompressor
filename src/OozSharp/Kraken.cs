@@ -125,7 +125,9 @@ namespace OozSharp
                 }
                 else
                 {
-                    throw new NotImplementedException($"memset(dst_start + offset, qhdr.checksum, dst_bytes_left);");
+                    uint val = quantumHeader.Checksum;
+
+                    Buffer.MemoryCopy(&val, destination + destinationOffset, destinationBytesLeft, destinationBytesLeft);
                 }
 
                 decoder.SourceUsed = (int)(source - sourceIn);

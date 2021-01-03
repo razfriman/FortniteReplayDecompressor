@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/EncryptionTest.replay"; //Used for testing
+            var replayFile = "Replays/problem.replay"; //Used for testing
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/Test.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
@@ -74,26 +74,29 @@ namespace ConsoleReader
 
             var reader = new ReplayReader(null, new FortniteReplaySettings
             {
-                PlayerLocationType = LocationTypes.Team,
-                LocationChangeDeltaMS = 5000
             });
 
-            foreach (string path in Directory.GetFiles(Path.Combine(appData, "FortniteGame", "Saved", "Demos")))
+            string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
+
+            foreach (string path in Directory.GetFiles("Replays"))
             {
                 for (int i = 0; i < 5; i++)
                 {
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(path, ParseType.Full);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
 
                     sw.Stop();
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
+                    var killFeed = replay.GameInformation.KillFeed.Where(x => x.FinisherOrDowner?.IsPlayersReplay == true).ToList();
 
-                    var a = replay.GameInformation.Players.Where(x => x.EpicId == "D7C0CF2764AD4CD8ACAB234D8A13C2DE");
+                    var bots = replay.GameInformation.Players.Where(x => !String.IsNullOrEmpty(x.BotId)).ToList();
+                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).ToList();
+                    var asdfa = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
 
                     //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
 
