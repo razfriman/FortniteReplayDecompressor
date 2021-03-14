@@ -70,6 +70,7 @@ namespace FortniteReplayReader.Models
             _weapons.Remove(channel);
             _floorLoot.Remove(channel);
             _playerStructures.Remove(channel);
+
         }
 
         internal void AddActor(uint channel, Actor actor)
@@ -422,8 +423,8 @@ namespace FortniteReplayReader.Models
                     if (_actorToChannel.TryGetValue(playerPawnC.PlayerState.Value, out uint playerStateChannel) && _players.TryGetValue(playerStateChannel, out Player player))
                     {
                         _players.TryGetValue(playerStateChannel, out Player p);
-
                         _playerPawns.TryAdd(channelId, player);
+
                         playerpawn = player;
                     }
                     else
@@ -600,7 +601,10 @@ namespace FortniteReplayReader.Models
             if(inventory.ReplayPawn > 0)
             {
                 //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                _inventories.TryAdd(channelId, inventory);
+                if(!_inventories.TryAdd(channelId, inventory))
+                {
+                    _inventories[channelId] = inventory;
+                }
             }
         }
 
