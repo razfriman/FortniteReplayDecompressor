@@ -281,6 +281,8 @@ namespace Unreal.Core.Models
 
         private List<DebuggingHandle> AsExportHandle()
         {
+            List<DebuggingHandle> handles = new List<DebuggingHandle>();
+
             _reader.Reset();
 
             while (true)
@@ -307,6 +309,8 @@ namespace Unreal.Core.Models
                     NumBits = numBits
                 };
 
+                handles.Add(debuggingHandle);
+
                 if (numBits == 0)
                 {
                     continue;
@@ -320,7 +324,7 @@ namespace Unreal.Core.Models
                 }
             }
 
-            return null;
+            return handles;
         }
 
         private List<IProperty> AsPotentialPropeties()

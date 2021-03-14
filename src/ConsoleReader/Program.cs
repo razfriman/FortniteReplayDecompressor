@@ -27,7 +27,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel((LogLevel)3));
+                    .SetMinimumLevel(LogLevel.Warning));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/problem.replay"; //Used for testing
+            var replayFile = "Replays/HaakonWin2.replay"; //Used for testing
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/Test.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
@@ -87,8 +87,12 @@ namespace ConsoleReader
                     sw.Restart();
                     var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
-
                     sw.Stop();
+
+                    var aff = replay.GameInformation.Players.OrderByDescending(x => x.Locations.Count);
+
+                    var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
+                    var aaa = replay.GameInformation.Players.SelectMany(y => y.Shots);
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 

@@ -66,6 +66,7 @@ namespace FortniteReplayReader.Models
 
         internal void ChannelClosed(uint channel)
         {
+            _playerPawns.Remove(channel);
             _weapons.Remove(channel);
             _floorLoot.Remove(channel);
             _playerStructures.Remove(channel);
@@ -449,7 +450,7 @@ namespace FortniteReplayReader.Models
                     return;
                 }
             }
-
+            
             switch (playerpawn)
             {
                 case Player playerActor:
@@ -475,7 +476,7 @@ namespace FortniteReplayReader.Models
                     //Update current weapon
                     if(!Settings.IgnoreWeaponSwitches && playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
                     {
-                        if(_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
+                        if (_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
                         {
                             if(_weapons.TryGetValue(weaponChannel, out Weapon weapon))
                             {

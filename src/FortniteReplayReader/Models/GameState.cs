@@ -52,5 +52,6 @@ namespace FortniteReplayReader.Models
         internal int TotalPlayerStructures { get; set; }
         internal float ElapsedTime { get; set; } //Time since last update?
         internal int OldTeamSize { get; set; } //Used in older replays
+        internal float DeltaGameTime => CurrentWorldTime - GameWorldStartTime;
     }
 }

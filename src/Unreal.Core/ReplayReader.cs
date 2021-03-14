@@ -172,7 +172,7 @@ namespace Unreal.Core
 
                 if (archive.Position != offset + chunkSize)
                 {
-                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not correctly read...");
+                    _logger?.LogError($"Chunk ({chunkType}) at offset {offset} not correctly read...");
                     archive.Seek(offset + chunkSize, SeekOrigin.Begin);
                 }
             }
@@ -1058,10 +1058,10 @@ namespace Unreal.Core
                             {
                                 if (bunch.bReliable)
                                 {
-                                    _logger?.LogWarning("Reliable initial partial trying to destroy reliable initial partial");
+                                    _logger?.LogError("Reliable initial partial trying to destroy reliable initial partial");
                                     return;
                                 }
-                                _logger?.LogWarning("Unreliable initial partial trying to destroy unreliable initial partial");
+                                _logger?.LogError("Unreliable initial partial trying to destroy unreliable initial partial");
                                 return;
 
                             }
@@ -1077,7 +1077,7 @@ namespace Unreal.Core
                     {
                         if (bitsLeft % 8 != 0)
                         {
-                            _logger?.LogWarning($"Corrupt partial bunch. Initial partial bunches are expected to be byte-aligned. BitsLeft = {bitsLeft % 8}.");
+                            _logger?.LogError($"Corrupt partial bunch. Initial partial bunches are expected to be byte-aligned. BitsLeft = {bitsLeft % 8}.");
                             return;
                         }
 
@@ -1125,7 +1125,7 @@ namespace Unreal.Core
                         // This is to ensure fast copies/appending of partial bunches. The final partial bunch may be non byte aligned.
                         if (!bunch.bHasPackageMapExports && !bunch.bPartialFinal && (bitsLeft % 8 != 0))
                         {
-                            _logger?.LogWarning("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned.");
+                            _logger?.LogError("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned.");
                             return;
                         }
 
@@ -1138,7 +1138,7 @@ namespace Unreal.Core
 
                             if (bunch.bHasPackageMapExports)
                             {
-                                _logger?.LogWarning("Corrupt partial bunch. Final partial bunch has package map exports.");
+                                _logger?.LogError("Corrupt partial bunch. Final partial bunch has package map exports.");
                                 return;
                             }
 
@@ -1440,7 +1440,7 @@ namespace Unreal.Core
             {
                 if (ParseType == ParseType.Debug)
                 {
-                    _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
+                    _logger?.LogDebug($"Couldn't find ClassNetCache for {netFieldExportGroup?.PathName}");
                 }
 
                 return false;
@@ -1492,7 +1492,7 @@ namespace Unreal.Core
                     {
                         if (exportGroup == null)
                         {
-                            _logger?.LogWarning($"Failed to find export group for function property {fieldCache.Name} {classNetCache.PathName}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                            _logger?.LogError($"Failed to find export group for function property {fieldCache.Name} {classNetCache.PathName}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
                             return false;
                         }
@@ -1508,14 +1508,14 @@ namespace Unreal.Core
                         {
                             if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
                             {
-                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
+                                _logger?.LogError($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name}");
                             }
                         }
                         else if (exportGroup != null)
                         {
                             if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
                             {
-                                _logger?.LogWarning($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                                _logger?.LogError($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
 
                                 return false;
                             }
@@ -1543,13 +1543,13 @@ namespace Unreal.Core
 
             if (reader.IsError)
             {
-                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true");
+                _logger?.LogError("ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true");
                 return false;
             }
 
             if (!reader.AtEnd())
             {
-                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read.");
+                _logger?.LogError("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read.");
                 return false;
             }
 
@@ -1612,7 +1612,7 @@ namespace Unreal.Core
 
             if (reader.IsError)
             {
-                _logger?.LogWarning($"Failed to read DeltaSerialize header {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
+                _logger?.LogError($"Failed to read DeltaSerialize header {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
 
                 return false;
             }
@@ -1657,7 +1657,7 @@ namespace Unreal.Core
 
             if (reader.IsError || !reader.AtEnd())
             {
-                _logger?.LogWarning($"Failed to read DeltaSerialize {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
+                _logger?.LogError($"Failed to read DeltaSerialize {netFieldExportGroup.PathName} {netFieldExportGroup.NetFieldExports[handle].Name}");
 
                 return false;
             }
@@ -1823,7 +1823,7 @@ namespace Unreal.Core
                     {
                         ++PropertyError;
 
-                        _logger?.LogError($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
 
 #if DEBUG
                         cmdReader.Reset();
@@ -1835,7 +1835,7 @@ namespace Unreal.Core
 
                     if (archive.IsError)
                     {
-                        _logger?.LogError($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
                         continue;
                     }
 
@@ -1843,7 +1843,7 @@ namespace Unreal.Core
                     {
                         ++FailedToRead;
 
-                        _logger?.LogWarning($"Property {export.Name} ({export.Handle}) in {group.PathName} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                        _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
 
                         continue;
                     }
