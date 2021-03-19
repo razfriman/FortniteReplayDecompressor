@@ -50,7 +50,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, Weapon> _unknownWeapons = new Dictionary<uint, Weapon>(); //Channel to Weapon
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
-
+        private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Player _replayPlayer;
 
         //Delta updates
@@ -784,15 +784,67 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void UpdateHealth(uint channelId, HealthSet health)
+        internal void UpdateHealth(uint channelId, HealthSet health, NetGuidCache cache)
         {
-            if(_players.TryGetValue(channelId, out Player player))
+            if (_players.TryGetValue(channelId, out Player player))
             {
-                player.HealthChanges.Add(new HealthUpdate
+                if(_healthSetStartingHandles.Count == 0)
+                {
+                    NetFieldExportGroup healthSetExport = cache.NetFieldExportGroupMap.FirstOrDefault(x => x.Value.CleanedPath.Contains("HealthSet")).Value;
+                    List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
+
+                    if(maxHandles.Count > 0)
+                    {
+                        _healthSetStartingHandles.TryAdd("Health", maxHandles[0].Handle - 3);
+                    }
+
+                    if (maxHandles.Count > 1)
+                    {
+                        _healthSetStartingHandles.TryAdd("Shield", maxHandles[1].Handle - 3);
+                    }
+                }
+
+                if(_healthSetStartingHandles.TryGetValue("Health", out uint healthHandle))
+                {
+                    health.HealthFortSet = CreateFortSet(healthHandle);
+                }
+
+                if (_healthSetStartingHandles.TryGetValue("Shield", out uint shieldHandle))
+                {
+                    health.ShieldFortSet = CreateFortSet(shieldHandle);
+                }
+
+                HealthUpdate update = new HealthUpdate
                 {
                     Health = health,
                     DeltaGameTimeSeconds = GameState.CurrentWorldTime - GameState.GameWorldStartTime
-                });
+                };
+
+                player.HealthChanges.Add(update);
+            }
+
+            FortSet CreateFortSet(uint startingHandle)
+            {
+                FortSet fortSet = new FortSet
+                {
+                    BaseValue = GetValue(startingHandle),
+                    CurrentValue = GetValue(startingHandle + 1),
+                    Maximum = GetValue(startingHandle + 3),
+                    UnclampedBaseValue = GetValue(startingHandle + 7),
+                    UnclampedCurrentValue = GetValue(startingHandle + 8)
+                };
+
+                return fortSet;
+            }
+
+            float? GetValue(uint handle)
+            {
+                if(health.UnknownHandles.Remove(handle, out DebuggingObject val))
+                {
+                    return val.FloatValue;
+                }
+
+                return null;
             }
         }
 

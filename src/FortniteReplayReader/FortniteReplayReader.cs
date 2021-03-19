@@ -183,7 +183,7 @@ namespace FortniteReplayReader
                 case HealthSet healthSet:
                     if (!_fortniteSettings.IgnoreHealth)
                     {
-                        Replay.GameInformation.UpdateHealth(channel, healthSet);
+                        Replay.GameInformation.UpdateHealth(channel, healthSet, GuidCache);
                     }
                     break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode

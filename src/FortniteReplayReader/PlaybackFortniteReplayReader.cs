@@ -137,7 +137,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateContainer(channel, prop);
                     break;
                 case HealthSet healthSet:
-                    Replay.GameInformation.UpdateHealth(channel, healthSet);
+                    Replay.GameInformation.UpdateHealth(channel, healthSet, GuidCache);
                     break;
             }
         }
