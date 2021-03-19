@@ -27,7 +27,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
         public FortSet HealthFortSet { get; set; }
         public FortSet ShieldFortSet { get; set; }
 
-        public bool HealthChange => HealthFortSet != null;
-        public bool ShieldChange => ShieldFortSet != null;
+        public bool HealthChange => HealthFortSet?.CurrentValue != null;
+        public bool ShieldChange => ShieldFortSet?.CurrentValue != null;
     }
 }
