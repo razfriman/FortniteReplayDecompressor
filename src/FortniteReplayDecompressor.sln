@@ -7,17 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FortniteReplayReader", "For
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleReader", "ConsoleReader\ConsoleReader.csproj", "{A65BE8CF-EA6C-4D69-B6CD-DA097318DE44}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Core.Test", "Unreal.Core.Test\Unreal.Core.Test.csproj", "{4F2E3153-B26D-4EDA-B1DE-FB2FA8B59CEE}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Encryption", "Unreal.Encryption\Unreal.Encryption.csproj", "{2EDD40F7-5739-4E02-9CAE-62D546FE78A1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Network", "Unreal.Network\Unreal.Network.csproj", "{7DE39CD8-B99B-484D-AF1E-EF5A3F10A7AC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Encryption.Test", "Unreal.Encryption.Test\Unreal.Encryption.Test.csproj", "{40D27CC0-1B5B-4636-9321-0D05BE1D86BA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Network.Test", "Unreal.Network.Test\Unreal.Network.Test.csproj", "{FAB8E1B2-AE0E-4A49-AB60-EC62338F2AE4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FortniteReplayReader.Test", "FortniteReplayReader.Test\FortniteReplayReader.Test.csproj", "{EBA0CE49-9A74-47B2-B789-9F2AE57C36D1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Unreal.Core", "Unreal.Core\Unreal.Core.csproj", "{2FF0EC4E-5084-4CBA-A7BD-C09A35D10D2D}"
 EndProject

@@ -790,7 +790,7 @@ namespace FortniteReplayReader.Models
             {
                 if(_healthSetStartingHandles.Count == 0)
                 {
-                    NetFieldExportGroup healthSetExport = cache.NetFieldExportGroupMap.FirstOrDefault(x => x.Value.CleanedPath.Contains("HealthSet")).Value;
+                    NetFieldExportGroup healthSetExport = cache.NetFieldExportGroupMap.FirstOrDefault(x => x.Value.PathName.Contains("HealthSet")).Value;
                     List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
 
                     if(maxHandles.Count > 0)

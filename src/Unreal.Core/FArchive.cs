@@ -24,22 +24,29 @@ namespace Unreal.Core
             IsError = true;
         }
 
+        public void Reset()
+        {
+            IsError = false;
+            Position = 0;
+        }
+
         /// <summary>
         /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L693
         /// </summary>
         public virtual bool HasLevelStreamingFixes()
         {
-            return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.HasStreamingFixes);
         }
 
-        /// <summary>
-        /// Returns whether or not this replay was recorded / is playing with Game Specific Frame Data.
-        /// see https://github.com/EpicGames/UnrealEngine/blob/0218ad46444accdba786b9a82bee3f445d9fa938/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L928
-        /// </summary>
+        public virtual bool HasDeltaCheckpoints()
+        {
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.DeltaCheckpoints);
+        }
+
         public virtual bool HasGameSpecificFrameData()
         {
-            return ReplayHeaderFlags >= ReplayHeaderFlags.GameSpecificFrameData;
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.GameSpecificFrameData);
         }
 
         public abstract bool AtEnd();
