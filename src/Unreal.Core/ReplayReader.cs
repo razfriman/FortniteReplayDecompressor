@@ -125,6 +125,17 @@ namespace Unreal.Core
             //ChannelActors = new bool?[DefaultMaxChannelSize];
             IgnoringChannels = new uint?[DefaultMaxChannelSize];
 
+
+
+            NullHandles = 0;
+            TotalErrors = 0;
+            TotalGroupsRead = 0;
+            TotalFailedBunches = 0;
+            TotalFailedReplicatorReceives = 0;
+            PropertyError = 0;
+            TotalMappedGUIDs = 0;
+            FailedToRead = 0;
+
             GuidCache.ClearCache();
         }
 
