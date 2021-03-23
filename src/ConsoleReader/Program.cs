@@ -85,7 +85,7 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(path, ParseType.Full);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
 
