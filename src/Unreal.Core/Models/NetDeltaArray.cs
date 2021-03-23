@@ -26,5 +26,10 @@ namespace Unreal.Core.Models
         {
             return _items.TryGetValue(index, out item);
         }
+
+        public void Clear()
+        {
+            _items.Clear();
+        }
     }
 }

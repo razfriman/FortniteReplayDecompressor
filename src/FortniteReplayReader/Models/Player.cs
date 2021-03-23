@@ -58,6 +58,7 @@ namespace FortniteReplayReader.Models
         internal int InventoryBaseReplicationKey { get; set; }
         internal float LastTransformUpdate { get; set; }
         internal ActorGUID PrivateTeamActorId { get; set; } //Used to set the team data later
+        internal uint ReplayPawnId { get; set; }
     }
 
     public class PlayerLocation

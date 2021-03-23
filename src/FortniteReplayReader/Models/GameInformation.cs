@@ -598,29 +598,47 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateFortInventory(uint channelId, FortInventory inventory)
         {
-            if(inventory.ReplayPawn > 0)
+            if (inventory.ReplayPawn > 0)
             {
-                //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                if(!_inventories.TryAdd(channelId, inventory))
-                {
-                    _inventories[channelId] = inventory;
-                }
+                _inventories[channelId] = inventory;
             }
         }
 
         //Only occur on main player's inventory or server replays
         internal void UpdateNetDeltaFortInventory(NetDeltaUpdate deltaUpdate)
         {
+            uint channel = 0;
+
             if (!_inventories.TryGetValue(deltaUpdate.ChannelIndex, out FortInventory inventory) || 
-               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out uint channel) || 
+               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out channel) || 
                !_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
             {
+                QueuedPlayerPawn queuedPlayerSpawn = _queuedPlayerPawns.Values.FirstOrDefault(x => x.FirstOrDefault()?.ChannelId == channel)?.First();
+
+                if (queuedPlayerSpawn == null)
+                {
+                    //Gets here when entering the bus. Items are deleted later
+                    return;
+                }
+
+                queuedPlayerSpawn.InventoryUpdates.Add(deltaUpdate);
+
                 return;
             }
 
             if (!(playerPawn is Player player))
             {
                 return;
+            }
+
+            //Got on bus, possibly respawn too?
+            if (player.ReplayPawnId != inventory.ReplayPawn.Value)
+            {
+                player.InventoryBeforeDeletes.Clear();
+                player.InventoryBeforeDeletes.AddRange(player.CurrentInventory.Items);
+                player.CurrentInventory.Clear();
+
+                player.ReplayPawnId = inventory.ReplayPawn.Value;
             }
 
             if (deltaUpdate.Deleted)
@@ -949,6 +967,11 @@ namespace FortniteReplayReader.Models
                 foreach(QueuedPlayerPawn playerPawn in playerPawns)
                 {
                     UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
+
+                    foreach (NetDeltaUpdate inventoryUpdate in playerPawn.InventoryUpdates)
+                    {
+                        UpdateNetDeltaFortInventory(inventoryUpdate);
+                    }
                 }
             }
         }
