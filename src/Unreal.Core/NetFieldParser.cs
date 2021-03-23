@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,116 +17,435 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        public static bool IncludeOnlyMode { get; set; } = true;
-        public static HashSet<Type> IncludedExportGroups { get; private set; } = new HashSet<Type>();
+        private static Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
 
-        private static Dictionary<string, Type> _netFieldGroups = new Dictionary<string, Type>();
-        private static Dictionary<Type, NetFieldGroupInfo> _netFieldGroupInfo = new Dictionary<Type, NetFieldGroupInfo>();
-        private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
+        private NetFieldParserInfo _parserInfo;
 
-        public static bool HasNewNetFields => UnknownNetFields.Count > 0;
-
-        static NetFieldParser()
+        public NetFieldParser(Assembly callingAssembly)
         {
-            IEnumerable<Type> netFields = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
+            if (_parserInfoDict.ContainsKey(callingAssembly))
+            {
+                //Already intialized data
+                _parserInfo = _parserInfoDict[callingAssembly];
 
+                return;
+            }
+
+            Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+
+            HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+
+            referencedAssemblies.Add(callingAssembly);
+
+            IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
+
+            //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
+
+            List<Type> netFields = new List<Type>();
+            List<Type> classNetCaches = new List<Type>();
+            List<Type> propertyTypes = new List<Type>();
+
+            //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
+            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
+            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+            _parserInfo = new NetFieldParserInfo();
+            _parserInfoDict.Add(callingAssembly, _parserInfo);
+
+            LoadNetFields(netFields);
+            LoadClassNetCaches(classNetCaches);
+            LoadPropertyTypes(propertyTypes);
+        }
+
+#if DEBUG
+        private void UpdateFiles(IEnumerable<Type> types)
+        {
+            Dictionary<string, Type> keyValues = types.ToDictionary(x => x.Name, x => x);
+
+            string[] allFiles = Directory.GetFiles("NetFieldExports", "*.bak", SearchOption.AllDirectories);
+
+            foreach (string file in allFiles)
+            {
+                if(file.Contains("BaseStructure"))
+                {
+
+                }
+
+                List<string> lines = File.ReadAllLines(file).ToList();
+
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    string line = lines[i];
+
+                    Match match = Regex.Match(line, "public( abstract)? class (.*?) ");
+
+                    if (match.Success)
+                    {
+                        if (!keyValues.TryGetValue(match.Groups[2].Value, out Type t))
+                        {
+                            continue;
+                        }
+
+                        PropertyInfo[] props = t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+                        if (props.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        int insertLine = FindInsertLine(lines, i);
+
+                        if (insertLine == -1)
+                        {
+                            continue;
+                        }
+
+                        string text = InsertManualRead(props, out bool add);
+
+                        if (add)
+                        {
+                            lines.InsertRange(insertLine, text.Split(Environment.NewLine));
+                        }
+
+                        i = insertLine; //Skip ahead
+                    }
+                }
+
+                File.WriteAllLines(file.Replace(".bak", ""), lines);
+            }
+        }
+        
+        private int FindInsertLine(List<string> lines, int startLine)
+        {
+            int braceCount = 0;
+
+            for (int i = startLine; i < lines.Count; i++)
+            {
+                string line = lines[i];
+
+                switch (line.Trim())
+                {
+                    case "public override bool ManualRead(string property, object value)":
+                        return -1;
+                    case "{":
+                        ++braceCount;
+                        break;
+                    case "}":
+                        --braceCount;
+
+                        if (braceCount == 0)
+                        {
+                            return i;
+                        }
+
+                        break;
+                }
+            }
+
+            return -1;
+        }
+
+        private string InsertManualRead(PropertyInfo[] props, out bool addToFile)
+        {
+            static string GetTypeName(Type type)
+            {
+                if(type.Name == "Nullable`1")
+                {
+                    return GetTypeName(type.GenericTypeArguments[0]);
+                }
+
+                if(type == typeof(int))
+                {
+                    return "int";
+                }
+                else if (type == typeof(double))
+                {
+                    return "double";
+                }
+                else if (type == typeof(float))
+                {
+                    return "float";
+                }
+                else if (type == typeof(long))
+                {
+                    return "long";
+                }
+                else if (type == typeof(ulong))
+                {
+                    return "ulong";
+                }
+                else if (type == typeof(byte))
+                {
+                    return "byte";
+                }
+                else if (type == typeof(bool))
+                {
+                    return "bool";
+                }
+                else if (type == typeof(uint))
+                {
+                    return "uint";
+                }
+                else if (type == typeof(short))
+                {
+                    return "short";
+                }
+                else if (type == typeof(ushort))
+                {
+                    return "ushort";
+                }
+                else if (type == typeof(double))
+                {
+                    return "double";
+                }
+                else if (type == typeof(object))
+                {
+                    return "object";
+                }
+                else if(type.IsPrimitive)
+                {
+                    return null;
+                }
+                else if (type == typeof(string))
+                {
+                    return "string";
+                }
+                else if (type.IsArray)
+                {
+                    return $"{GetTypeName(type.GetElementType())}[]";
+                }
+                else
+                {
+                    return type.Name;
+                }
+            }
+
+            addToFile = false;
+
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine();
+            builder.AppendLine("\t\tpublic override bool ManualRead(string property, object value)");
+            builder.AppendLine("\t\t{");
+            builder.AppendLine("\t\t\tswitch(property)");
+            builder.AppendLine("\t\t\t{");
+
+            foreach(PropertyInfo info in props)
+            {
+                NetFieldExportAttribute export = info.GetCustomAttribute<NetFieldExportAttribute>();
+
+                if(export == null)
+                {
+                    continue;
+                }
+
+                addToFile = true;
+
+                builder.AppendLine($"\t\t\t\tcase \"{export.Name}\":");
+                builder.AppendLine($"\t\t\t\t\t{info.Name} = {(info.PropertyType != typeof(object) ? $"({GetTypeName(info.PropertyType)})" : String.Empty)}value;");
+                builder.AppendLine($"\t\t\t\t\tbreak;");
+            }
+
+            builder.AppendLine("\t\t\t\tdefault:");
+            builder.AppendLine("\t\t\t\t\treturn base.ManualRead(property, value);");
+            builder.AppendLine("\t\t\t}");
+            builder.AppendLine();
+            builder.AppendLine("\t\t\treturn true;");
+            builder.AppendLine("\t\t}");
+
+            return builder.ToString();
+        }
+#endif
+
+        private HashSet<Assembly> GetAllReferencedAssemblies(Assembly assembly, Dictionary<string, Assembly> allAssemblies)
+        {
+            HashSet<Assembly> allAssemblyNames = new HashSet<Assembly>();
+
+            foreach (AssemblyName assemblyName in assembly.GetReferencedAssemblies())
+            {
+                Assembly referencedAssembly = null;
+
+                if (!allAssemblies.TryGetValue(assemblyName.FullName, out referencedAssembly))
+                {
+                    continue;
+                }
+
+                allAssemblyNames.Add(allAssemblies[assemblyName.FullName]);
+
+                foreach (Assembly newAssembly in GetAllReferencedAssemblies(referencedAssembly, allAssemblies))
+                {
+                    allAssemblyNames.Add(newAssembly);
+                }
+            }
+
+            return allAssemblyNames;
+        }
+
+        private void LoadNetFields(List<Type> netFields)
+        {
             foreach (Type type in netFields)
             {
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+                PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
 
-                if (attribute != null)
+                if (playerController != null)
                 {
-                    _netFieldGroups[attribute.Path] = type;
+                    _parserInfo.PlayerControllers.Add(playerController.Name);
                 }
 
                 NetFieldGroupInfo info = new NetFieldGroupInfo();
 
-                _netFieldGroupInfo[type] = info;
+                info.Type = type;
+                info.Attribute = attribute;
+
+                _parserInfo.NetFieldGroups[attribute.Path] = info;
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
-                    NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
-
-                    if(netFieldExportAttribute == null)
+                    NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
+                    NetFieldExportHandleAttribute netFieldExportHandleAttribute = property.GetCustomAttribute<NetFieldExportHandleAttribute>(); //Uses handle id
+                    if (netFieldExportAttribute == null && netFieldExportHandleAttribute == null)
                     {
                         continue;
                     }
 
-                    info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                    if (netFieldExportAttribute != null)
                     {
-                        Attribute = netFieldExportAttribute,
-                        PropertyInfo = property
-                    };
+                        info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                        {
+                            Attribute = netFieldExportAttribute,
+                            PropertyInfo = property
+                        };
+                    }
+                    else
+                    {
+                        info.UsesHandles = true;
+
+                        info.HandleProperties[netFieldExportHandleAttribute.Handle] = new NetFieldInfo
+                        {
+                            Attribute = netFieldExportHandleAttribute,
+                            PropertyInfo = property
+                        };
+                    }
                 }
             }
+        }
 
+        private void LoadClassNetCaches(List<Type> classNetCaches)
+        {
+            foreach (Type type in classNetCaches)
+            {
+                NetFieldExportRPCAttribute attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
+                NetRPCFieldGroupInfo info = new NetRPCFieldGroupInfo();
+                info.ParseType = attribute.MinimumParseType;
+
+                _parserInfo.NetRPCStructureTypes[attribute.PathName] = info;
+
+                foreach (PropertyInfo property in type.GetProperties())
+                {
+                    NetFieldExportRPCPropertyAttribute propertyAttribute = property.GetCustomAttribute<NetFieldExportRPCPropertyAttribute>();
+
+                    if (propertyAttribute != null)
+                    {
+                        info.PathNames.TryAdd(propertyAttribute.Name, new NetRPCFieldInfo
+                        {
+                            PropertyInfo = property,
+                            Attribute = propertyAttribute,
+                            IsCustomStructure = propertyAttribute.CustomStructure
+                        });
+                    }
+                }
+            }
+        }
+
+        private void LoadPropertyTypes(List<Type> propertyTypes)
+        {
             //Type layout for dynamic arrays
-            _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
-            _primitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
-            _primitiveTypeLayout.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
-            _primitiveTypeLayout.Add(typeof(int), RepLayoutCmdType.PropertyInt);
-            _primitiveTypeLayout.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
-            _primitiveTypeLayout.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
-            _primitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
-            _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
-
-            IEnumerable<Type> iPropertyTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(int), RepLayoutCmdType.PropertyInt);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
+            _parserInfo.PrimitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
 
             //Allows deserializing IProperty type arrays
-            foreach (var iPropertyType in iPropertyTypes)
+            foreach (var iPropertyType in propertyTypes)
             {
-                _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
+                _parserInfo.PrimitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
+            }
+        }
+
+        public bool IsPlayerController(string name)
+        {
+            return _parserInfo.PlayerControllers.Contains(name);
+        }
+
+        public string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
+        {
+            readChecksumBit = false;
+
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(netCache, out NetRPCFieldGroupInfo netCacheFieldGroupInfo))
+            {
+                if (netCacheFieldGroupInfo.PathNames.TryGetValue(property, out NetRPCFieldInfo rpcAttribute))
+                {
+                    readChecksumBit = rpcAttribute.Attribute.ReadChecksumBit;
+
+                    return rpcAttribute.Attribute.TypePathName;
+                }
+                else
+                {
+                    //Debugging
+                }
+            }
+            else
+            {
+                //Debugging
             }
 
-            _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
-
-            AddDefaultExportGroups();
-        }
-        
-        private static void AddDefaultExportGroups()
-        {
-            //Player info
-            IncludedExportGroups.Add(typeof(FortPlayerState));
-            IncludedExportGroups.Add(typeof(PlayerPawnC));
-            IncludedExportGroups.Add(typeof(FortInventory));
-            IncludedExportGroups.Add(typeof(FortPickup));
-
-            //Game state
-            IncludedExportGroups.Add(typeof(GameStateC));
-            IncludedExportGroups.Add(typeof(SafeZoneIndicatorC));
-            IncludedExportGroups.Add(typeof(AircraftC));
-
-            //Supply drops / llamas
-            IncludedExportGroups.Add(typeof(SupplyDropC));
-            IncludedExportGroups.Add(typeof(SupplyDropLlamaC));
-            IncludedExportGroups.Add(typeof(SupplyDropBalloonC));
-
-            //////Projectiles
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperC));
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperHeavyC));
-            //IncludedExportGroups.Add(typeof(BPrjLotusMustacheC));
-            //IncludedExportGroups.Add(typeof(BPrjArrowExplodeOnImpactC));
-            //IncludedExportGroups.Add(typeof(BPrjBulletSniperAutoChildC));
-
-            //All weapons
-            /*foreach(KeyValuePair<Type, NetFieldGroupInfo> type in _netFieldGroupInfo.Where(x => x.Value.Properties.Any(y => y.Key == "WeaponData")))
-            {
-                IncludedExportGroups.Add(type.Key);
-            }*/
+            return null;
         }
 
-        public static bool WillReadType(string group)
+        public bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
         {
-            if(_netFieldGroups.ContainsKey(group))
-            {
-                Type type = _netFieldGroups[group];
+            willParse = false;
+            netFieldInfo = null;
 
-                if(IncludedExportGroups.Contains(type))
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(classNetPathName, out NetRPCFieldGroupInfo groups))
+            {
+                willParse = parseType >= groups.ParseType;
+
+                if (!willParse)
                 {
                     return true;
                 }
+
+                if (groups.PathNames.TryGetValue(property, out NetRPCFieldInfo netFieldExportRPCPropertyAttribute))
+                {
+                    netFieldInfo = netFieldExportRPCPropertyAttribute;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
+        {
+            ignoreChannel = false;
+
+            if (_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo groupInfo))
+            {
+                if (parseType >= groupInfo.Attribute.MinimumParseType)
+                {
+                    return true;
+                }
+
+                //Ignore channels where we know the type and outside the parse mode
+                ignoreChannel = true;
 
                 return false;
             }
@@ -133,65 +453,96 @@ namespace Unreal.Core
             return false;
         }
 
-        public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        public void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             string group = exportGroup.PathName;
 
             string fixedExportName = FixInvalidNames(export.Name);
 
-            if(!_netFieldGroups.ContainsKey(group))
+            bool isDebug = obj is DebuggingExportGroup;
+
+            if (isDebug)
             {
-                AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
+                group = "DebuggingExportGroup";
+                fixedExportName = "Handles";
+            }
+
+            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
+            {
+                return;
+            }
+
+            NetFieldInfo netFieldInfo = null;
+
+            if ((!netGroupInfo.UsesHandles && !netGroupInfo.Properties.TryGetValue(fixedExportName, out netFieldInfo)) ||
+                (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo)))
+            {
+                //Clean this up
+                if (obj is IHandleNetFieldExportGroup handleGroup)
+                {
+                    DebuggingObject data = (DebuggingObject)ReadDataType(RepLayoutCmdType.Property, netBitReader, typeof(DebuggingObject));
+                    handleGroup.UnknownHandles.Add(handle, data);
+                }
 
                 return;
             }
 
-            Type netType = _netFieldGroups[group];
-            NetFieldGroupInfo netGroupInfo = _netFieldGroupInfo[netType];
-
-            if(!netGroupInfo.Properties.ContainsKey(fixedExportName))
-            {
-                AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-
-                return;
-            }
-
-            NetFieldInfo netFieldInfo = netGroupInfo.Properties[fixedExportName];
-
-            //Update if it finds a higher bit count or an actual type
-            if(!String.IsNullOrEmpty(export.Type))
-            {
-                if(String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
-            }
-            /*else if(netFieldInfo.Attribute.Info.BitCount < netBitReader.GetBitsLeft())
-            {
-                if(String.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
-            }*/
-
-            SetType(obj, netType, netFieldInfo, exportGroup, netBitReader);
+            SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
         }
 
-        private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
+        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        {
+            object data;
+
+            switch (netFieldInfo.Attribute.Type)
+            {
+                case RepLayoutCmdType.DynamicArray:
+                    data = ReadArrayField(exportGroup, netFieldInfo, groupInfo, netBitReader);
+                    break;
+                default:
+                    data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
+                    break;
+            }
+
+            if (obj is DebuggingExportGroup debugGroup)
+            {
+                debugGroup.Handles.Add(handle, data as DebuggingObject);
+
+                return;
+            }
+
+            if (data != null)
+            {
+                if(!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
+                {
+                    TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
+                    typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
+                }
+
+            }
+        }
+
+        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
         {
             object data = null;
 
-            switch(replayout)
+            switch (replayout)
             {
                 case RepLayoutCmdType.Property:
-                    data = Activator.CreateInstance(objectType);
+                    data = _parserInfo.LinqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
+                    break;
+                case RepLayoutCmdType.RepMovement:
+                    data = netBitReader.SerializeRepMovement();
+                    break;
+                case RepLayoutCmdType.RepMovementWholeNumber:
+                    data = netBitReader.SerializeRepMovement(VectorQuantization.RoundWholeNumber, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber);
                     break;
                 case RepLayoutCmdType.PropertyBool:
                     data = netBitReader.SerializePropertyBool();
                     break;
                 case RepLayoutCmdType.PropertyName:
-                    netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
+                    data = netBitReader.SerializePropertyName();
                     break;
                 case RepLayoutCmdType.PropertyFloat:
                     data = netBitReader.SerializePropertyFloat();
@@ -225,121 +576,77 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyVectorQ:
                     data = netBitReader.SerializePropertyQuantizeVector();
                     break;
-                case RepLayoutCmdType.RepMovement:
-                    data = netBitReader.SerializeRepMovement();
-                    break;
                 case RepLayoutCmdType.Enum:
                     data = netBitReader.SerializeEnum();
                     break;
-                //Auto generation fix to handle 1-8 bits
                 case RepLayoutCmdType.PropertyByte:
                     data = (byte)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
                     break;
-                //Auto generation fix to handle 1-32 bits. 
                 case RepLayoutCmdType.PropertyInt:
-                    data = netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadInt32();
                     break;
                 case RepLayoutCmdType.PropertyUInt64:
                     data = netBitReader.ReadUInt64();
                     break;
+                case RepLayoutCmdType.PropertyInt16:
+                    data = netBitReader.ReadInt16();
+                    break;
                 case RepLayoutCmdType.PropertyUInt16:
-                    data = (ushort)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadUInt16();
                     break;
                 case RepLayoutCmdType.PropertyUInt32:
                     data = netBitReader.ReadUInt32();
                     break;
-                case RepLayoutCmdType.Pointer:
-                    switch (netBitReader.GetBitsLeft())
-                    {
-                        case 8:
-                            data = (uint)netBitReader.ReadByte();
-                            break;
-                        case 16:
-                            data = (uint)netBitReader.ReadUInt16();
-                            break;
-                        case 32:
-                            data = netBitReader.ReadUInt32();
-                            break;
-                    }
-                    break;
                 case RepLayoutCmdType.PropertyVector:
-                    data = new FVector(netBitReader.ReadSingle(), netBitReader.ReadSingle(), netBitReader.ReadSingle());
+                    data = netBitReader.SerializePropertyVector();
                     break;
                 case RepLayoutCmdType.Ignore:
-                    netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
+                    netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
+                    break;
+                case RepLayoutCmdType.Debug:
+                    data = _parserInfo.LinqCache.CreateObject(typeof(DebuggingObject));
+                    (data as IProperty).Serialize(netBitReader);
                     break;
             }
 
             return data;
         }
 
-        private static void SetType(object obj, Type netType, NetFieldInfo netFieldInfo, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
-        {
-            object data = null;
-
-            switch (netFieldInfo.Attribute.Type)
-            {
-                case RepLayoutCmdType.DynamicArray:
-                    data = ReadArrayField(obj, exportGroup, netFieldInfo, netBitReader);
-                    break;
-                default:
-                    data = ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType);
-                    break;
-            }
-
-            if (data != null)
-            {
-                TypeAccessor typeAccessor = TypeAccessor.Create(netType);
-                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
-            }
-        }
-
-        private static Array ReadArrayField(object obj, NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetBitReader netBitReader)
+        private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
 
             Type elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
             RepLayoutCmdType replayout = RepLayoutCmdType.Ignore;
+            bool isGroupType = elementType == groupInfo.Type || elementType == groupInfo.Type.BaseType;
 
-            NetFieldGroupInfo groupInfo = null;
+            if (!isGroupType)
+            {
+                groupInfo = null;
 
-            if(_netFieldGroupInfo.ContainsKey(elementType))
-            {
-                groupInfo = _netFieldGroupInfo[elementType];
-            }
-            else
-            {
-                if (!_primitiveTypeLayout.TryGetValue(elementType, out replayout))
+                if (!_parserInfo.PrimitiveTypeLayout.TryGetValue(elementType, out replayout))
                 {
                     replayout = RepLayoutCmdType.Ignore;
                 }
-                else
-                {
-                    if (elementType == typeof(DebuggingObject))
-                    {
-
-                    }
-                }
             }
-
 
             Array arr = Array.CreateInstance(elementType, arrayIndexes);
 
-            while(true)
+            while (true)
             {
                 uint index = netBitReader.ReadIntPacked();
 
-                if(index == 0)
+                if (index == 0)
                 {
-                    if(netBitReader.GetBitsLeft() == 8)
+                    if (netBitReader.GetBitsLeft() == 8)
                     {
                         uint terminator = netBitReader.ReadIntPacked();
 
-                        if(terminator != 0x00)
+                        if (terminator != 0x00)
                         {
                             //Log error
 
-                            return arr; 
+                            return arr;
                         }
                     }
 
@@ -348,7 +655,7 @@ namespace Unreal.Core
 
                 --index;
 
-                if(index >= arrayIndexes)
+                if (index >= arrayIndexes)
                 {
                     //Log error
 
@@ -357,15 +664,15 @@ namespace Unreal.Core
 
                 object data = null;
 
-                if (groupInfo != null)
+                if (isGroupType)
                 {
-                    data = Activator.CreateInstance(elementType);
+                    data = _parserInfo.LinqCache.CreateObject(elementType);
                 }
 
                 while (true)
                 {
-                    uint handle = netBitReader.ReadIntPacked(); 
-                    
+                    uint handle = netBitReader.ReadIntPacked();
+
                     if (handle == 0)
                     {
                         break;
@@ -402,7 +709,7 @@ namespace Unreal.Core
                     //Uses the same type for the array
                     if (groupInfo != null)
                     {
-                        ReadField(data, export, netfieldExportGroup, handle, cmdReader);
+                        ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, cmdReader);
                     }
                     else //Probably primitive values
                     {
@@ -414,230 +721,40 @@ namespace Unreal.Core
             }
         }
 
-        public static INetFieldExportGroup CreateType(string group)
+        public INetFieldExportGroup CreateType(string group)
         {
-            if(!_netFieldGroups.ContainsKey(group))
+            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo exportGroup))
             {
                 return null;
             }
 
-            return (INetFieldExportGroup)Activator.CreateInstance(_netFieldGroups[group]);
+            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
         }
 
-        public static void GenerateFiles(string directory)
+        /// <summary>
+        /// Create the object associated with the property that should be read.
+        /// Used as a workaround for RPC structs.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
         {
-            if(Directory.Exists(directory))
+            property = null;
+
+            if (_parserInfo.NetRPCStructureTypes.TryGetValue(group, out NetRPCFieldGroupInfo groupInfo))
             {
-                Directory.Delete(directory, true);
-            }
-
-            Directory.CreateDirectory(directory);
-
-            foreach(KeyValuePair<string, Type> netFieldGroundKvp in _netFieldGroups)
-            {
-                if(!_netFieldGroupInfo.TryGetValue(netFieldGroundKvp.Value, out NetFieldGroupInfo groupInfo))
+                if (groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
                 {
-                    continue;
-                }
+                    property = (IProperty)_parserInfo.LinqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
 
-                foreach (KeyValuePair<string, NetFieldInfo> netFieldInfo in groupInfo.Properties)
-                {
-                    AddUnknownField(netFieldGroundKvp.Key, netFieldInfo.Value.Attribute.Info);
+                    return true;
                 }
             }
 
-
-            foreach (KeyValuePair<string, HashSet<UnknownFieldInfo>> kvp in UnknownNetFields)
-            {
-                string fileName = String.Join("", kvp.Key.Split('/').Last().Split('.').Last().Split("_")).Replace("Athena", "");
-                fileName = FixInvalidNames(fileName);
-
-                if (char.IsDigit(fileName[0]))
-                {
-                    int firstCharacter = fileName.ToList().FindIndex(x => !char.IsDigit(x));
-
-                    fileName = fileName.Substring(firstCharacter);
-                }
-
-
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine("using System.Collections.Generic;");
-                builder.AppendLine("using Unreal.Core.Attributes;");
-                builder.AppendLine("using Unreal.Core.Contracts;");
-                builder.AppendLine("using Unreal.Core.Models.Enums;\n");
-                builder.AppendLine("namespace Unreal.Core.Models");
-                builder.AppendLine("{");
-                builder.AppendLine($"\t[NetFieldExportGroup(\"{kvp.Key}\")]");
-                builder.AppendLine($"\tpublic class {fileName} : INetFieldExportGroup");
-                builder.AppendLine("\t{");
-
-                foreach (UnknownFieldInfo unknownField in kvp.Value.OrderBy(x => x.Handle))
-                {
-                    RepLayoutCmdType commandType = RepLayoutCmdType.Ignore;
-                    string type = "object";
-
-                    if(!String.IsNullOrEmpty(unknownField.Type))
-                    {
-                        //8, 16, or 32
-                        if(unknownField.Type.EndsWith("*") || unknownField.Type.StartsWith("TSubclassOf"))
-                        {
-                            type = "uint?";
-                            commandType = RepLayoutCmdType.Pointer;
-                        }
-                        else if (unknownField.Type.StartsWith("TEnumAsByte"))
-                        {
-                            type = "int?";
-                            commandType = RepLayoutCmdType.Enum;
-                        }
-                        else if (unknownField.Type.StartsWith("E") && unknownField.Type.Length > 1 && Char.IsUpper(unknownField.Type[1]))
-                        {
-                            type = "int?";
-                            commandType = RepLayoutCmdType.Enum;
-                        }
-                        else
-                        {
-                            switch (unknownField.Type)
-                            {
-                                case "TArray":
-                                    type = "object[]";
-                                    commandType = RepLayoutCmdType.DynamicArray;
-                                    break;
-                                case "FRotator":
-                                    type = "FRotator";
-                                    commandType = RepLayoutCmdType.PropertyRotator;
-                                    break;
-                                case "float":
-                                    type = "float?";
-                                    commandType = RepLayoutCmdType.PropertyFloat;
-                                    break;
-                                case "bool":
-                                    type = "bool?";
-                                    commandType = RepLayoutCmdType.PropertyBool;
-                                    break;
-                                case "int8":
-                                    if (unknownField.BitCount == 1)
-                                    {
-                                        type = "bool?";
-                                        commandType = RepLayoutCmdType.PropertyBool;
-                                    }
-                                    else
-                                    {
-                                        type = "byte?";
-                                        commandType = RepLayoutCmdType.PropertyByte;
-                                    }
-                                    break;
-                                case "uint8":
-                                    if (unknownField.BitCount == 1)
-                                    {
-                                        type = "bool?";
-                                        commandType = RepLayoutCmdType.PropertyBool;
-                                    }
-                                    else
-                                    {
-                                        type = "byte?";
-                                        commandType = RepLayoutCmdType.PropertyByte;
-                                    }
-                                    break;
-                                case "int16":
-                                    type = "ushort?";
-                                    commandType = RepLayoutCmdType.PropertyUInt16;
-                                    break;
-                                case "uint16":
-                                    type = "ushort?";
-                                    commandType = RepLayoutCmdType.PropertyUInt16;
-                                    break;
-                                case "uint32":
-                                    type = "uint?";
-                                    commandType = RepLayoutCmdType.PropertyUInt32;
-                                    break;
-                                case "int32":
-                                    type = "int?";
-                                    commandType = RepLayoutCmdType.PropertyInt;
-                                    break;
-                                case "FUniqueNetIdRepl":
-                                    type = "string";
-                                    commandType = RepLayoutCmdType.PropertyNetId;
-                                    break;
-                                case "FHitResult":
-                                case "FGameplayTag":
-                                case "FText":
-                                case "FVector2D":
-                                case "FAthenaPawnReplayData":
-                                case "FDateTime":
-                                case "FName":
-                                case "FQuat":
-                                case "FVector":
-                                case "FQuantizedBuildingAttribute":
-                                    type = unknownField.Type;
-                                    commandType = RepLayoutCmdType.Property;
-                                    break;
-                                case "FVector_NetQuantize":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVectorQ;
-                                    break;
-                                case "FVector_NetQuantize10":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVector10;
-                                    break;
-                                case "FVector_NetQuantizeNormal":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVectorNormal;
-                                    break;
-                                case "FVector_NetQuantize100":
-                                    type = "FVector";
-                                    commandType = RepLayoutCmdType.PropertyVector100;
-                                    break;
-                                case "FString":
-                                    type = "string";
-                                    commandType = RepLayoutCmdType.PropertyString;
-                                    break;
-                                case "FRepMovement":
-                                    type = "FRepMovement";
-                                    commandType = RepLayoutCmdType.RepMovement;
-                                    break;
-                                case "FMinimalGameplayCueReplicationProxy":
-                                    type = "int?";
-                                    commandType = RepLayoutCmdType.Enum;
-                                    break;
-                                default:
-                                    //Console.WriteLine(unknownField.Type);
-                                    break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        switch (unknownField.BitCount)
-                        {
-                            case 1:
-                                type = "bool?";
-                                commandType = RepLayoutCmdType.PropertyBool;
-                                break;
-                            case 8: //Can't determine if it's a pointer that can have 8, 16, or 32 bits
-                            case 16:
-                            case 32:
-                                type = "uint?";
-                                commandType = RepLayoutCmdType.PropertyUInt32;
-                                break;
-                        }
-                    }
-
-                    string fixedPropertyName = FixInvalidNames(unknownField.PropertyName);
-
-                    builder.AppendLine($"\t\t[NetFieldExport(\"{unknownField.PropertyName}\", RepLayoutCmdType.{commandType.ToString()}, {unknownField.Handle}, \"{unknownField.PropertyName}\", \"{unknownField.Type}\", {unknownField.BitCount})]");
-                    builder.AppendLine($"\t\tpublic {type} {fixedPropertyName} {{ get; set; }} //Type: {unknownField.Type} Bits: {unknownField.BitCount}\n");
-                }
-
-                builder.AppendLine("\t}");
-                builder.AppendLine("}");
-
-                string cSharpFile = builder.ToString();
-
-                File.WriteAllText(Path.Combine(directory, fileName) + ".cs", cSharpFile);
-            }
+            return false;
         }
 
-        private static unsafe string FixInvalidNames(string str)
+        private unsafe string FixInvalidNames(string str)
         {
             int len = str.Length;
             char* newChars = stackalloc char[len];
@@ -652,7 +769,7 @@ namespace Unreal.Core
                 byte val = (byte)((c & 0xDF) - 0x40);
                 bool isChar = val > 0 && val <= 26;
 
-                if(isDigit || isChar)
+                if (isDigit || isChar)
                 {
                     *currentChar++ = c;
                 }
@@ -661,74 +778,47 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
-        private static void AddUnknownField(string group, UnknownFieldInfo fieldInfo)
-        {
-            HashSet<UnknownFieldInfo> fields = new HashSet<UnknownFieldInfo>();
-
-            if (!UnknownNetFields.TryAdd(group, fields))
-            {
-                UnknownNetFields.TryGetValue(group, out fields);
-            }
-
-            fields.Add(fieldInfo);
-
-        }
-
-        private static void AddUnknownField(string exportName, string exportType, string group, uint handle, NetBitReader netBitReader)
-        {
-            HashSet<UnknownFieldInfo> fields = new HashSet<UnknownFieldInfo>();
-
-            if (!UnknownNetFields.TryAdd(group, fields))
-            {
-                UnknownNetFields.TryGetValue(group, out fields);
-            }
-
-            fields.Add(new UnknownFieldInfo(FixInvalidNames(exportName), exportType, netBitReader.GetBitsLeft(), handle));
-
-        }
-
         private class NetFieldGroupInfo
         {
+            public NetFieldExportGroupAttribute Attribute { get; set; }
+            public Type Type { get; set; }
+            public bool UsesHandles { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
+            public Dictionary<uint, NetFieldInfo> HandleProperties { get; set; } = new Dictionary<uint, NetFieldInfo>();
         }
 
         private class NetFieldInfo
         {
-            public NetFieldExportAttribute Attribute { get; set; }
+            public RepLayoutAttribute Attribute { get; set; }
+
             public PropertyInfo PropertyInfo { get; set; }
+        }
+
+        /// <summary>
+        /// Holds type info for assembly
+        /// </summary>
+        private class NetFieldParserInfo
+        {
+            public Dictionary<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } =
+            new Dictionary<string, NetFieldGroupInfo>();
+            public Dictionary<Type, RepLayoutCmdType> PrimitiveTypeLayout { get; private set; } =
+            new Dictionary<Type, RepLayoutCmdType>();
+            public Dictionary<string, NetRPCFieldGroupInfo> NetRPCStructureTypes { get; private set; } = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
+            public HashSet<string> PlayerControllers { get; private set; } = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
+            public CompiledLinqCache LinqCache { get; private set; } = new CompiledLinqCache();
         }
     }
 
-    public class UnknownFieldInfo
+    public class NetRPCFieldInfo
     {
-        public string PropertyName { get; set; }
-        public string Type { get; set; }
-        public int BitCount { get; set; }
-        public uint Handle { get; set; }
+        public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
+        public bool IsCustomStructure { get; set; }
+    }
 
-        public UnknownFieldInfo(string propertyname, string type, int bitCount, uint handle)
-        {
-            PropertyName = propertyname;
-            Type = type;
-            BitCount = bitCount;
-            Handle = handle;
-        }
-
-        public override bool Equals(object obj)
-        {
-            UnknownFieldInfo fieldInfo = obj as UnknownFieldInfo;
-
-            if (fieldInfo == null)
-            {
-                return base.Equals(obj);
-            }
-
-            return fieldInfo.PropertyName == PropertyName;
-        }
-
-        public override int GetHashCode()
-        {
-            return PropertyName.GetHashCode();
-        }
+    public class NetRPCFieldGroupInfo
+    {
+        public ParseType ParseType { get; set; }
+        public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();
     }
 }

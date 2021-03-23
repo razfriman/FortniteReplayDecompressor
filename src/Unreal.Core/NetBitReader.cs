@@ -41,9 +41,28 @@ namespace Unreal.Core
             return ReadSingle();
         }
 
-        public void SerializePropertyName()
+        public string SerializePropertyName()
         {
-            // TODO StaticSerialzeName
+            var isHardcoded = ReadBoolean();
+            if (isHardcoded)
+            {
+                uint nameIndex;
+                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    nameIndex = ReadUInt32();
+                }
+                else
+                {
+                    nameIndex = ReadIntPacked();
+                }
+
+                return ((UnrealNames)nameIndex).ToString();
+            }
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+
+            return inString;
         }
 
         public string SerializePropertyString()
@@ -61,20 +80,23 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
         /// </summary>
-        public FRepMovement SerializeRepMovement()
+        public FRepMovement SerializeRepMovement(
+            VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
+            RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
+            VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
             var flags = ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
-            repMovement.bRepPhysics = (flags & (1 << 1)) == 1;
+            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
 
-            repMovement.Location = SerializeQuantizedVector(VectorQuantization.RoundTwoDecimals);
+            repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
             repMovement.Rotation = ReadRotation();
-            repMovement.LinearVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+            repMovement.LinearVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
 
             if (repMovement.bRepPhysics)
             {
-                repMovement.AngularVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+                repMovement.AngularVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
             }
 
             return repMovement;
@@ -88,6 +110,11 @@ namespace Unreal.Core
             var x = ReadSingle();
             var y = ReadSingle();
             return new FVector2D(x, y);
+        }
+
+        public FVector SerializePropertyVector()
+        {
+            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }
 
         /// <summary>
@@ -242,6 +269,7 @@ namespace Unreal.Core
             {
                 Value = ReadIntPacked()
             };
+
             return netGuid.Value;
 
             //if (!netGuid.IsValid())

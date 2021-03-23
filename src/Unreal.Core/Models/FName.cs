@@ -12,28 +12,12 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
-            var isHardcoded = reader.ReadBoolean();
-            if (isHardcoded)
-            {
-                uint nameIndex;
-                if (reader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = reader.ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = reader.ReadIntPacked();
-                }
+            Name = reader.SerializePropertyName();
+        }
 
-                Name = ((UnrealNames)nameIndex).ToString();
-
-                return;
-            }
-
-            var inString = reader.ReadFString();
-            var inNumber = reader.ReadInt32();
-
-            Name = inString;
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
-            reader.SkipBytes(9);
+            reader.SkipBits(72);
 
             Key = reader.ReadFString();
             Text = reader.ReadFString();

@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Enums;
+﻿using Unreal.Core.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -6,7 +7,7 @@ namespace Unreal.Core.Models
     /// Replicated movement data of our RootComponent.
     /// see  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3005
     /// </summary>
-    public class FRepMovement
+    public class FRepMovement : IProperty
     {
         /// <summary>
         /// Velocity of component in world space
@@ -52,6 +53,31 @@ namespace Unreal.Core.Models
         /// Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts.
         /// </summary>
         public RotatorQuantization RotationQuantizationLevel { get; set;}
+
+        public void Serialize(NetBitReader reader)
+        {
+            SerializeRepMovement(reader);
+        }
+
+        protected void SerializeRepMovement(NetBitReader reader,
+            VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
+            RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
+            VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
+        {
+            var flags = reader.ReadBitsToInt(2);
+            bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            bRepPhysics = (flags & (1 << 1)) > 0;
+
+            Location = reader.SerializeQuantizedVector(locationQuantizationLevel);
+
+            Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? reader.ReadRotation() : reader.ReadRotationShort();
+            LinearVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+
+            if (bRepPhysics)
+            {
+                AngularVelocity = reader.SerializeQuantizedVector(velocityQuantizationLevel);
+            }
+        }
 
         public override string ToString()
         {

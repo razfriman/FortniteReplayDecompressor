@@ -4,20 +4,36 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core.Attributes
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public sealed class NetFieldExportAttribute : Attribute
+    public class RepLayoutAttribute : Attribute
+    {
+        public RepLayoutCmdType Type { get; set; }
+
+        public RepLayoutAttribute(RepLayoutCmdType type)
+        {
+            Type = type;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public sealed class NetFieldExportAttribute : RepLayoutAttribute
     {
         public string Name { get; set; }
-        public RepLayoutCmdType Type { get; set; }
-        public int Handle { get; set; }
-        public UnknownFieldInfo Info { get; set; }
 
-
-        public NetFieldExportAttribute(string name, RepLayoutCmdType type, int handle, string propertyNameUKInfo, string typeUKInfo, int bitCountUKInfo)
+        public NetFieldExportAttribute(string name, RepLayoutCmdType type) : base(type)
         {
             Name = name;
-            Type = type;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public sealed class NetFieldExportHandleAttribute : RepLayoutAttribute
+    {
+        public uint Handle { get; private set; }
+
+        public NetFieldExportHandleAttribute(uint handle, RepLayoutCmdType type) : base(type)
+        {
             Handle = handle;
-            Info = new UnknownFieldInfo(propertyNameUKInfo, typeUKInfo, bitCountUKInfo, (uint)handle);
+            Type = type;
         }
     }
 }

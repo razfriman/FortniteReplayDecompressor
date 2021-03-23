@@ -32,8 +32,10 @@
         PropertySoftObject = 22,
         PropertyWeakObject = 23,
 
+        RepMovementWholeNumber = 94,
+        Debug = 95,
+        PropertyInt16 = 96,
         PropertyUInt16 = 97,
-        Pointer = 98,
         Enum = 99,
         Ignore = 100
     }

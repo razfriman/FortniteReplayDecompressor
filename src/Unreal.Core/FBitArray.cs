@@ -8,69 +8,70 @@ namespace Unreal.Core
 {
     public class FBitArray
     {
-        private bool[] _items;
+        public bool[] Items { get; private set; }
 
-        public int Length => _items.Length;
-        public bool[] Bits => _items;
+        public int Length => Items.Length;
         public bool IsReadOnly => false;
+        public byte[] ByteArrayUsed;
 
         public FBitArray(bool[] bits)
         {
-            _items = bits;
+            Items = bits;
         }
 
         public unsafe FBitArray(byte[] bytes)
         {
-            _items = new bool[bytes.Length * 8];
+            Items = new bool[bytes.Length * 8];
+            ByteArrayUsed = bytes;
 
             fixed (byte* bytePtr = bytes)
-            fixed (bool* itemPtr = Bits)
+            fixed (bool* itemPtr = Items)
             {
                 for (int i = 0; i < bytes.Length; i++)
                 {
                     int offset = i * 8;
 
-                    byte b = *(bytePtr + i);
-
-                    for (int z = 0; z < 8; z++)
-                    {
-                        *(itemPtr + offset + z) = (b & 0x01) == 0x01;
-
-                        b >>= 1;
-                    }
+                    *(itemPtr + offset) = ((*(bytePtr + i)) & 0x01) == 0x01;
+                    *(itemPtr + offset + 1) = ((*(bytePtr + i) >> 1) & 0x01) == 0x01;
+                    *(itemPtr + offset + 2) = ((*(bytePtr + i) >> 2) & 0x01) == 0x01;
+                    *(itemPtr + offset + 3) = ((*(bytePtr + i) >> 3) & 0x01) == 0x01;
+                    *(itemPtr + offset + 4) = ((*(bytePtr + i) >> 4) & 0x01) == 0x01;
+                    *(itemPtr + offset + 5) = ((*(bytePtr + i) >> 5) & 0x01) == 0x01;
+                    *(itemPtr + offset + 6) = ((*(bytePtr + i) >> 6) & 0x01) == 0x01;
+                    *(itemPtr + offset + 7) = ((*(bytePtr + i) >> 7) & 0x01) == 0x01;
                 }
             }
         }
 
         public bool this[int index]
-        { 
+        {
             get
             {
-                return _items[index];
+                return Items[index];
             }
             set
             {
-                _items[index] = value;
+                Items[index] = value;
             }
         }
 
         public Span<bool> AsSpan(int start, int count)
         {
-            return _items.AsSpan(start, count);
+            return Items.AsSpan(start, count);
         }
         public void CopyTo(bool[] array, int arrayIndex)
         {
-            _items.CopyTo(array, arrayIndex);
+            Items.CopyTo(array, arrayIndex);
         }
 
         public void Append(bool[] after)
         {
-            bool[] newArray = new bool[_items.Length + after.Length];
+            bool[] newArray = new bool[Items.Length + after.Length];
 
-            Array.Copy(_items, 0, newArray, 0, _items.Length);
-            Array.Copy(after, 0, newArray, _items.Length, after.Length);
+            Array.Copy(Items, 0, newArray, 0, Items.Length);
+            Array.Copy(after, 0, newArray, Items.Length, after.Length);
 
-            _items = newArray;
+            Items = newArray;
         }
     }
 }
