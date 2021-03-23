@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/HaakonWin2.replay"; //Used for testing
+            var replayFile = "Replays/testReplay.replay"; //Used for testing
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/Test.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
