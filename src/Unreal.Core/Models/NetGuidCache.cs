@@ -29,12 +29,17 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMap.Clear();
             NetFieldExportGroupIndexToGroup.Clear();
             NetGuidToPathName.Clear();
-            _archTypeToExportGroup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
+            NetworkGameplayTagNodeIndex = null;
+
+            _archTypeToExportGroup.Clear();
+            _cleanedClassNetCache.Clear();
+            _partialPathNames.Clear();
             _cleanedPaths.Clear();
             _failedPaths.Clear();
-            NetworkGameplayTagNodeIndex = null;
+            _pathToExportGroup.Clear();
         }
+
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
             if (NetworkGameplayTagNodeIndex == null && group == "NetworkGameplayTagNodeIndex")
