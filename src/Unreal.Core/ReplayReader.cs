@@ -169,7 +169,7 @@ namespace Unreal.Core
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
                    //Failing to read checkpoints properly
-                   ReadCheckpoint(archive);
+                   //ReadCheckpoint(archive);
 
                     archive.Seek(chunkSize, SeekOrigin.Current);
                 }
