@@ -50,11 +50,18 @@ namespace Unreal.Core
         private int InPacketId;
         private DataBunch PartialBunch;
         private int?[] InReliable = new int?[DefaultMaxChannelSize];
-        public UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
+
         //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
+        private List<string> PathNameTable = new List<string>();
         private bool isReading = false;
         private NetFieldParser _netFieldParser;
+
+#if DEBUG
+        public UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
+#else
+        private UChannel[] Channels = new UChannel[DefaultMaxChannelSize];
+#endif
 
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
@@ -109,13 +116,13 @@ namespace Unreal.Core
 #if DEBUG
             StringBuilder builder = new StringBuilder();
 
-            foreach(var exportGroupMap in GuidCache.NetFieldExportGroupMap)
+            foreach (var exportGroupMap in GuidCache.NetFieldExportGroupMap)
             {
                 builder.AppendLine($"Path: {exportGroupMap.Key}");
 
-                foreach(var exportGroup in exportGroupMap.Value.NetFieldExports)
+                foreach (var exportGroup in exportGroupMap.Value.NetFieldExports)
                 {
-                    if(exportGroup == null)
+                    if (exportGroup == null)
                     {
                         continue;
                     }
@@ -134,6 +141,13 @@ namespace Unreal.Core
             Channels = new UChannel[DefaultMaxChannelSize];
             //ChannelActors = new bool?[DefaultMaxChannelSize];
             IgnoringChannels = new uint?[DefaultMaxChannelSize];
+            PathNameTable.Clear();
+
+            replayDataIndex = 0;
+            checkpointIndex = 0;
+            externalDataIndex = 0;
+            packetIndex = 0;
+            bunchIndex = 0;
 
             GuidCache.ClearCache();
         }
@@ -154,8 +168,8 @@ namespace Unreal.Core
 
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
-                    //Failing to read checkpoints properly
-                    //ReadCheckpoint(archive);
+                   //Failing to read checkpoints properly
+                   //ReadCheckpoint(archive);
 
                     archive.Seek(chunkSize, SeekOrigin.Current);
                 }
@@ -256,11 +270,40 @@ namespace Unreal.Core
                     OuterGuid = new NetworkGUID
                     {
                         Value = binaryArchive.ReadIntPacked()
-                    },
-                    PathName = binaryArchive.ReadFString(),
-                    NetworkChecksum = binaryArchive.ReadUInt32(),
-                    Flags = binaryArchive.ReadByte()
+                    }
                 };
+
+                if(binaryArchive.NetworkVersion < NetworkVersionHistory.HISTORY_GUID_NAMETABLE)
+                {
+                    cacheObject.PathName = binaryArchive.ReadFString();
+                }
+                else
+                {
+                    bool isExported = binaryArchive.ReadBoolean();
+
+                    if(isExported)
+                    {
+                        cacheObject.PathName = binaryArchive.ReadFString();
+
+                        PathNameTable.Add(cacheObject.PathName);
+                    }
+                    else
+                    {
+                        uint pathNameIndex = binaryArchive.ReadIntPacked();
+
+                        if(pathNameIndex < PathNameTable.Count)
+                        {
+                            cacheObject.PathName = PathNameTable[(int)pathNameIndex];
+                        }
+                        else
+                        {
+                            _logger?.LogError("Invalid guid path table index while deserializing checkpoint.");
+                        }
+                    }
+                }
+
+                cacheObject.NetworkChecksum = binaryArchive.ReadUInt32();
+                cacheObject.Flags = binaryArchive.ReadByte();
 
                 // TODO DemoNetDriver 5319
                 // GuidCache->ObjectLookup.Add(Guid, CacheObject);
@@ -1271,7 +1314,7 @@ namespace Unreal.Core
                     return;
                 }
 
-                #region SerializeNewActor https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
+#region SerializeNewActor https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
 
                 var inActor = new Actor
                 {
@@ -1344,7 +1387,7 @@ namespace Unreal.Core
                     inActor.Velocity = ConditionallySerializeQuantizedVector(new FVector(0, 0, 0));
                 }
 
-                #endregion
+#endregion
 
                 channel.Actor = inActor;
 

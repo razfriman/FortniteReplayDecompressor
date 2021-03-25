@@ -20,6 +20,8 @@
         HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO = 13,    // Bump version to conditionally disable quantization for Scale, Location, and Velocity when spawning network actors.
         HISTORY_JITTER_IN_HEADER = 14,                  // Bump version since we added jitter clock time to packet headers and removed remote saturation
         HISTORY_CLASSNETCACHE_FULLNAME = 15,			// Bump version to use full paths in GetNetFieldExportGroupForClassNetCache
+        HISTORY_REPLAY_DORMANCY = 16,                   // Bump version to support dormancy properly in replays (TODO)
+        HISTORY_ENUM_SERIALIZATION_COMPAT = 17,         // Bump version to include enum bits required for serialization into compat checksums, as well as unify enum and byte property enum serialization (TODO)
 
         HISTORY_ENGINENETVERSION_PLUS_ONE,
         HISTORY_ENGINENETVERSION_LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,
