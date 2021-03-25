@@ -169,7 +169,7 @@ namespace Unreal.Core
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
                    //Failing to read checkpoints properly
-                   //ReadCheckpoint(archive);
+                   ReadCheckpoint(archive);
 
                     archive.Seek(chunkSize, SeekOrigin.Current);
                 }
@@ -302,7 +302,11 @@ namespace Unreal.Core
                     }
                 }
 
-                cacheObject.NetworkChecksum = binaryArchive.ReadUInt32();
+                if (binaryArchive.NetworkVersion < NetworkVersionHistory.HISTORY_GUIDCACHE_CHECKSUMS)
+                {
+                    cacheObject.NetworkChecksum = binaryArchive.ReadUInt32();
+                }
+
                 cacheObject.Flags = binaryArchive.ReadByte();
 
                 // TODO DemoNetDriver 5319
