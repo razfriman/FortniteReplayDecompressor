@@ -10,6 +10,7 @@ using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
+using FortniteReplayReader.Models.NetFieldExports.Vehicles;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -186,10 +187,11 @@ namespace FortniteReplayReader
                         Replay.GameInformation.UpdateHealth(channel, healthSet, GuidCache);
                     }
                     break;
+                case BaseVehicle vehicle:
+                    Replay.GameInformation.UpdateVehicle(channel, vehicle);
+                    break;
                 case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-                    if (debuggingObject.ExportGroup.PathName.StartsWith("/Game/Building/ActorBlueprints/Player/Wood"))
-                    {
-                    }
+
                     break;
             }
         }

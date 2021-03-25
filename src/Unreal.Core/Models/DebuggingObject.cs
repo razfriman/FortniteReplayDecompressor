@@ -35,6 +35,8 @@ namespace Unreal.Core.Models
         public FVector Vector100 => AsVector(VectorType.Vector100);
         public FRotator RotatorByte => AsRotator(RotatorType.Byte);
         public FRotator RotatorShort => AsRotator(RotatorType.Short);
+        public FRepMovement FRepMovementWholeNumber => AsFRepMovement(VectorQuantization.RoundWholeNumber);
+        public FRepMovement FRepMovementTwoDecimal => AsFRepMovement(VectorQuantization.RoundTwoDecimals);
 
         //public FRepMovement RepMovement => AsRepMovement();
         public string AsciiString => Encoding.ASCII.GetString(Bytes);
@@ -381,6 +383,20 @@ namespace Unreal.Core.Models
             _reader.Reset();
 
             return _reader.SerializePropertyEnum(_reader.GetBitsLeft());
+        }
+
+        private FRepMovement AsFRepMovement(VectorQuantization vectorQuantization)
+        {
+            _reader.Reset();
+
+            FRepMovement movement  = _reader.SerializeRepMovement(vectorQuantization);
+
+            if(_reader.IsError || !_reader.AtEnd())
+            {
+                return null;
+            }
+
+            return movement;
         }
     }
 
