@@ -67,6 +67,10 @@ namespace FortniteReplayReader.Models
         public virtual float Yaw { get; set; }
 
         public float WorldTime { get; set; }
+        public float DeltaGameTimeSeconds { get; set; }
+        public bool InVehicle { get; set; }
+
+        internal uint VehicleChannel { get; set; }
     }
 
     public class PlayerLocationRepMovement : PlayerLocation

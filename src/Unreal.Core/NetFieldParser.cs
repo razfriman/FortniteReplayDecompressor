@@ -59,6 +59,55 @@ namespace Unreal.Core
         }
 
 #if DEBUG
+
+        public static string CreateFileData(DebuggingExportGroup debuggingGroup)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.AppendLine($"\t[NetFieldExportGroup(\"{debuggingGroup.ExportGroup.PathName}\", ParseType.Normal)]");
+            builder.AppendLine($"\tpublic class {debuggingGroup.ExportGroup.PathName.Split("/").Last()} : INetFieldExportGroup");
+            builder.AppendLine("\t{");
+
+            HashSet<string> alreadyAdded = new HashSet<string>();
+
+            foreach (KeyValuePair<uint, string> kvp in debuggingGroup.HandleNames)
+            {
+                if(alreadyAdded.Contains(kvp.Value))
+                {
+                    continue;
+                }
+
+                builder.AppendLine($"\t\t[NetFieldExport(\"{kvp.Value}\", RepLayoutCmdType.Property)]");
+                builder.AppendLine($"\t\tpublic DebuggingObject {kvp.Value} {{ get; set; }}");
+                builder.AppendLine($"");
+
+                alreadyAdded.Add(kvp.Value);
+            }
+
+            builder.AppendLine("\t\tpublic override bool ManualRead(string property, object value)");
+            builder.AppendLine("\t\t{");
+            builder.AppendLine("\t\t\tswitch(property)");
+            builder.AppendLine("\t\t\t{");
+
+            foreach (string properties in alreadyAdded)
+            {
+                builder.AppendLine($"\t\t\t\tcase \"{properties}\":");
+                builder.AppendLine($"\t\t\t\t\t{properties} = (DebuggingObject)value;");
+                builder.AppendLine($"\t\t\t\t\tbreak;");
+            }
+
+            builder.AppendLine("\t\t\t\tdefault:");
+            builder.AppendLine("\t\t\t\t\treturn base.ManualRead(property, value);");
+            builder.AppendLine("\t\t\t}");
+            builder.AppendLine();
+            builder.AppendLine("\t\t\treturn true;");
+            builder.AppendLine("\t\t}");
+            builder.AppendLine("\t}");
+
+            return builder.ToString();
+        }
+
+
         private void UpdateFiles(IEnumerable<Type> types)
         {
             Dictionary<string, Type> keyValues = types.ToDictionary(x => x.Name, x => x);

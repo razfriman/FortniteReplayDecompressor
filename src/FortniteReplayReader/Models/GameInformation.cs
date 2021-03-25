@@ -10,6 +10,7 @@ using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
+using FortniteReplayReader.Models.NetFieldExports.Vehicles;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -51,6 +52,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, object> _containers = new Dictionary<uint, object>(); //Channel to searchable containers
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
+        private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
         private Player _replayPlayer;
 
         //Delta updates
@@ -67,15 +69,15 @@ namespace FortniteReplayReader.Models
         internal void ChannelClosed(uint channel)
         {
             _playerPawns.Remove(channel);
+            _vehicles.Remove(channel);
             _weapons.Remove(channel);
             _floorLoot.Remove(channel);
             _playerStructures.Remove(channel);
-
         }
 
         internal void AddActor(uint channel, Actor actor)
         {
-            _actorToChannel.TryAdd(actor.ActorNetGUID.Value, channel);
+            _actorToChannel[actor.ActorNetGUID.Value] = channel;
         }
 
         internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo)
@@ -430,7 +432,7 @@ namespace FortniteReplayReader.Models
                     else
                     {
                         //Queues up player pawn to process for later
-                        if (!_queuedPlayerPawns.TryGetValue(playerPawnC.PlayerState.Value, out var playerPawns))
+                        if (!_queuedPlayerPawns.TryGetValue(playerPawnC.PlayerState.Value, out List<QueuedPlayerPawn> playerPawns))
                         {
                             playerPawns = new List<QueuedPlayerPawn>();
 
@@ -457,21 +459,57 @@ namespace FortniteReplayReader.Models
                 case Player playerActor:
                     playerActor.LastTransformUpdate = playerPawnC.ReplayLastTransformUpdateTimeStamp ?? playerActor.LastTransformUpdate;
 
-                    if (playerPawnC.ReplicatedMovement != null && !IgnoreLocationUpdate(playerActor)) //Update location
+                    if (!IgnoreLocationUpdate(playerActor))
                     {
-                        var newLocation = new PlayerLocationRepMovement
-                        {
-                            RepLocation = playerPawnC.ReplicatedMovement,
-                            WorldTime = GameState.CurrentWorldTime,
-                            LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp
-                        };
+                        PlayerLocationRepMovement fRepMovement = null;
 
-                        if (trackLocations)
+                        if (playerPawnC.Vehicle != null) //Player got in vehicle, so grab vehicle location
                         {
-                            playerActor.Locations.Add(newLocation);
+                            uint actorChannel = 0;
+
+                            if (playerPawnC.Vehicle.Value > 0 &&
+                                _actorToChannel.TryGetValue(playerPawnC.Vehicle.Value, out actorChannel) &&
+                                _vehicles.TryGetValue(actorChannel, out Vehicle vehicle))
+                            {
+                                fRepMovement = vehicle.CurrentLocation;
+                                fRepMovement.InVehicle = true;
+                                fRepMovement.VehicleChannel = actorChannel;
+                            }
+                            else
+                            {
+                                //Missing vehicle
+                            }
+                        }
+                        else if (playerActor.LastKnownLocation?.InVehicle == true) //Still in vehicle, use vehicle locations
+                        {
+                            if(_vehicles.TryGetValue(playerActor.LastKnownLocation.VehicleChannel, out Vehicle vehicle))
+                            {
+                                fRepMovement = vehicle.CurrentLocation;
+                                fRepMovement.InVehicle = true;
+                                fRepMovement.VehicleChannel = playerActor.LastKnownLocation.VehicleChannel;
+                            }
                         }
 
-                        playerActor.LastKnownLocation = newLocation;
+                        if (playerPawnC.ReplicatedMovement != null)
+                        {
+                            fRepMovement = new PlayerLocationRepMovement
+                            {
+                                RepLocation = playerPawnC.ReplicatedMovement,
+                                WorldTime = GameState.CurrentWorldTime,
+                                LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp,
+                                DeltaGameTimeSeconds = GameState.DeltaGameTime
+                            };
+                        }
+
+                        if (fRepMovement != null)
+                        {
+                            if (trackLocations)
+                            {
+                                playerActor.Locations.Add(fRepMovement);
+                            }
+
+                            playerActor.LastKnownLocation = fRepMovement;
+                        }
                     }
 
                     //Update current weapon
@@ -514,6 +552,35 @@ namespace FortniteReplayReader.Models
                     }
 
                     break;
+            }
+        }
+
+        internal void UpdateVehicle(uint channelId, BaseVehicle baseVehicle)
+        {
+            if (!_vehicles.TryGetValue(channelId, out Vehicle vehicle))
+            {
+                NetGUIDToPathName.TryGetValue(baseVehicle.ChannelActor.Archetype.Value, out string carType);
+
+                vehicle = new Vehicle
+                {
+                    SpawnLocation = baseVehicle.ChannelActor.Location,
+                    SpawnRotation = baseVehicle.ChannelActor.Rotation,
+                    VehicleName = carType
+                };
+
+                _vehicles[channelId] = vehicle;
+            }
+
+            if (baseVehicle.ReplicatedMovement != null) //Update location
+            {
+                PlayerLocationRepMovement newLocation = new PlayerLocationRepMovement
+                {
+                    RepLocation = baseVehicle.ReplicatedMovement,
+                    WorldTime = GameState.CurrentWorldTime,
+                    DeltaGameTimeSeconds = GameState.DeltaGameTime
+                };
+
+                vehicle.CurrentLocation = newLocation;
             }
         }
 
@@ -962,7 +1029,7 @@ namespace FortniteReplayReader.Models
 
         private void HandleQueuedPlayerPawns(Player player)
         {
-            if(_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out var playerPawns))
+            if(_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out List<QueuedPlayerPawn> playerPawns))
             {
                 foreach(QueuedPlayerPawn playerPawn in playerPawns)
                 {
@@ -996,7 +1063,7 @@ namespace FortniteReplayReader.Models
                     break;
             }
 
-            if(shouldIgnore)
+            if(shouldIgnore || Settings.LocationChangeDeltaMS == 0)
             {
                 return shouldIgnore;
             }
