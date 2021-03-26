@@ -91,7 +91,17 @@ namespace Unreal.Core
             repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
 
             repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
-            repMovement.Rotation = ReadRotation();
+
+            switch(rotationQuantizationLevel)
+            {
+                case RotatorQuantization.ByteComponents:
+                    repMovement.Rotation = ReadRotation();
+                    break;
+                case RotatorQuantization.ShortComponents:
+                    repMovement.Rotation = ReadRotationShort();
+                    break;
+            }
+
             repMovement.LinearVelocity = SerializeQuantizedVector(velocityQuantizationLevel);
 
             if (repMovement.bRepPhysics)

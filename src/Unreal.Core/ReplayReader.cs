@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
@@ -1810,6 +1811,7 @@ namespace Unreal.Core
             outExport = exportGroup;
             outExport.ChannelActor = Channels[channelIndex].Actor;
 
+
             bool hasData = false;
 
             while (true)
@@ -2397,6 +2399,40 @@ namespace Unreal.Core
 
             //_logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return decompressed;
+        }
+
+        /// <summary>
+        /// Changes the parsing mode for specific NetFieldExport types
+        /// </summary>
+        /// <param name="type">NetFieldExport type</param>
+        /// <param name="parseType">Minimum parse type required to parse objects from replay</param>
+        /// <returns></returns>
+        public virtual void SetParseType(IEnumerable<Type> types, ParseType parseType)
+        {
+            foreach (Type type in types)
+            {
+                SetParseType(type, parseType);
+            }
+        }
+
+        /// <summary>
+        /// Changes the parsing mode for specific NetFieldExport types
+        /// </summary>
+        /// <param name="type">NetFieldExport type</param>
+        /// <param name="parseType">Minimum parse type required to parse objects from replay</param>
+        /// <returns></returns>
+        public virtual void SetParseType(Type type, ParseType parseType)
+        {
+            NetFieldExportGroupAttribute netFieldExport = (NetFieldExportGroupAttribute)type.GetCustomAttributes(typeof(NetFieldExportGroupAttribute), true).FirstOrDefault();
+
+            if (netFieldExport == null)
+            {
+                _logger.LogWarning($"Failed to find 'NetFieldExportGroupAttribute' on type {type.Name}");
+
+                return;
+            }
+
+            _netFieldParser.SetMinimalParseType(netFieldExport.Path, parseType);
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
