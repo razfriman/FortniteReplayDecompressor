@@ -169,8 +169,7 @@ namespace Unreal.Core
 
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
-                   //Failing to read checkpoints properly
-                   //ReadCheckpoint(archive);
+                    //ReadCheckpoint(archive);
 
                     archive.Seek(chunkSize, SeekOrigin.Current);
                 }
@@ -2404,7 +2403,7 @@ namespace Unreal.Core
         /// <summary>
         /// Changes the parsing mode for specific NetFieldExport types
         /// </summary>
-        /// <param name="type">NetFieldExport type</param>
+        /// <param name="type">NetFieldExport types</param>
         /// <param name="parseType">Minimum parse type required to parse objects from replay</param>
         /// <returns></returns>
         public virtual void SetParseType(IEnumerable<Type> types, ParseType parseType)
@@ -2416,7 +2415,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Changes the parsing mode for specific NetFieldExport types
+        /// Changes the parsing mode for specific NetFieldExport type
         /// </summary>
         /// <param name="type">NetFieldExport type</param>
         /// <param name="parseType">Minimum parse type required to parse objects from replay</param>
@@ -2432,7 +2431,23 @@ namespace Unreal.Core
                 return;
             }
 
-            _netFieldParser.SetMinimalParseType(netFieldExport.Path, parseType);
+            SetParseType(netFieldExport.Path, parseType);
+        }
+
+        /// <summary>
+        /// Changes the parsing mode for specific NetFieldExport type
+        /// </summary>
+        /// <param name="type">Path name of NetFieldExport</param>
+        /// <param name="parseType">Minimum parse type required to parse objects from replay</param>
+        /// <returns></returns>
+        public virtual void SetParseType(string pathname, ParseType parseType)
+        {
+            _netFieldParser.SetMinimalParseType(pathname, parseType);
+        }
+
+        public virtual Dictionary<string, ParseType> GetNetFieldExports()
+        {
+            return _netFieldParser.GetNetFieldExportTypes();
         }
 
         protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
