@@ -28,6 +28,11 @@ namespace Unreal.Core.Models
                     break;
             }
         }
+
+        public override string ToString()
+        {
+            return Text;
+        }
     }
 
     [Flags]
