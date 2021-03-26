@@ -30,8 +30,9 @@ namespace FortniteReplayReader.Models
         public List<WeaponShot> Shots { get; internal set; } = new List<WeaponShot>();
         public List<WeaponShot> DamageTaken { get; internal set; } = new List<WeaponShot>();
         public FGameplayTag[] DeathTags { get; internal set; }
-        public bool Disconnected { get; set; }
+        public bool Disconnected { get; internal set; }
         public PlayerLocationRepMovement LastKnownLocation { get; internal set; }
+        public int WorldPlayerId { get; internal set; }
 
         //Extended information
         public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();
@@ -52,7 +53,6 @@ namespace FortniteReplayReader.Models
         public PlayerLocation LandingLocation { get; set; }
 
         //Internal 
-        internal int WorldPlayerId { get; set; }
         internal KillFeedEntry LastKnockedEntry { get; set; }
         internal List<InventoryItem> InventoryBeforeDeletes { get; set; } = new List<InventoryItem>();
         internal int InventoryBaseReplicationKey { get; set; }
