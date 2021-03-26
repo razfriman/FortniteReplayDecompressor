@@ -23,6 +23,12 @@ namespace Unreal.Core.Models
         public int FaceIndex { get; private set; }
 
         /// <summary>
+        /// If this test started in penetration (bStartPenetrating is true) and a depenetration vector can be computed,
+        /// If the distance cannot be computed, this distance will be zero.
+        /// </summary>
+        public byte ElementIndex { get; private set; }
+
+        /// <summary>
         /// 'Time' of impact along trace direction (ranging from 0.0 to 1.0) if there is a hit, indicating time between TraceStart and TraceEnd.
         /// For swept movement(but not queries) this may be pulled back slightly from the actual time of impact, to prevent precision problems with adjacent geometry.
         /// </summary>
@@ -95,7 +101,6 @@ namespace Unreal.Core.Models
         /// </summary>
         public string MyBoneName { get; private set; }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
         /// </summary>
@@ -103,7 +108,7 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(7);
+            var flags = reader.ReadBits(8);
 
             // Most of the time the vectors are the same values, use that as an optimization
             BlockingHit = flags[0];
@@ -115,6 +120,7 @@ namespace Unreal.Core.Models
             bool bInvalidItem = flags[4];
             bool bInvalidFaceIndex = flags[5];
             bool bNoPenetrationDepth = flags[6];
+            bool bInvalidElementIndex = flags[7];
 
             Time = reader.ReadSingle();
 
@@ -166,6 +172,7 @@ namespace Unreal.Core.Models
             Actor = reader.SerializePropertyObject();
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
+
             if (!bInvalidFaceIndex)
             {
                 FaceIndex = reader.ReadInt32();
@@ -173,6 +180,15 @@ namespace Unreal.Core.Models
             else
             {
                 FaceIndex = 0;
+            }
+
+            if (!bInvalidElementIndex)
+            {
+                ElementIndex = reader.ReadByte();
+            }
+            else
+            {
+                ElementIndex = 0;
             }
         }
     }

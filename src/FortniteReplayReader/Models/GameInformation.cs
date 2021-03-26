@@ -465,19 +465,19 @@ namespace FortniteReplayReader.Models
 
                         if (playerPawnC.Vehicle != null) //Player got in vehicle, so grab vehicle location
                         {
-                            uint actorChannel = 0;
-
-                            if (playerPawnC.Vehicle.Value > 0 &&
-                                _actorToChannel.TryGetValue(playerPawnC.Vehicle.Value, out actorChannel) &&
-                                _vehicles.TryGetValue(actorChannel, out Vehicle vehicle))
+                            if (playerPawnC.Vehicle.Value > 0)
                             {
-                                fRepMovement = vehicle.CurrentLocation;
-                                fRepMovement.InVehicle = true;
-                                fRepMovement.VehicleChannel = actorChannel;
-                            }
-                            else
-                            {
-                                //Missing vehicle
+                                if (_actorToChannel.TryGetValue(playerPawnC.Vehicle.Value, out uint actorChannel) &&
+                                    _vehicles.TryGetValue(actorChannel, out Vehicle vehicle))
+                                {
+                                    fRepMovement = vehicle.CurrentLocation;
+                                    fRepMovement.InVehicle = true;
+                                    fRepMovement.VehicleChannel = actorChannel;
+                                }
+                                else
+                                {
+                                    //Missing vehicle
+                                }
                             }
                         }
                         else if (playerActor.LastKnownLocation?.InVehicle == true) //Still in vehicle, use vehicle locations

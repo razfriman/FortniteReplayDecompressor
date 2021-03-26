@@ -19,6 +19,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unreal.Core;
+using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
@@ -490,6 +491,40 @@ namespace FortniteReplayReader
             };
 
             return decrypted;
+        }
+
+        public void SetParseType(ParsingGroup group, ParseType type)
+        {
+            switch (group)
+            {
+                case ParsingGroup.PlayerPawn:
+                    SetParseType(typeof(PlayerPawnC), type); //Normal player locations
+                    SetParseType(GetInheritedClasses(typeof(PlayerPawnC)), type); //Bot locations
+                    SetParseType(GetInheritedClasses(typeof(BaseVehicle)), type); //Vehicle locations (required for players in them)
+                    break;
+            }
+
+            List<Type> GetInheritedClasses(Type type)
+            {
+                List<Type> inheritedTypes = new List<Type>();
+
+                IEnumerable<Type> allTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes());
+
+                foreach(Type checkType in allTypes)
+                {
+                    if (checkType.IsSubclassOf(type))
+                    {
+                        NetFieldExportGroupAttribute netFieldExport = (NetFieldExportGroupAttribute)checkType.GetCustomAttributes(typeof(NetFieldExportGroupAttribute), true).FirstOrDefault();
+
+                        if (netFieldExport != null)
+                        {
+                            inheritedTypes.Add(checkType);
+                        }
+                    }
+                }
+
+                return inheritedTypes;
+            }
         }
     }
 }

@@ -58,6 +58,18 @@ namespace Unreal.Core
             LoadPropertyTypes(propertyTypes);
         }
 
+        public bool SetMinimalParseType(string path, ParseType type)
+        {
+            if(!_parserInfo.NetFieldGroups.TryGetValue(path, out NetFieldGroupInfo netFieldGroup))
+            {
+                return false;
+            }
+
+            netFieldGroup.Attribute.MinimumParseType = type;
+
+            return true;
+        }
+
 #if DEBUG
 
         public static string CreateFileData(DebuggingExportGroup debuggingGroup)

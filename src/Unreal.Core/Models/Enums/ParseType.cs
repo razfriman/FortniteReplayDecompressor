@@ -11,19 +11,19 @@ namespace Unreal.Core.Models.Enums
         /// </summary>
         EventsOnly,
         /// <summary>
-        /// Parses events and partial useful data. 
+        /// Parses events and initial game state.
         /// </summary>
         Minimal,
         /// <summary>
-        /// Parses events and all useful data.
+        /// Parses events and full game state.
         /// </summary>
         Normal,
         /// <summary>
-        /// Not implemented
+        /// Parses everything currently handled.
         /// </summary>
         Full,
         /// <summary>
-        /// Contains debugging information
+        /// Parses everything + contains debugging information
         /// </summary>
         Debug
     }
