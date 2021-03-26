@@ -47,7 +47,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 		[NetFieldExport("RearSpringLengthMultiplier", RepLayoutCmdType.PropertyFloat)]
 		public float? RearSpringLengthMultiplier { get; set; }
 
-		[NetFieldExport("GravityMultiplier", RepLayoutCmdType.Property)]
+		[NetFieldExport("GravityMultiplier", RepLayoutCmdType.PropertyFloat)]
 		public float? GravityMultiplier { get; set; }
 
 		[NetFieldExport("GearInfos", RepLayoutCmdType.DynamicArray)]
