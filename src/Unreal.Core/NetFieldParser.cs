@@ -15,13 +15,13 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
-    public class NetFieldParser
+    internal class NetFieldParser
     {
         private static Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
 
         private NetFieldParserInfo _parserInfo;
 
-        public NetFieldParser(Assembly callingAssembly)
+        internal NetFieldParser(Assembly callingAssembly)
         {
             if (_parserInfoDict.ContainsKey(callingAssembly))
             {
@@ -58,7 +58,7 @@ namespace Unreal.Core
             LoadPropertyTypes(propertyTypes);
         }
 
-        public bool SetMinimalParseType(string path, ParseType type)
+        internal bool SetMinimalParseType(string path, ParseType type)
         {
             if(!_parserInfo.NetFieldGroups.TryGetValue(path, out NetFieldGroupInfo netFieldGroup))
             {
@@ -70,9 +70,14 @@ namespace Unreal.Core
             return true;
         }
 
+        internal Dictionary<string, ParseType> GetNetFieldExportTypes()
+        {
+            return _parserInfo.NetFieldGroups.ToDictionary(x => x.Key, x => x.Value.Attribute.MinimumParseType);
+        }
+
 #if DEBUG
 
-        public static string CreateFileData(DebuggingExportGroup debuggingGroup)
+        internal static string CreateFileData(DebuggingExportGroup debuggingGroup)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -118,7 +123,6 @@ namespace Unreal.Core
 
             return builder.ToString();
         }
-
 
         private void UpdateFiles(IEnumerable<Type> types)
         {
@@ -439,12 +443,12 @@ namespace Unreal.Core
             }
         }
 
-        public bool IsPlayerController(string name)
+        internal bool IsPlayerController(string name)
         {
             return _parserInfo.PlayerControllers.Contains(name);
         }
 
-        public string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
+        internal string GetClassNetPropertyPathname(string netCache, string property, out bool readChecksumBit)
         {
             readChecksumBit = false;
 
@@ -469,7 +473,7 @@ namespace Unreal.Core
             return null;
         }
 
-        public bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
+        internal bool TryGetNetFieldGroupRPC(string classNetPathName, string property, ParseType parseType, out NetRPCFieldInfo netFieldInfo, out bool willParse)
         {
             willParse = false;
             netFieldInfo = null;
@@ -494,7 +498,7 @@ namespace Unreal.Core
             return false;
         }
 
-        public bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
+        internal bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
         {
             ignoreChannel = false;
 
@@ -514,7 +518,7 @@ namespace Unreal.Core
             return false;
         }
 
-        public void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        internal void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
             string group = exportGroup.PathName;
 
@@ -782,7 +786,7 @@ namespace Unreal.Core
             }
         }
 
-        public INetFieldExportGroup CreateType(string group)
+        internal INetFieldExportGroup CreateType(string group)
         {
             if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo exportGroup))
             {
@@ -798,7 +802,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
+        internal bool TryCreateRPCPropertyType(string group, string propertyName, out IProperty property)
         {
             property = null;
 
@@ -870,14 +874,14 @@ namespace Unreal.Core
         }
     }
 
-    public class NetRPCFieldInfo
+    internal class NetRPCFieldInfo
     {
         public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
         public PropertyInfo PropertyInfo { get; set; }
         public bool IsCustomStructure { get; set; }
     }
 
-    public class NetRPCFieldGroupInfo
+    internal class NetRPCFieldGroupInfo
     {
         public ParseType ParseType { get; set; }
         public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();

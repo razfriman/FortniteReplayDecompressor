@@ -120,8 +120,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bCombinePickupsWhenTossCompletes", RepLayoutCmdType.PropertyBool)]
         public bool? bCombinePickupsWhenTossCompletes { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("OptionalOwnerID", RepLayoutCmdType.PropertyInt)]
-        public int? OptionalOwnerID { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("OptionalOwnerID", RepLayoutCmdType.PropertyInt16)]
+        public short? OptionalOwnerID { get; set; } //Type: int32 Bits: 32
 
         [NetFieldExport("bPickedUp", RepLayoutCmdType.PropertyBool)]
         public bool? bPickedUp { get; set; } //Type: bool Bits: 1
@@ -260,7 +260,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					bCombinePickupsWhenTossCompletes = (bool)value;
 					break;
 				case "OptionalOwnerID":
-					OptionalOwnerID = (int)value;
+					OptionalOwnerID = (short)value;
 					break;
 				case "bPickedUp":
 					bPickedUp = (bool)value;

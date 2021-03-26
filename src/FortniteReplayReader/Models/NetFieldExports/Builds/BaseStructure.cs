@@ -19,8 +19,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public int? Role { get; set; }
 
-        [NetFieldExport("OwnerPersistentID", RepLayoutCmdType.PropertyUInt32)]
-        public uint? OwnerPersistentID { get; set; }
+        [NetFieldExport("OwnerPersistentID", RepLayoutCmdType.PropertyInt16)]
+        public short? OwnerPersistentID { get; set; }
 
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool? bDestroyed { get; set; }
@@ -102,7 +102,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
 					Role = (int)value;
 					break;
 				case "OwnerPersistentID":
-					OwnerPersistentID = (uint)value;
+					OwnerPersistentID = (short)value;
 					break;
 				case "bDestroyed":
 					bDestroyed = (bool)value;
