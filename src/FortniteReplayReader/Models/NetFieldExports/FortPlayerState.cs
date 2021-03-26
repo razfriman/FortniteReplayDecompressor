@@ -66,8 +66,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId)]
 		public string PartyOwnerUniqueId { get; set; } //Type: FUniqueNetIdRepl Bits: 144
 
-		[NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt)]
-		public int? WorldPlayerId { get; set; } //Type: int32 Bits: 32
+		[NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt16)]
+		public short? WorldPlayerId { get; set; } //Type: int32 Bits: 32
 
 		[NetFieldExport("HeroType", RepLayoutCmdType.PropertyObject)]
 		public uint? HeroType { get; set; } //Type: UFortHeroType* Bits: 16
@@ -309,7 +309,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					PartyOwnerUniqueId = (string)value;
 					break;
 				case "WorldPlayerId":
-					WorldPlayerId = (int)value;
+					WorldPlayerId = (short)value;
 					break;
 				case "HeroType":
 					HeroType = (uint)value;
