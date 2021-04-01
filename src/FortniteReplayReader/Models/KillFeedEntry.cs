@@ -164,11 +164,6 @@ namespace FortniteReplayReader.Models
                     PointOfInterest = deathTag.Split('.').Last();
                 }
             }
-
-            if(!DoNotDisplayInKillFeed && ItemRarity == ItemRarity.Uncommon && ItemType == ItemType.SMG)
-            {
-
-            }
         }
     }
 

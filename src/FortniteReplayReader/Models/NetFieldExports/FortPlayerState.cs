@@ -69,8 +69,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt16)]
 		public short? WorldPlayerId { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("HeroType", RepLayoutCmdType.PropertyObject)]
-		public uint? HeroType { get; set; } //Type: UFortHeroType* Bits: 16
+		[NetFieldExport("HeroType", RepLayoutCmdType.Property)]
+		public ItemDefinitionGUID HeroType { get; set; } //Type: UFortHeroType* Bits: 16
 
 		[NetFieldExport("Platform", RepLayoutCmdType.PropertyString)]
 		public string Platform { get; set; } //Type: FString Bits: 64
@@ -85,7 +85,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
 
 		[NetFieldExport("Parts", RepLayoutCmdType.Property)]
-		public UObjectGUID Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
+		public ItemDefinitionGUID Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
 
 		[NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.Ignore)]
 		public uint? WasPartReplicatedFlags { get; set; } //Type:  Bits: 8
@@ -93,8 +93,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.Ignore)]
 		public uint? RequiredVariantPartFlags { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.Ignore)]
-		public int[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
+		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray)]
+		public ItemDefinitionGUID[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
 
 		[NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Property)]
 		public ActorGUID PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
@@ -312,7 +312,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					WorldPlayerId = (short)value;
 					break;
 				case "HeroType":
-					HeroType = (uint)value;
+					HeroType = (ItemDefinitionGUID)value;
 					break;
 				case "Platform":
 					Platform = (string)value;
@@ -327,7 +327,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					WasReplicatedFlags = (byte)value;
 					break;
 				case "Parts":
-					Parts = (UObjectGUID)value;
+					Parts = (ItemDefinitionGUID)value;
 					break;
 				case "WasPartReplicatedFlags":
 					WasPartReplicatedFlags = (uint)value;
@@ -336,7 +336,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					RequiredVariantPartFlags = (uint)value;
 					break;
 				case "VariantRequiredCharacterParts":
-					VariantRequiredCharacterParts = (int[])value;
+					VariantRequiredCharacterParts = (ItemDefinitionGUID[])value;
 					break;
 				case "PlayerTeamPrivate":
 					PlayerTeamPrivate = (ActorGUID)value;
