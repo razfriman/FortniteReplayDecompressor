@@ -19,7 +19,10 @@ namespace FortniteReplayReader.Models
         public float Distance { get; internal set; }
         public Weapon Weapon { get; internal set; }
         public bool DoNotDisplayInKillFeed { get; internal set; }
-
+        public bool InsideSafeZone { get; internal set; }
+        public string Biome { get; internal set; }
+        public string PointOfInterest { get; internal set; }
+        public bool IsTargeting { get; internal set; }
         public string[] DeathTags
         {
             get
@@ -49,6 +52,12 @@ namespace FortniteReplayReader.Models
             {
                 switch (deathTag)
                 {
+                    case "Gameplay.InsideSafeZone":
+                        InsideSafeZone = true;
+                        break;
+                    case "Gameplay.Status.IsTargeting":
+                        IsTargeting = true;
+                        break;
                     case "Pawn.Athena.DoNotDisplayInKillFeed":
                         DoNotDisplayInKillFeed = true;
                         break;
@@ -143,6 +152,16 @@ namespace FortniteReplayReader.Models
                     case "Rarity.Mythic":
                         ItemRarity = ItemRarity.Mythic;
                         break;
+                }
+
+                if(Biome == null && deathTag.StartsWith("Athena.Location.Biome", StringComparison.OrdinalIgnoreCase))
+                {
+                    Biome = deathTag.Split('.').Last();
+                }
+                else if (PointOfInterest == null && 
+                    (deathTag.StartsWith("Athena.Location.POI", StringComparison.OrdinalIgnoreCase) || deathTag.StartsWith("Athena.Location.UnNamedPOI", StringComparison.OrdinalIgnoreCase)))
+                {
+                    PointOfInterest = deathTag.Split('.').Last();
                 }
             }
 
