@@ -361,8 +361,17 @@ namespace FortniteReplayReader.Models
             newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
             newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
+            newPlayer.Cosmetics.CharacterBodyType = playerState.CharacterBodyType ?? newPlayer.Cosmetics.CharacterBodyType;
+            newPlayer.Cosmetics.HeroType = GetPathName(playerState.HeroType) ?? newPlayer.Cosmetics.HeroType;
+            newPlayer.Cosmetics.CharacterGender = playerState.CharacterGender ?? newPlayer.Cosmetics.CharacterGender;
+            newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
 
-            if(newPlayer.IsPlayersReplay)
+            if (playerState.VariantRequiredCharacterParts != null)
+            {
+                newPlayer.Cosmetics.VariantRequiredCharacterParts = playerState.VariantRequiredCharacterParts.Select(x => GetPathName(x)).ToList();
+            }
+
+            if (newPlayer.IsPlayersReplay)
             {
                 _replayPlayer = newPlayer;
             }
@@ -551,7 +560,34 @@ namespace FortniteReplayReader.Models
                         }
                     }
 
+                    HandleCosmetics(playerActor, playerPawnC);
+
                     break;
+            }
+
+            void HandleCosmetics(Player playerActor, PlayerPawnC playerPawnC)
+            {
+                playerActor.Cosmetics.Backpack = GetPathName(playerPawnC.Backpack) ?? playerActor.Cosmetics.Backpack;
+                playerActor.Cosmetics.BannerColorId = playerPawnC.BannerColorId ?? playerActor.Cosmetics.BannerColorId;
+                playerActor.Cosmetics.BannerIconId = playerPawnC.BannerIconId ?? playerActor.Cosmetics.BannerIconId;
+                playerActor.Cosmetics.Character = GetPathName(playerPawnC.Character) ?? playerActor.Cosmetics.Character;
+                playerActor.Cosmetics.IsDefaultCharacter = playerPawnC.bIsDefaultCharacter ?? playerActor.Cosmetics.IsDefaultCharacter;
+                playerActor.Cosmetics.PetSkin = GetPathName(playerPawnC.PetSkin) ?? playerActor.Cosmetics.PetSkin;
+                playerActor.Cosmetics.Glider = GetPathName(playerPawnC.Glider) ?? playerActor.Cosmetics.Glider;
+                playerActor.Cosmetics.LoadingScreen = GetPathName(playerPawnC.LoadingScreen) ?? playerActor.Cosmetics.LoadingScreen;
+                playerActor.Cosmetics.MusicPack = GetPathName(playerPawnC.MusicPack) ?? playerActor.Cosmetics.MusicPack;
+                playerActor.Cosmetics.Pickaxe = GetPathName(playerPawnC.Pickaxe) ?? playerActor.Cosmetics.Pickaxe;
+                playerActor.Cosmetics.SkyDiveContrail = GetPathName(playerPawnC.SkyDiveContrail) ?? playerActor.Cosmetics.SkyDiveContrail;
+
+                if(playerPawnC.Dances != null)
+                {
+                    playerActor.Cosmetics.Dances = playerPawnC.Dances.Select(x => GetPathName(x)).ToList();
+                }
+
+                if(playerPawnC.ItemWraps != null)
+                {
+                    playerActor.Cosmetics.ItemWraps = playerPawnC.ItemWraps.Select(x => GetPathName(x)).ToList();
+                }
             }
         }
 
@@ -1092,6 +1128,21 @@ namespace FortniteReplayReader.Models
             }
 
             return shouldIgnore;
+        }
+
+        private string GetPathName(ItemDefinitionGUID guid)
+        {
+            if(guid == null || !guid.IsValid())
+            {
+                return null;
+            }
+
+            if(NetGUIDToPathName.TryGetValue(guid.Value, out string pathname))
+            {
+                return pathname;
+            }
+
+            return String.Empty;
         }
 
         internal void UpdateBuild(uint channelId, BaseStructure baseBuild)

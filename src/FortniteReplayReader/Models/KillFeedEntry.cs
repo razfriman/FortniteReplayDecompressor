@@ -145,11 +145,6 @@ namespace FortniteReplayReader.Models
                         break;
                 }
             }
-
-            if(!DoNotDisplayInKillFeed && ItemRarity == ItemRarity.Uncommon && ItemType == ItemType.SMG)
-            {
-
-            }
         }
     }
 

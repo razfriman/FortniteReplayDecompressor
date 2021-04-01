@@ -376,7 +376,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public FMinimalGameplayCueReplicationProxy SimulatedProxyGameplayCues { get; set; } //Type: FMinimalGameplayCueReplicationProxy Bits: 5
 
 		[NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
-		public NetworkGUID[] ItemWraps { get; set; } //Type:  Bits: 408
+		public ItemDefinitionGUID[] ItemWraps { get; set; } //Type:  Bits: 408
 
 		[NetFieldExport("WeaponActivated", RepLayoutCmdType.PropertyBool)]
 		public bool? WeaponActivated { get; set; } //Type: bool Bits: 1
@@ -860,7 +860,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					SimulatedProxyGameplayCues = (FMinimalGameplayCueReplicationProxy)value;
 					break;
 				case "ItemWraps":
-					ItemWraps = (NetworkGUID[])value;
+					ItemWraps = (ItemDefinitionGUID[])value;
 					break;
 				case "WeaponActivated":
 					WeaponActivated = (bool)value;

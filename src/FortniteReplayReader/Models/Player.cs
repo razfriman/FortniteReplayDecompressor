@@ -33,6 +33,7 @@ namespace FortniteReplayReader.Models
         public bool Disconnected { get; internal set; }
         public PlayerLocationRepMovement LastKnownLocation { get; internal set; }
         public int WorldPlayerId { get; internal set; }
+        public Cosmetics Cosmetics { get; internal set; } = new Cosmetics();
 
         //Extended information
         public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();
