@@ -1869,7 +1869,7 @@ namespace Unreal.Core
 
                     archive.Read(buffer, (int)numBits);
 
-                    var cmdReader = new NetBitReader(_tempBuffer, (int)numBits)
+                    var cmdReader = new NetBitReader(buffer, (int)numBits)
                     {
                         EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                         NetworkVersion = Replay.Header.NetworkVersion
