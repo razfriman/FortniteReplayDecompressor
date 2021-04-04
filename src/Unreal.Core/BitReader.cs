@@ -322,17 +322,23 @@ namespace Unreal.Core
             string value;
             if (length < 0)
             {
-                if (!CanRead(-2 * length))
+                length = -2 * length;
+
+                int totalBits = length * 8;
+
+                if (totalBits <= 0 || !CanRead(totalBits))
                 {
                     IsError = true;
                     return "";
                 }
 
-                value = Encoding.Unicode.GetString(ReadBytes(-2 * length));
+                value = Encoding.Unicode.GetString(ReadBytes(length));
             }
             else
             {
-                if (!CanRead(length))
+                int totalBits = length * 8;
+
+                if (totalBits <= 0 || !CanRead(totalBits))
                 {
                     IsError = true;
                     return "";
@@ -657,7 +663,7 @@ namespace Unreal.Core
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
-            if (offset < 0 || offset > Bits.Length || (seekOrigin == SeekOrigin.Current && offset + _position > Bits.Length))
+            if (offset < 0 || offset > LastBit || (seekOrigin == SeekOrigin.Current && offset + _position > LastBit))
             {
                 throw new ArgumentOutOfRangeException("Specified offset doesnt fit within the BitArray buffer");
             }
@@ -665,7 +671,7 @@ namespace Unreal.Core
             _ = (seekOrigin switch
             {
                 SeekOrigin.Begin => _position = offset,
-                SeekOrigin.End => _position = Bits.Length - offset,
+                SeekOrigin.End => _position = LastBit - offset,
                 SeekOrigin.Current => _position += offset,
                 _ => _position = offset,
             });
@@ -685,11 +691,11 @@ namespace Unreal.Core
         {
             _position += numbits;
 
-            if (numbits < 0 || _position > Bits.Length)
+            if (numbits < 0 || _position > LastBit)
             {
                 IsError = true;
 
-                _position = Bits.Length;
+                _position = LastBit;
             }
         }
 

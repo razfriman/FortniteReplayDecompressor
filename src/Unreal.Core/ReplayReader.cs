@@ -220,7 +220,7 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            if (!archive.CanRead(info.SizeInBytes))
+            if (!archive.CanRead(info.SizeInBytes * 8))
             {
                 _logger?.LogError($"Can't read checkpoint data {info.Id}");
 

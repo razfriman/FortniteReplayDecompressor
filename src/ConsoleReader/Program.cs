@@ -72,21 +72,23 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(logger, new FortniteReplaySettings
+            var reader = new ReplayReader(null, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.User
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
 
-            foreach (string path in Directory.GetFiles("Replays"))
+            foreach (string path in Directory.GetFiles(@"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays"))
             {
+                Console.WriteLine(path);
+
                 for (int i = 0; i < 5; i++)
                 {
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(path, ParseType.Debug);
 
                     sw.Stop();
 
@@ -101,7 +103,7 @@ namespace ConsoleReader
 
                         if(currentLocation.DeltaGameTimeSeconds - lastLocation.DeltaGameTimeSeconds > 1)
                         {
-                            Console.WriteLine($"{currentLocation.Location} - {lastLocation.DeltaGameTimeSeconds} - {currentLocation.DeltaGameTimeSeconds - lastLocation.DeltaGameTimeSeconds}s");
+                            //Console.WriteLine($"{ currentLocation.Location} - {lastLocation.DeltaGameTimeSeconds} - {currentLocation.DeltaGameTimeSeconds - lastLocation.DeltaGameTimeSeconds}s");
                         }
                     }
 
@@ -109,34 +111,13 @@ namespace ConsoleReader
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
-                    var killFeed = replay.GameInformation.KillFeed.Where(x => x.FinisherOrDowner?.IsPlayersReplay == true).ToList();
-
-                    var bots = replay.GameInformation.Players.Where(x => !String.IsNullOrEmpty(x.BotId)).ToList();
-                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).ToList();
-                    var asdfa = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-
-                    //Console.WriteLine($"\t - Properties Read: {reader.TotalPropertiesRead}");
-
-                    //Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Llamas: {reader.GameInformation.Llamas.Count}. Unknown Fields: {NetFieldParser.UnknownNetFields.Count}");
-
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 
-                    /*
-                    foreach (Llama llama in replay.GameInformation.Llamas)
-                    {
-                        //Console.WriteLine($"\t -{llama}");
-                    }
 
-
-                    var c = replay.GameInformation.Players.Where(x => x.IsPlayersReplay);
-                    var d = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-                    //var a = NetFieldParser.UnknownNetFields;
-                    var kills = d.FirstOrDefault().Players.Sum(x => x.TotalKills);
-
-                    var asdfas = replay.GameInformation.Teams.OrderByDescending(x => x.Players.Count);
-                    var totalBots = replay.GameInformation.Players.Count(x => x.IsBot);*/
                 }
+
+                Console.WriteLine();
             }
 
             var fastest5 = times.OrderBy(x => x).Take(10);
