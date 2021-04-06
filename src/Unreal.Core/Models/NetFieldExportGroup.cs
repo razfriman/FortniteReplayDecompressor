@@ -15,6 +15,7 @@ namespace Unreal.Core.Models
         public uint NetFieldExportsLength { get; set; }
         public NetFieldExport[] NetFieldExports { get; set; }
 
+
         public bool IsValidIndex(uint handle)
         {
             return handle >= 0 && handle < NetFieldExportsLength;

@@ -522,7 +522,13 @@ namespace Unreal.Core
         {
             string group = exportGroup.PathName;
 
-            string fixedExportName = FixInvalidNames(export.Name);
+            string fixedExportName = export.CleanedName;
+
+            if (fixedExportName == null)
+            {
+                export.CleanedName = FixInvalidNames(export.Name);
+                fixedExportName = export.CleanedName;
+            }
 
             bool isDebug = obj is DebuggingExportGroup;
 
