@@ -170,7 +170,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public float? DesiredTeamSizePercent { get; set; }
 
 		[NetFieldExport("PlayerIds", RepLayoutCmdType.Property)]
-		public DebuggingObject PlayerIds { get; set; }
+		public MinigamePlayerId PlayerIds { get; set; }
 
 		[NetFieldExport("NumberOfHidersGameStart", RepLayoutCmdType.PropertyInt)]
 		public int? NumberOfHidersGameStart { get; set; }
@@ -336,7 +336,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					DesiredTeamSizePercent = (float)value;
 					break;
 				case "PlayerIds":
-					PlayerIds = (DebuggingObject)value; //?
+					PlayerIds = (MinigamePlayerId)value;
 
 					break;
 				case "NumberOfHidersGameStart":

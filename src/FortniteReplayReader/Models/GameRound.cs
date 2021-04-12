@@ -9,5 +9,7 @@ namespace FortniteReplayReader.Models
     public class GameRound
     {
         public float DeltaStartTime { get; set; }
+        public ICollection<RoundTeam> Teams { get; set; }
+
     }
 }

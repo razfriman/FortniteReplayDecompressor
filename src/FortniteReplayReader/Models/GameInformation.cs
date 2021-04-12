@@ -34,6 +34,7 @@ namespace FortniteReplayReader.Models
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
         public FortniteReplaySettings Settings { get; internal set; }
+        public MinigameInformation MinigameInformation { get; internal set; }
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
@@ -53,6 +54,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
+        private Dictionary<string, Player> _playerById = new Dictionary<string, Player>(); //Used only for minigame replays
         private Player _replayPlayer;
 
         //Delta updates
@@ -65,7 +67,6 @@ namespace FortniteReplayReader.Models
         private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
         internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
-
         internal void ChannelClosed(uint channel)
         {
             _playerPawns.Remove(channel);
@@ -390,15 +391,19 @@ namespace FortniteReplayReader.Models
 
             if (playerState.TeamIndex != null)
             {
-                if(!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
+                //Only should populate the teams when we aren't in a round game. Should use the round teams to determine teams
+                if(MinigameInformation == null || MinigameInformation.TotalRounds <= 1)
                 {
-                    team = new Team();
+                    if (!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
+                    {
+                        team = new Team();
 
-                    _teams.TryAdd(playerState.TeamIndex.Value, team);
+                        _teams.TryAdd(playerState.TeamIndex.Value, team);
+                    }
+
+                    team.Players.Add(newPlayer);
+                    newPlayer.Team = team;
                 }
-                
-                team.Players.Add(newPlayer);
-                newPlayer.Team = team;
             }
             
             //Add to killfeed
@@ -421,6 +426,11 @@ namespace FortniteReplayReader.Models
             if(isNewPlayer)
             {
                 HandleQueuedPlayerPawns(newPlayer);
+            }
+
+            if(MinigameInformation != null)
+            {
+                _playerById[newPlayer.EpicId] = newPlayer;
             }
         }
 
@@ -1200,8 +1210,151 @@ namespace FortniteReplayReader.Models
 
         internal void MiniGameUpdate(uint channelId, MiniGameCreated minigame, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(minigame.Stats != null)
+            MinigameInformation ??= new MinigameInformation();
+
+            MinigameInformation.TimeLimit = minigame.TimeLimit ?? MinigameInformation.TimeLimit;
+            MinigameInformation.TotalRounds = minigame.TotalRounds ?? MinigameInformation.TotalRounds;
+            MinigameInformation.WarmupDuration = minigame.WarmupDuration ?? MinigameInformation.WarmupDuration;
+            MinigameInformation.GameResetDelay = minigame.PostGameResetDelay ?? MinigameInformation.GameResetDelay;
+            MinigameInformation.RoundScoreDisplayTime = minigame.RoundScoreDisplayTime ?? MinigameInformation.RoundScoreDisplayTime;
+            MinigameInformation.GameScoreDisplayTime = minigame.GameScoreDisplayTime ?? MinigameInformation.GameScoreDisplayTime;
+            MinigameInformation.WinnerDisplayTime = minigame.GameWinnerDisplayTime ?? MinigameInformation.WinnerDisplayTime;
+            MinigameInformation.WinCondition = minigame.WinCondition ?? MinigameInformation.WinCondition;
+            MinigameInformation.State = (RoundState?)minigame.CurrentState ?? MinigameInformation.State;
+
+            if (MinigameInformation.Rounds.Count == 0)
             {
+                MinigameInformation.Rounds.Add(new GameRound());
+            }
+
+            GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
+
+            //New round
+            if (minigame.StartTime != null && GameState.GameWorldStartTime > 0)
+            {
+                if (currentRound.DeltaStartTime == 0)
+                {
+                    currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime;
+                }
+                else
+                {
+                    GameRound round = new GameRound
+                    {
+                        DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime
+                    };
+
+                    MinigameInformation.Rounds.Add(round);
+                }
+            }
+
+            //Updates the team at the start to handle scoreboard
+            if(minigame.CurrentState == (int)RoundState.RoundPlaying)
+            {
+                MinigameInformation.CurrentRoundTeams = new HashSet<int>(MinigameInformation.TeamInfo.Where(x => x.CurrentTeamSize > 0).Select(x => x.TeamIndex));
+            }
+
+            bool roundOver = MinigameInformation.State == RoundState.StartingNewRound || MinigameInformation.State == RoundState.GameoverScoreboard;
+
+            if (roundOver)
+            {
+                currentRound.Teams = MinigameInformation.TeamInfo.Where(x => MinigameInformation.CurrentRoundTeams.Contains(x.TeamIndex)).ToList();
+            }
+
+            if (minigame.TeamArray != null)
+            {
+                for (int i = 0; i < minigame.TeamArray.Length; i++)
+                {
+                    if(MinigameInformation.TeamInfo == null)
+                    {
+                        MinigameInformation.TeamInfo = new RoundTeam[minigame.TeamArray.Length];
+                    }
+
+                    if(MinigameInformation.TeamInfo[i] == null)
+                    {
+                        MinigameInformation.TeamInfo[i] = new RoundTeam();
+                    }
+                    else if(roundOver)
+                    {
+                        MinigameInformation.TeamInfo[i] = new RoundTeam(MinigameInformation.TeamInfo[i]);
+
+                        //Update bucket reference
+                        var bucket = MinigameInformation.PlayerBuckets.FirstOrDefault(x => x.TeamIndex == MinigameInformation.TeamInfo[i].TeamIndex);
+
+                        if(bucket != null)
+                        {
+                            bucket.Team = MinigameInformation.TeamInfo[i];
+                        }
+                    }
+
+                    var teamInfo = minigame.TeamArray[i];
+                    RoundTeam roundTeam = MinigameInformation.TeamInfo[i];
+
+                    if (teamInfo != null)
+                    {
+                        roundTeam.CurrentTeamSize = teamInfo.TeamSize ?? roundTeam.CurrentTeamSize;
+                        roundTeam.MaxSize = teamInfo.MaxInitTeamSize ?? roundTeam.MaxSize;
+                        roundTeam.TeamIndex = teamInfo.TeamIndex ?? roundTeam.TeamIndex;
+                        roundTeam.TeamColorIndex = teamInfo.TeamColorIndex ?? roundTeam.TeamColorIndex;
+                        roundTeam.Eliminations = teamInfo.EliminatedCount ?? roundTeam.Eliminations;
+                    }
+                }
+            }
+
+            if(minigame.PlayerBuckets != null && (int)MinigameInformation.State > 0)
+            {
+                if(MinigameInformation.PlayerBuckets == null)
+                {
+                    MinigameInformation.PlayerBuckets = new MinigameInformation.PlayerBucket[minigame.PlayerBuckets.Length];
+                }
+
+                for(int i = 0; i < minigame.PlayerBuckets.Length; i++)
+                {
+                    if(MinigameInformation.PlayerBuckets[i] == null)
+                    {
+                        MinigameInformation.PlayerBuckets[i] = new MinigameInformation.PlayerBucket();
+                    }
+
+                    var bucket = minigame.PlayerBuckets[i];
+                    var miniGameBucket = MinigameInformation.PlayerBuckets[i];
+
+                    if (bucket != null)
+                    {
+                        miniGameBucket.TeamIndex = bucket.TeamIdAtGameStart ?? miniGameBucket.TeamIndex;
+
+                        if (bucket.TeamIdAtGameStart > 0)
+                        {
+                            RoundTeam teamInfo = MinigameInformation.TeamInfo.FirstOrDefault(x => x.TeamIndex == bucket.TeamIdAtGameStart);
+
+                            miniGameBucket.Team = teamInfo;
+                        }
+
+                        if(bucket.PlayerIds != null)
+                        {
+                            if(bucket.PlayerIds.RemoveAll)
+                            {
+                                miniGameBucket.Team.PlayerIds.ForEach(x => x.HasLeft = true);
+                            }
+                            else
+                            {
+                                //Need to figure out single players leaving on a team
+                                foreach (string id in bucket.PlayerIds.Ids)
+                                {
+                                    RoundPlayer roundPlayer = new RoundPlayer
+                                    {
+                                        PlayerId = id
+                                    };
+
+                                    if(_playerById.TryGetValue(id, out Player player))
+                                    {
+                                        roundPlayer.Player = player;
+                                    }
+
+                                    miniGameBucket.Team.PlayerIds.Add(roundPlayer);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
