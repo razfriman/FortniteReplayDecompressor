@@ -15,7 +15,7 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
-    internal class NetFieldParser
+    public class NetFieldParser
     {
         private static Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
 
@@ -77,7 +77,7 @@ namespace Unreal.Core
 
 #if DEBUG
 
-        internal static string CreateFileData(DebuggingExportGroup debuggingGroup)
+        public static string CreateFileData(DebuggingExportGroup debuggingGroup)
         {
             StringBuilder builder = new StringBuilder();
 

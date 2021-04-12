@@ -44,7 +44,9 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/testReplay.replay"; //Used for testing
+            var replayFile = "Replays/rounds.replay"; //Used for testing
+            //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
+
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
             //var replayFile = "Replays/Test.replay"; //Used for testing
             //var replayFile = "Replays/shoottest.replay"; 
@@ -74,7 +76,7 @@ namespace ConsoleReader
 
             var reader = new ReplayReader(null, new FortniteReplaySettings
             {
-                PlayerLocationType = LocationTypes.User
+                PlayerLocationType = LocationTypes.None
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
@@ -88,26 +90,13 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(path, ParseType.Debug);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                     sw.Stop();
 
-                    var aff = replay.GameInformation.Players.OrderByDescending(x => x.Locations.Count);
-
-                    var player = replay.GameInformation.Players.FirstOrDefault(x => x.IsPlayersReplay);
-
-                    for(int z = 1; z < player.Locations.Count; z++)
-                    {
-                        PlayerLocationRepMovement lastLocation = player.Locations[z - 1];
-                        PlayerLocationRepMovement currentLocation = player.Locations[z];
-
-                        if(currentLocation.DeltaGameTimeSeconds - lastLocation.DeltaGameTimeSeconds > 1)
-                        {
-                            //Console.WriteLine($"{ currentLocation.Location} - {lastLocation.DeltaGameTimeSeconds} - {currentLocation.DeltaGameTimeSeconds - lastLocation.DeltaGameTimeSeconds}s");
-                        }
-                    }
-
-                    var aaa = replay.GameInformation.Players.SelectMany(y => y.Shots);
+                    var bots = replay.GameInformation.Players.Where(x => !String.IsNullOrEmpty(x.BotId)).ToList();
+                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).ToList();
+                    var b = replay.GameInformation.Players.Where(x => x.EpicId == "4A0BA154F91E4EF1B2E638F3661926E9");
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 

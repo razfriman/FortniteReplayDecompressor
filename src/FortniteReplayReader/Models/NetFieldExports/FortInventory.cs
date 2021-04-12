@@ -79,7 +79,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? ParentInventory { get; set; } 
 
         [NetFieldExport("Handle", RepLayoutCmdType.PropertyInt)]
-        public int Handle { get; set; } 
+        public int? Handle { get; set; } 
 
         [NetFieldExport("AlterationInstances", RepLayoutCmdType.DynamicArray)]
         public DebuggingObject[] AlterationInstances { get; set; } 

@@ -191,8 +191,10 @@ namespace FortniteReplayReader
                 case BaseVehicle vehicle:
                     Replay.GameInformation.UpdateVehicle(channel, vehicle);
                     break;
-                case DebuggingExportGroup debuggingObject: //Only occurs in debug mode
-
+                case MiniGameCreated minigame: //Multiple rounds
+                    Replay.GameInformation.MiniGameUpdate(channel, minigame);
+                    break;
+                case DebuggingExportGroup debuggingObject:
                     break;
             }
         }

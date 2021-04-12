@@ -82,7 +82,7 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo)
         {
-            _privateTeamInfo.TryAdd(channelId, new NetDeltaArray<PrivateTeamInfo>());
+            _privateTeamInfo[channelId] = new NetDeltaArray<PrivateTeamInfo>();
         }
 
         internal void UpdateLlama(uint channelId, SupplyDropLlamaC supplyDropLlama)
@@ -1044,19 +1044,19 @@ namespace FortniteReplayReader.Models
 
         internal void HandleDeltaNetRead(NetDeltaUpdate deltaUpdate)
         {
-            if (_inventories.ContainsKey(deltaUpdate.ChannelIndex))
+            switch (deltaUpdate.ExportGroup.PathName)
             {
-                if(Settings.IgnoreInventory)
-                {
-                    return;
-                }
+                case "FortTeamPrivateInfo_ClassNetCache":
+                    UpdateNetDeltaPrivateTeamInfo(deltaUpdate);
+                    break;
+                case "FortInventory_ClassNetCache":
+                    if (Settings.IgnoreInventory)
+                    {
+                        return;
+                    }
 
-                UpdateNetDeltaFortInventory(deltaUpdate);
-            }
-
-            if(_privateTeamInfo.ContainsKey(deltaUpdate.ChannelIndex))
-            {
-                UpdateNetDeltaPrivateTeamInfo(deltaUpdate);
+                    UpdateNetDeltaFortInventory(deltaUpdate);
+                    break;
             }
 
             //GameMemberInfoArray
@@ -1195,6 +1195,14 @@ namespace FortniteReplayReader.Models
                 case BaseStairsStructure stairs:
                     newStructure.BaseStructureType = BaseStructureType.Stairs;
                     break;
+            }
+        }
+
+        internal void MiniGameUpdate(uint channelId, MiniGameCreated minigame)
+        {
+            if(minigame.CurrentRound != null)
+            {
+
             }
         }
     }
