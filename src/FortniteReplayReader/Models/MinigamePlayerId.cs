@@ -11,32 +11,53 @@ namespace FortniteReplayReader.Models
     public class MinigamePlayerId : IProperty
     {
         public string[] Ids { get; private set; }
-        public bool RemoveAll => Ids == null;
+        public bool RemoveAll { get; private set; }
+        public uint? RemoveId { get; private set; }
+        internal List<string> debugStrings = new List<string>();
 
         public void Serialize(NetBitReader reader)
         {
             uint total = reader.ReadIntPacked();
 
-            if(reader.LastBit == 16)
+            if(total == 0)
             {
-                reader.ReadBits(16);
-
-                return;
+                RemoveAll = true;
             }
-
-            Ids = new string[total];
-
-            for(int i = 0; i < total; i++)
+            else
             {
-                reader.SkipBits(40);
+                uint id = reader.ReadIntPacked();
 
-                Ids[i] = reader.SerializePropertyNetId();
+                if (id == 0)
+                {
+                    RemoveId = (total);
+                }
+                else
+                {
+                    Ids = new string[total];
 
-                reader.SkipBits(8); //Unknown
+                    Ids[id - 1] = ParseId();
 
+                    while (id < total)
+                    {
+                        id = reader.ReadIntPacked();
+
+                        Ids[id - 1] = ParseId();
+                    }
+                }
             }
 
             reader.SkipBits(8);
+
+            string ParseId()
+            {
+                reader.SkipBits(32); //Always the same
+
+                string playerId = reader.SerializePropertyNetId();
+
+                reader.SkipBits(8); //Always 0
+
+                return playerId;
+            }
         }
     }
 }

@@ -37,6 +37,7 @@ namespace FortniteReplayReader.Models
         internal RoundState State { get; set; }
         internal PlayerBucket[] PlayerBuckets { get; set; }
         internal HashSet<int> CurrentRoundTeams { get; set; } = new HashSet<int>();
+        internal uint CurrentRound { get; set; } = 1;
 
         internal class PlayerBucket
         {

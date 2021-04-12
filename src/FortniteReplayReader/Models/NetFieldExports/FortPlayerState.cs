@@ -195,6 +195,12 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
 		public FGameplayTagContainer DeathTags { get; set; } //Type:  Bits: 40
 
+		[NetFieldExport("VictimTags", RepLayoutCmdType.Property)]
+		public FGameplayTagContainer VictimTags { get; set; } //Type:  Bits: 40
+
+		[NetFieldExport("FinisherOrDownerTags", RepLayoutCmdType.Property)]
+		public FGameplayTagContainer FinisherOrDownerTags { get; set; } //Type:  Bits: 40
+
 		[NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool)]
 		public bool? bResurrectionChipAvailable { get; set; } //Type:  Bits: 1
 
@@ -436,6 +442,12 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					break;
 				case "DeathTags":
 					DeathTags = (FGameplayTagContainer)value;
+					break;
+				case "FinisherOrDownerTags":
+					FinisherOrDownerTags = (FGameplayTagContainer)value;
+					break;
+				case "VictimTags":
+					VictimTags = (FGameplayTagContainer)value;
 					break;
 				case "bResurrectionChipAvailable":
 					bResurrectionChipAvailable = (bool)value;

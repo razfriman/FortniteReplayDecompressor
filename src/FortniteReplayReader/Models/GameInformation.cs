@@ -67,6 +67,7 @@ namespace FortniteReplayReader.Models
         private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
         internal Dictionary<uint, string> NetGUIDToPathName { get; set; }
+
         internal void ChannelClosed(uint channel)
         {
             _playerPawns.Remove(channel);
@@ -311,12 +312,13 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(playerState.bOnlySpectator == true)
+            if (playerState.bOnlySpectator == true)
             {
                 return;
             }
 
             bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
+
 
             if (isNewPlayer)
             {
@@ -325,9 +327,11 @@ namespace FortniteReplayReader.Models
                 _players.TryAdd(channelId, newPlayer);
             }
 
-            if (playerState.DeathTags != null && networkGameplayTagNode != null)
+            if (networkGameplayTagNode != null)
             {
-                playerState.DeathTags.UpdateTags(networkGameplayTagNode);
+                playerState.DeathTags?.UpdateTags(networkGameplayTagNode);
+                playerState.VictimTags?.UpdateTags(networkGameplayTagNode);
+                playerState.FinisherOrDownerTags?.UpdateTags(networkGameplayTagNode);
             }
 
             //Attempt to update private team info to correct object
@@ -1221,30 +1225,19 @@ namespace FortniteReplayReader.Models
             MinigameInformation.WinnerDisplayTime = minigame.GameWinnerDisplayTime ?? MinigameInformation.WinnerDisplayTime;
             MinigameInformation.WinCondition = minigame.WinCondition ?? MinigameInformation.WinCondition;
             MinigameInformation.State = (RoundState?)minigame.CurrentState ?? MinigameInformation.State;
-
-            if (MinigameInformation.Rounds.Count == 0)
-            {
-                MinigameInformation.Rounds.Add(new GameRound());
-            }
+            MinigameInformation.CurrentRound = minigame.CurrentRound ?? MinigameInformation.CurrentRound;
 
             GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
 
-            //New round
-            if (minigame.StartTime != null && GameState.GameWorldStartTime > 0)
+            if (currentRound != null && minigame.StartTime != null)
             {
-                if (currentRound.DeltaStartTime == 0)
-                {
-                    currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime;
-                }
-                else
-                {
-                    GameRound round = new GameRound
-                    {
-                        DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime
-                    };
+                currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime;
+            }
 
-                    MinigameInformation.Rounds.Add(round);
-                }
+            //New round
+            if ((RoundState?)minigame.CurrentState == RoundState.Initializing)
+            {
+                MinigameInformation.Rounds.Add(new GameRound());
             }
 
             //Updates the team at the start to handle scoreboard
@@ -1296,6 +1289,11 @@ namespace FortniteReplayReader.Models
                         roundTeam.TeamIndex = teamInfo.TeamIndex ?? roundTeam.TeamIndex;
                         roundTeam.TeamColorIndex = teamInfo.TeamColorIndex ?? roundTeam.TeamColorIndex;
                         roundTeam.Eliminations = teamInfo.EliminatedCount ?? roundTeam.Eliminations;
+
+                        if(roundTeam.MaxSize == -1)
+                        {
+                            roundTeam.MaxSize = 1;
+                        }
                     }
                 }
             }
@@ -1328,28 +1326,80 @@ namespace FortniteReplayReader.Models
                             miniGameBucket.Team = teamInfo;
                         }
 
-                        if(bucket.PlayerIds != null)
+                        if (miniGameBucket.Team.PlayerIds == null)
+                        {
+                            miniGameBucket.Team.PlayerIds = new RoundPlayer[MinigameInformation.TeamInfo[i].MaxSize];
+                        }
+
+                        if (bucket.PlayerIds != null)
                         {
                             if(bucket.PlayerIds.RemoveAll)
                             {
-                                miniGameBucket.Team.PlayerIds.ForEach(x => x.HasLeft = true);
+                                foreach(RoundPlayer player in miniGameBucket.Team.PlayerIds)
+                                {
+                                    if (player != null)
+                                    {
+                                        player.HasLeft = true;
+                                    }
+                                }
+                            }
+                            else if (bucket.PlayerIds.RemoveId.HasValue)
+                            {
+                                RoundPlayer roundPlayer = miniGameBucket.Team.PlayerIds[bucket.PlayerIds.RemoveId.Value];
+
+                                if (roundPlayer != null)
+                                {
+                                    roundPlayer.HasLeft = true;
+                                }
+                                else
+                                {
+
+                                }
                             }
                             else
                             {
-                                //Need to figure out single players leaving on a team
-                                foreach (string id in bucket.PlayerIds.Ids)
+                                for(int z = 0; z < (bucket.PlayerIds.Ids?.Length ?? 0); z++)
                                 {
-                                    RoundPlayer roundPlayer = new RoundPlayer
-                                    {
-                                        PlayerId = id
-                                    };
+                                    string id = bucket.PlayerIds.Ids[z];
 
-                                    if(_playerById.TryGetValue(id, out Player player))
+                                    if(id == null)
                                     {
-                                        roundPlayer.Player = player;
+                                        continue;
                                     }
 
-                                    miniGameBucket.Team.PlayerIds.Add(roundPlayer);
+                                    //Player left + reordering of indexes
+                                    if (miniGameBucket.Team.PlayerIds[z] != null)
+                                    {
+                                        RoundPlayer leftPlayer = miniGameBucket.Team.PlayerIds[z];
+
+                                        leftPlayer.HasLeft = true;
+
+                                        for (int x = z + 1; x < miniGameBucket.Team.PlayerIds.Length; x++)
+                                        {
+                                            //Swap locations to handle "has left" property
+                                            if (miniGameBucket.Team.PlayerIds[x].PlayerId == id)
+                                            {
+                                                miniGameBucket.Team.PlayerIds[z] = miniGameBucket.Team.PlayerIds[x];
+                                                miniGameBucket.Team.PlayerIds[x] = leftPlayer;
+
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        RoundPlayer roundPlayer = new RoundPlayer
+                                        {
+                                            PlayerId = id
+                                        };
+
+                                        if (_playerById.TryGetValue(id, out Player player))
+                                        {
+                                            roundPlayer.Player = player;
+                                        }
+
+                                        miniGameBucket.Team.PlayerIds[z] = roundPlayer;
+                                    }
                                 }
                             }
                         }

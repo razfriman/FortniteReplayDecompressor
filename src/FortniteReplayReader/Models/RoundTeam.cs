@@ -15,7 +15,7 @@ namespace FortniteReplayReader.Models
 
         public int Eliminations { get; set; }
 
-        public List<RoundPlayer> PlayerIds { get; set; } = new List<RoundPlayer>();
+        public RoundPlayer[] PlayerIds { get; set; }
 
         public RoundTeam()
         {
@@ -29,7 +29,18 @@ namespace FortniteReplayReader.Models
             TeamIndex = team.TeamIndex;
             TeamColorIndex = team.TeamColorIndex;
             Eliminations = team.Eliminations;
-            PlayerIds = team.PlayerIds.Where(x => !x.HasLeft).Select(x => new RoundPlayer(x)).ToList();
+            PlayerIds = team.PlayerIds?.Select(x => new RoundPlayer(x)).ToArray();
+
+            if (PlayerIds != null)
+            {
+                for (int i = 0; i < PlayerIds.Length; i++)
+                {
+                    if (PlayerIds[i].HasLeft == true)
+                    {
+                        PlayerIds[i] = null;
+                    }
+                }
+            }
         }
     }
 
@@ -38,6 +49,7 @@ namespace FortniteReplayReader.Models
         public Player Player { get; set; }
         public string PlayerId { get; set; }
         public bool HasLeft { get; set; }
+        public int PlayerIndex { get; set; }
 
         public RoundPlayer()
         {
@@ -46,9 +58,10 @@ namespace FortniteReplayReader.Models
 
         public RoundPlayer(RoundPlayer player)
         {
-            Player = player.Player;
-            PlayerId = player.PlayerId;
-            HasLeft = player.HasLeft;
+            Player = player?.Player;
+            PlayerId = player?.PlayerId;
+            HasLeft = player?.HasLeft ?? false;
+            PlayerIndex = player?.PlayerIndex ?? 0;
         }
     }
 }
