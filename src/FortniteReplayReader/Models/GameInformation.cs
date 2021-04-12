@@ -1198,11 +1198,10 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        internal void MiniGameUpdate(uint channelId, MiniGameCreated minigame)
+        internal void MiniGameUpdate(uint channelId, MiniGameCreated minigame, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(minigame.CurrentRound != null)
+            if(minigame.Stats != null)
             {
-
             }
         }
     }

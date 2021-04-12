@@ -20,7 +20,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public DebuggingObject Role { get; set; }
 
 		[NetFieldExport("UIExtensionTags", RepLayoutCmdType.Property)]
-		public DebuggingObject UIExtensionTags { get; set; }
+		public FGameplayTagContainer UIExtensionTags { get; set; }
 
 		[NetFieldExport("TimeLimit", RepLayoutCmdType.PropertyFloat)]
 		public float? TimeLimit { get; set; }
@@ -31,50 +31,50 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("TotalRounds", RepLayoutCmdType.PropertyUInt32)]
 		public uint? TotalRounds { get; set; }
 
-		[NetFieldExport("WarmupDuration", RepLayoutCmdType.Property)]
-		public DebuggingObject WarmupDuration { get; set; }
+		[NetFieldExport("WarmupDuration", RepLayoutCmdType.PropertyFloat)]
+		public float? WarmupDuration { get; set; }
 
-		[NetFieldExport("PostGameResetDelay", RepLayoutCmdType.Property)]
-		public DebuggingObject PostGameResetDelay { get; set; }
+		[NetFieldExport("PostGameResetDelay", RepLayoutCmdType.PropertyFloat)]
+		public float? PostGameResetDelay { get; set; }
 
-		[NetFieldExport("GameWinnerDisplayTime", RepLayoutCmdType.Property)]
-		public DebuggingObject GameWinnerDisplayTime { get; set; }
+		[NetFieldExport("GameWinnerDisplayTime", RepLayoutCmdType.PropertyFloat)]
+		public float? GameWinnerDisplayTime { get; set; }
 
-		[NetFieldExport("GameScoreDisplayTime", RepLayoutCmdType.Property)]
-		public DebuggingObject GameScoreDisplayTime { get; set; }
+		[NetFieldExport("GameScoreDisplayTime", RepLayoutCmdType.PropertyFloat)]
+		public float? GameScoreDisplayTime { get; set; }
 
-		[NetFieldExport("RoundWinnerDisplayTime", RepLayoutCmdType.Property)]
-		public DebuggingObject RoundWinnerDisplayTime { get; set; }
+		[NetFieldExport("RoundWinnerDisplayTime", RepLayoutCmdType.PropertyFloat)]
+		public float? RoundWinnerDisplayTime { get; set; }
 
-		[NetFieldExport("RoundScoreDisplayTime", RepLayoutCmdType.Property)]
-		public DebuggingObject RoundScoreDisplayTime { get; set; }
+		[NetFieldExport("RoundScoreDisplayTime", RepLayoutCmdType.PropertyFloat)]
+		public float? RoundScoreDisplayTime { get; set; }
 
-		[NetFieldExport("TeamArray", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamArray { get; set; }
+		[NetFieldExport("TeamArray", RepLayoutCmdType.DynamicArray)]
+		public MiniGameCreated[] TeamArray { get; set; }
 
-		[NetFieldExport("TeamIndex", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamIndex { get; set; }
+		[NetFieldExport("TeamIndex", RepLayoutCmdType.PropertyByte)]
+		public byte? TeamIndex { get; set; }
 
-		[NetFieldExport("TeamName", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamName { get; set; }
+		[NetFieldExport("TeamName", RepLayoutCmdType.PropertyString)]
+		public string TeamName { get; set; }
 
-		[NetFieldExport("TeamColorIndex", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamColorIndex { get; set; }
+		[NetFieldExport("TeamColorIndex", RepLayoutCmdType.PropertyUInt32)]
+		public uint? TeamColorIndex { get; set; }
 
-		[NetFieldExport("MaxInitTeamSize", RepLayoutCmdType.Property)]
-		public DebuggingObject MaxInitTeamSize { get; set; }
+		[NetFieldExport("MaxInitTeamSize", RepLayoutCmdType.PropertyInt)]
+		public int? MaxInitTeamSize { get; set; }
 
-		[NetFieldExport("InitTeamSizeWeight", RepLayoutCmdType.Property)]
-		public DebuggingObject InitTeamSizeWeight { get; set; }
+		[NetFieldExport("InitTeamSizeWeight", RepLayoutCmdType.PropertyInt)]
+		public int? InitTeamSizeWeight { get; set; }
 
-		[NetFieldExport("bHasBucketAvailable", RepLayoutCmdType.Property)]
-		public DebuggingObject bHasBucketAvailable { get; set; }
+		[NetFieldExport("bHasBucketAvailable", RepLayoutCmdType.PropertyBool)]
+		public bool? bHasBucketAvailable { get; set; }
 
-		[NetFieldExport("EliminatedCount", RepLayoutCmdType.Property)]
-		public DebuggingObject EliminatedCount { get; set; }
+		[NetFieldExport("EliminatedCount", RepLayoutCmdType.PropertyByte)]
+		public byte? EliminatedCount { get; set; }
 
-		[NetFieldExport("TeamSize", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamSize { get; set; }
+		[NetFieldExport("TeamSize", RepLayoutCmdType.PropertyByte)]
+		public byte? TeamSize { get; set; }
 
 		[NetFieldExport("TrackedStats", RepLayoutCmdType.Property)]
 		public DebuggingObject TrackedStats { get; set; }
@@ -82,98 +82,98 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ScoreboardStats", RepLayoutCmdType.Property)]
 		public DebuggingObject ScoreboardStats { get; set; }
 
-		[NetFieldExport("Stats", RepLayoutCmdType.Property)]
-		public DebuggingObject Stats { get; set; }
+		[NetFieldExport("Stats", RepLayoutCmdType.DynamicArray)]
+		public MiniGameCreated[] Stats { get; set; }
 
 		[NetFieldExport("Filter", RepLayoutCmdType.Property)]
-		public DebuggingObject Filter { get; set; }
+		public NetworkGUID Filter { get; set; }
 
-		[NetFieldExport("Count", RepLayoutCmdType.Property)]
-		public DebuggingObject Count { get; set; }
+		[NetFieldExport("Count", RepLayoutCmdType.PropertyInt)]
+		public int? Count { get; set; }
 
-		[NetFieldExport("PlayerStats", RepLayoutCmdType.Property)]
-		public DebuggingObject PlayerStats { get; set; }
+		[NetFieldExport("PlayerStats", RepLayoutCmdType.DynamicArray)]
+		public MiniGameCreated[] PlayerStats { get; set; }
 
-		[NetFieldExport("Player", RepLayoutCmdType.Property)]
-		public DebuggingObject Player { get; set; }
+		[NetFieldExport("Player", RepLayoutCmdType.PropertyNetId)]
+		public string Player { get; set; }
 
-		[NetFieldExport("PlayerBucketStats", RepLayoutCmdType.Property)]
-		public DebuggingObject PlayerBucketStats { get; set; }
+		[NetFieldExport("PlayerBucketStats", RepLayoutCmdType.DynamicArray)]
+		public MiniGameCreated[] PlayerBucketStats { get; set; }
 
-		[NetFieldExport("BucketIndex", RepLayoutCmdType.Property)]
-		public DebuggingObject BucketIndex { get; set; }
+		[NetFieldExport("BucketIndex", RepLayoutCmdType.PropertyInt)]
+		public int? BucketIndex { get; set; }
 
-		[NetFieldExport("CurrentState", RepLayoutCmdType.Property)]
-		public DebuggingObject CurrentState { get; set; }
+		[NetFieldExport("CurrentState", RepLayoutCmdType.Enum)]
+		public int? CurrentState { get; set; }
 
-		[NetFieldExport("SetupTime", RepLayoutCmdType.Property)]
-		public DebuggingObject SetupTime { get; set; }
+		[NetFieldExport("SetupTime", RepLayoutCmdType.PropertyFloat)]
+		public float? SetupTime { get; set; }
 
-		[NetFieldExport("WarmupTime", RepLayoutCmdType.Property)]
-		public DebuggingObject WarmupTime { get; set; }
+		[NetFieldExport("WarmupTime", RepLayoutCmdType.PropertyFloat)]
+		public float? WarmupTime { get; set; }
 
-		[NetFieldExport("StartTime", RepLayoutCmdType.Property)]
-		public DebuggingObject StartTime { get; set; }
+		[NetFieldExport("StartTime", RepLayoutCmdType.PropertyFloat)]
+		public float? StartTime { get; set; }
 
-		[NetFieldExport("EndTime", RepLayoutCmdType.Property)]
-		public DebuggingObject EndTime { get; set; }
+		[NetFieldExport("EndTime", RepLayoutCmdType.PropertyFloat)]
+		public float? EndTime { get; set; }
 
-		[NetFieldExport("ResetTime", RepLayoutCmdType.Property)]
-		public DebuggingObject ResetTime { get; set; }
+		[NetFieldExport("ResetTime", RepLayoutCmdType.PropertyFloat)]
+		public float? ResetTime { get; set; }
 
 		[NetFieldExport("Volume", RepLayoutCmdType.Property)]
 		public DebuggingObject Volume { get; set; }
 
-		[NetFieldExport("bTeamsAreStable", RepLayoutCmdType.Property)]
-		public DebuggingObject bTeamsAreStable { get; set; }
+		[NetFieldExport("bTeamsAreStable", RepLayoutCmdType.PropertyBool)]
+		public bool? bTeamsAreStable { get; set; }
 
-		[NetFieldExport("bAllowJoinInProgress", RepLayoutCmdType.Property)]
-		public DebuggingObject bAllowJoinInProgress { get; set; }
+		[NetFieldExport("bAllowJoinInProgress", RepLayoutCmdType.PropertyBool)]
+		public bool? bAllowJoinInProgress { get; set; }
 
 		[NetFieldExport("MinigameStarter", RepLayoutCmdType.Property)]
-		public DebuggingObject MinigameStarter { get; set; }
+		public NetworkGUID MinigameStarter { get; set; }
 
-		[NetFieldExport("bStableTeamCosmetics", RepLayoutCmdType.Property)]
-		public DebuggingObject bStableTeamCosmetics { get; set; }
+		[NetFieldExport("bStableTeamCosmetics", RepLayoutCmdType.PropertyBool)]
+		public bool? bStableTeamCosmetics { get; set; }
 
-		[NetFieldExport("MinigameMapWidget", RepLayoutCmdType.Property)]
-		public DebuggingObject MinigameMapWidget { get; set; }
+		[NetFieldExport("MinigameMapWidget", RepLayoutCmdType.Enum)]
+		public int? MinigameMapWidget { get; set; }
 
-		[NetFieldExport("WinCondition", RepLayoutCmdType.Property)]
-		public DebuggingObject WinCondition { get; set; }
+		[NetFieldExport("WinCondition", RepLayoutCmdType.Enum)]
+		public int? WinCondition { get; set; }
 
-		[NetFieldExport("GameEndCallout", RepLayoutCmdType.Property)]
-		public DebuggingObject GameEndCallout { get; set; }
+		[NetFieldExport("GameEndCallout", RepLayoutCmdType.Enum)]
+		public int? GameEndCallout { get; set; }
 
-		[NetFieldExport("bShowCumulativeScoreboard", RepLayoutCmdType.Property)]
-		public DebuggingObject bShowCumulativeScoreboard { get; set; }
+		[NetFieldExport("bShowCumulativeScoreboard", RepLayoutCmdType.PropertyBool)]
+		public bool? bShowCumulativeScoreboard { get; set; }
 
-		[NetFieldExport("NumMinigameComponentsServer", RepLayoutCmdType.Property)]
-		public DebuggingObject NumMinigameComponentsServer { get; set; }
+		[NetFieldExport("NumMinigameComponentsServer", RepLayoutCmdType.PropertyInt)]
+		public int? NumMinigameComponentsServer { get; set; }
 
-		[NetFieldExport("bVolumeNavigationHasBuilt", RepLayoutCmdType.Property)]
-		public DebuggingObject bVolumeNavigationHasBuilt { get; set; }
+		[NetFieldExport("bVolumeNavigationHasBuilt", RepLayoutCmdType.PropertyBool)]
+		public bool? bVolumeNavigationHasBuilt { get; set; }
 
 		[NetFieldExport("RoundWinHistory", RepLayoutCmdType.Property)]
 		public DebuggingObject RoundWinHistory { get; set; }
 
-		[NetFieldExport("PlayerBuckets", RepLayoutCmdType.Property)]
-		public DebuggingObject PlayerBuckets { get; set; }
+		[NetFieldExport("PlayerBuckets", RepLayoutCmdType.DynamicArray)]
+		public MiniGameCreated[] PlayerBuckets { get; set; }
 
-		[NetFieldExport("TeamIdAtGameStart", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamIdAtGameStart { get; set; }
+		[NetFieldExport("TeamIdAtGameStart", RepLayoutCmdType.PropertyByte)]
+		public byte? TeamIdAtGameStart { get; set; }
 
-		[NetFieldExport("TeamIdAtRoundStart", RepLayoutCmdType.Property)]
-		public DebuggingObject TeamIdAtRoundStart { get; set; }
+		[NetFieldExport("TeamIdAtRoundStart", RepLayoutCmdType.PropertyByte)]
+		public byte? TeamIdAtRoundStart { get; set; }
 
-		[NetFieldExport("DesiredTeamSizePercent", RepLayoutCmdType.Property)]
-		public DebuggingObject DesiredTeamSizePercent { get; set; }
+		[NetFieldExport("DesiredTeamSizePercent", RepLayoutCmdType.PropertyFloat)]
+		public float? DesiredTeamSizePercent { get; set; }
 
 		[NetFieldExport("PlayerIds", RepLayoutCmdType.Property)]
 		public DebuggingObject PlayerIds { get; set; }
 
-		[NetFieldExport("NumberOfHidersGameStart", RepLayoutCmdType.Property)]
-		public DebuggingObject NumberOfHidersGameStart { get; set; }
+		[NetFieldExport("NumberOfHidersGameStart", RepLayoutCmdType.PropertyInt)]
+		public int? NumberOfHidersGameStart { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{
@@ -186,7 +186,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					Role = (DebuggingObject)value;
 					break;
 				case "UIExtensionTags":
-					UIExtensionTags = (DebuggingObject)value;
+					UIExtensionTags = (FGameplayTagContainer)value;
 					break;
 				case "TimeLimit":
 					TimeLimit = (float)value;
@@ -198,148 +198,149 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					TotalRounds = (uint)value;
 					break;
 				case "WarmupDuration":
-					WarmupDuration = (DebuggingObject)value;
+					WarmupDuration = (float)value;
 					break;
 				case "PostGameResetDelay":
-					PostGameResetDelay = (DebuggingObject)value;
+					PostGameResetDelay = (float)value;
 					break;
 				case "GameWinnerDisplayTime":
-					GameWinnerDisplayTime = (DebuggingObject)value;
+					GameWinnerDisplayTime = (float)value;
 					break;
 				case "GameScoreDisplayTime":
-					GameScoreDisplayTime = (DebuggingObject)value;
+					GameScoreDisplayTime = (float)value;
 					break;
 				case "RoundWinnerDisplayTime":
-					RoundWinnerDisplayTime = (DebuggingObject)value;
+					RoundWinnerDisplayTime = (float)value;
 					break;
 				case "RoundScoreDisplayTime":
-					RoundScoreDisplayTime = (DebuggingObject)value;
+					RoundScoreDisplayTime = (float)value;
 					break;
 				case "TeamArray":
-					TeamArray = (DebuggingObject)value;
+					TeamArray = (MiniGameCreated[])value;
 					break;
 				case "TeamIndex":
-					TeamIndex = (DebuggingObject)value;
+					TeamIndex = (byte?)value;
 					break;
 				case "TeamName":
-					TeamName = (DebuggingObject)value;
+					TeamName = (string)value;
 					break;
 				case "TeamColorIndex":
-					TeamColorIndex = (DebuggingObject)value;
+					TeamColorIndex = (uint)value;
 					break;
 				case "MaxInitTeamSize":
-					MaxInitTeamSize = (DebuggingObject)value;
+					MaxInitTeamSize = (int)value;
 					break;
 				case "InitTeamSizeWeight":
-					InitTeamSizeWeight = (DebuggingObject)value;
+					InitTeamSizeWeight = (int)value;
 					break;
 				case "bHasBucketAvailable":
-					bHasBucketAvailable = (DebuggingObject)value;
+					bHasBucketAvailable = (bool)value;
 					break;
 				case "EliminatedCount":
-					EliminatedCount = (DebuggingObject)value;
+					EliminatedCount = (byte)value;
 					break;
 				case "TeamSize":
-					TeamSize = (DebuggingObject)value;
+					TeamSize = (byte)value;
 					break;
 				case "TrackedStats":
-					TrackedStats = (DebuggingObject)value;
+					TrackedStats = (DebuggingObject)value; //Maybe an array of Stats?
 					break;
 				case "ScoreboardStats":
-					ScoreboardStats = (DebuggingObject)value;
+					ScoreboardStats = (DebuggingObject)value; //Maybe an array of Stats?
 					break;
 				case "Stats":
-					Stats = (DebuggingObject)value;
+					Stats = (MiniGameCreated[])value;
 					break;
 				case "Filter":
-					Filter = (DebuggingObject)value;
+					Filter = (NetworkGUID)value;
 					break;
 				case "Count":
-					Count = (DebuggingObject)value;
+					Count = (int)value;
 					break;
 				case "PlayerStats":
-					PlayerStats = (DebuggingObject)value;
+					PlayerStats = (MiniGameCreated[])value;
 					break;
 				case "Player":
-					Player = (DebuggingObject)value;
+					Player = (string)value;
 					break;
 				case "PlayerBucketStats":
-					PlayerBucketStats = (DebuggingObject)value;
+					PlayerBucketStats = (MiniGameCreated[])value;
 					break;
 				case "BucketIndex":
-					BucketIndex = (DebuggingObject)value;
+					BucketIndex = (int)value;
 					break;
 				case "CurrentState":
-					CurrentState = (DebuggingObject)value;
+					CurrentState = (int)value;
 					break;
 				case "SetupTime":
-					SetupTime = (DebuggingObject)value;
+					SetupTime = (float)value;
 					break;
 				case "WarmupTime":
-					WarmupTime = (DebuggingObject)value;
+					WarmupTime = (float)value;
 					break;
 				case "StartTime":
-					StartTime = (DebuggingObject)value;
+					StartTime = (float)value;
 					break;
 				case "EndTime":
-					EndTime = (DebuggingObject)value;
+					EndTime = (float)value;
 					break;
 				case "ResetTime":
-					ResetTime = (DebuggingObject)value;
+					ResetTime = (float)value;
 					break;
 				case "Volume":
 					Volume = (DebuggingObject)value;
 					break;
 				case "bTeamsAreStable":
-					bTeamsAreStable = (DebuggingObject)value;
+					bTeamsAreStable = (bool)value;
 					break;
 				case "bAllowJoinInProgress":
-					bAllowJoinInProgress = (DebuggingObject)value;
+					bAllowJoinInProgress = (bool)value;
 					break;
 				case "MinigameStarter":
-					MinigameStarter = (DebuggingObject)value;
+					MinigameStarter = (NetworkGUID)value;
 					break;
 				case "bStableTeamCosmetics":
-					bStableTeamCosmetics = (DebuggingObject)value;
+					bStableTeamCosmetics = (bool)value;
 					break;
 				case "MinigameMapWidget":
-					MinigameMapWidget = (DebuggingObject)value;
+					MinigameMapWidget = (int)value;
 					break;
 				case "WinCondition":
-					WinCondition = (DebuggingObject)value;
+					WinCondition = (int)value;
 					break;
 				case "GameEndCallout":
-					GameEndCallout = (DebuggingObject)value;
+					GameEndCallout = (int)value;
 					break;
 				case "bShowCumulativeScoreboard":
-					bShowCumulativeScoreboard = (DebuggingObject)value;
+					bShowCumulativeScoreboard = (bool)value;
 					break;
 				case "NumMinigameComponentsServer":
-					NumMinigameComponentsServer = (DebuggingObject)value;
+					NumMinigameComponentsServer = (int)value;
 					break;
 				case "bVolumeNavigationHasBuilt":
-					bVolumeNavigationHasBuilt = (DebuggingObject)value;
+					bVolumeNavigationHasBuilt = (bool)value;
 					break;
 				case "RoundWinHistory":
-					RoundWinHistory = (DebuggingObject)value;
+					RoundWinHistory = (DebuggingObject)value; //?
 					break;
 				case "PlayerBuckets":
-					PlayerBuckets = (DebuggingObject)value;
+					PlayerBuckets = (MiniGameCreated[])value;
 					break;
 				case "TeamIdAtGameStart":
-					TeamIdAtGameStart = (DebuggingObject)value;
+					TeamIdAtGameStart = (byte)value;
 					break;
 				case "TeamIdAtRoundStart":
-					TeamIdAtRoundStart = (DebuggingObject)value;
+					TeamIdAtRoundStart = (byte)value;
 					break;
 				case "DesiredTeamSizePercent":
-					DesiredTeamSizePercent = (DebuggingObject)value;
+					DesiredTeamSizePercent = (float)value;
 					break;
 				case "PlayerIds":
-					PlayerIds = (DebuggingObject)value;
+					PlayerIds = (DebuggingObject)value; //?
+
 					break;
 				case "NumberOfHidersGameStart":
-					NumberOfHidersGameStart = (DebuggingObject)value;
+					NumberOfHidersGameStart = (int)value;
 					break;
 				default:
 					return base.ManualRead(property, value);

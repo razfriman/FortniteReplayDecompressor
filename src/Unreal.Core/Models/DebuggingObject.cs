@@ -207,6 +207,7 @@ namespace Unreal.Core.Models
 
             object[] data = new object[totalElements];
 
+
             while (true)
             {
                 uint index = _reader.ReadIntPacked();

@@ -74,7 +74,7 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(null, new FortniteReplaySettings
+            var reader = new ReplayReader(logger, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.None
             });

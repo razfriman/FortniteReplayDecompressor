@@ -192,7 +192,7 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateVehicle(channel, vehicle);
                     break;
                 case MiniGameCreated minigame: //Multiple rounds
-                    Replay.GameInformation.MiniGameUpdate(channel, minigame);
+                    Replay.GameInformation.MiniGameUpdate(channel, minigame, GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case DebuggingExportGroup debuggingObject:
                     break;
