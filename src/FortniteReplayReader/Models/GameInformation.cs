@@ -365,6 +365,7 @@ namespace FortniteReplayReader.Models
             newPlayer.TotalKills = playerState.KillScore ?? newPlayer.TotalKills;
             newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
+            newPlayer.AnonMode = playerState.bUsingAnonymousMode ?? newPlayer.AnonMode;
             newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
             newPlayer.Cosmetics.CharacterBodyType = playerState.CharacterBodyType ?? newPlayer.Cosmetics.CharacterBodyType;
             newPlayer.Cosmetics.HeroType = GetPathName(playerState.HeroType) ?? newPlayer.Cosmetics.HeroType;
@@ -414,6 +415,21 @@ namespace FortniteReplayReader.Models
             if (playerState.bDBNO != null || playerState.FinisherOrDowner != null || playerState.RebootCounter != null)
             {
                 UpdateKillFeed(channelId, playerState);
+            }
+
+            if(playerState.bIsDisconnected == true && newPlayer.StatusChanges.LastOrDefault()?.CurrentPlayerState != PlayerState.Killed)
+            {
+                KillFeedEntry entry = new KillFeedEntry
+                {
+                    FinisherOrDowner = newPlayer,
+                    CurrentPlayerState = PlayerState.Killed,
+                    Player = newPlayer,
+                    DeltaGameTimeSeconds = GameState.DeltaGameTime
+                };
+
+                newPlayer.StatusChanges.Add(entry);
+
+                _killFeed.Add(entry);
             }
 
             if(playerState.bHasEverSkydivedFromBusAndLanded != null)
@@ -555,8 +571,8 @@ namespace FortniteReplayReader.Models
                             else
                             {
                                 //Useful to debug weapons that aren't added
-                                //var a = Channels[weaponChannel];
-                                //Console.WriteLine(a.Group.First());
+                                /*var a = Channels[weaponChannel];
+                                Console.WriteLine(a.Group.First());*/
                             }
                         }
                         else

@@ -34,6 +34,7 @@ namespace FortniteReplayReader.Models
         public PlayerLocationRepMovement LastKnownLocation { get; internal set; }
         public int WorldPlayerId { get; internal set; }
         public Cosmetics Cosmetics { get; internal set; } = new Cosmetics();
+        public bool AnonMode { get; internal set; }
 
         //Extended information
         public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();

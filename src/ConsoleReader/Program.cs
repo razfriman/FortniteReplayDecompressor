@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/rounds2.replay"; //Used for testing
+            var replayFile = "Replays/ArenaSolo.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -90,13 +90,14 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
 
                     var bots = replay.GameInformation.Players.Where(x => !String.IsNullOrEmpty(x.BotId)).ToList();
-                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).ToList();
-                    var b = replay.GameInformation.Players.Where(x => x.EpicId == "4A0BA154F91E4EF1B2E638F3661926E9");
+                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).OrderBy(x => x.Placement).ToList();
+
+                    var alive = nonBots.Where(x => x.StatusChanges.LastOrDefault()?.CurrentPlayerState == PlayerState.Alive);
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
