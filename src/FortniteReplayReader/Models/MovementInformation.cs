@@ -17,7 +17,7 @@ namespace FortniteReplayReader.Models
 
     public class PlayerMovementInformation
     {
-        public bool InAircraft { get; internal set; }
+        public bool InBus { get; internal set; }
         public bool Crouched { get; internal set; }
         public bool IsSlopeSliding { get; internal set; }
         public bool GliderOpen { get; internal set; }
@@ -33,7 +33,7 @@ namespace FortniteReplayReader.Models
         {
             return new PlayerMovementInformation
             {
-                InAircraft = InAircraft,
+                InBus = InBus,
                 Crouched = Crouched,
                 GliderOpen = GliderOpen,
                 IsEmoting = IsEmoting,

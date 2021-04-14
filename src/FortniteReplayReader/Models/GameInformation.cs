@@ -371,6 +371,7 @@ namespace FortniteReplayReader.Models
             newPlayer.Cosmetics.HeroType = GetPathName(playerState.HeroType) ?? newPlayer.Cosmetics.HeroType;
             newPlayer.Cosmetics.CharacterGender = playerState.CharacterGender ?? newPlayer.Cosmetics.CharacterGender;
             newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
+            newPlayer.MovementInformation.InBus = playerState.bInAircraft ?? newPlayer.MovementInformation.InBus;
 
             if (playerState.VariantRequiredCharacterParts != null)
             {
@@ -510,6 +511,7 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.ADS = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 1 : playerActor.MovementInformation.ADS;
                     playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
 
+                    
                     if (playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
                     {
                         playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
@@ -519,7 +521,6 @@ namespace FortniteReplayReader.Models
 
                     if (!IgnoreLocationUpdate(playerActor, currentMovementDeltaTime))
                     {
-
                         PlayerLocationRepMovement fRepMovement = null;
 
                         if (playerPawnC.Vehicle != null) //Player got in vehicle, so grab vehicle location

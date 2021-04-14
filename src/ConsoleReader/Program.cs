@@ -77,7 +77,6 @@ namespace ConsoleReader
             var reader = new ReplayReader(null, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.User,
-                LocationChangeDeltaMS = 100
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
@@ -99,6 +98,8 @@ namespace ConsoleReader
                     var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).OrderBy(x => x.Placement).ToList();
 
                     var alive = nonBots.Where(x => x.StatusChanges.LastOrDefault()?.CurrentPlayerState == PlayerState.Alive);
+
+                    var a = replay.GameInformation.Players.Where(x => x.IsPlayersReplay).SelectMany(x => x.Locations).Where(x => x.MovementInformation?.InBus == true);
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
