@@ -571,8 +571,10 @@ namespace FortniteReplayReader.Models
                             else
                             {
                                 //Useful to debug weapons that aren't added
-                                var a = Channels[weaponChannel];
+                                /*var a = Channels[weaponChannel];
 
+                                Console.WriteLine($"{GameState.DeltaGameTime} - {(a.Group.FirstOrDefault() ?? "Empty")}");
+                                */
                             }
                         }
                         else
