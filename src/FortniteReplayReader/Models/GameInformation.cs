@@ -506,10 +506,11 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.IsInteracting = playerPawnC.bStartedInteractSearch ?? playerActor.MovementInformation.IsInteracting;
                     playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
                     playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
-                    playerActor.MovementInformation.MovementType = playerPawnC.CurrentMovementStyle ?? playerActor.MovementInformation.MovementType;
-                    playerActor.MovementInformation.BuildingState = playerPawnC.BuildingState ?? playerActor.MovementInformation.BuildingState;
+                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 3 : playerActor.MovementInformation.Sprinting;
+                    playerActor.MovementInformation.ADS = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 1 : playerActor.MovementInformation.ADS;
+                    playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
 
-                    if(playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
+                    if (playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
                     {
                         playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
                     }
@@ -518,6 +519,7 @@ namespace FortniteReplayReader.Models
 
                     if (!IgnoreLocationUpdate(playerActor, currentMovementDeltaTime))
                     {
+
                         PlayerLocationRepMovement fRepMovement = null;
 
                         if (playerPawnC.Vehicle != null) //Player got in vehicle, so grab vehicle location
@@ -541,7 +543,7 @@ namespace FortniteReplayReader.Models
                         }
                         else if (playerActor.LastKnownLocation?.InVehicle == true) //Still in vehicle, use vehicle locations
                         {
-                            if(_vehicles.TryGetValue(playerActor.LastKnownLocation.VehicleChannel, out Vehicle vehicle))
+                            if (_vehicles.TryGetValue(playerActor.LastKnownLocation.VehicleChannel, out Vehicle vehicle))
                             {
                                 fRepMovement = vehicle.CurrentLocation;
                                 fRepMovement.InVehicle = true;
