@@ -510,8 +510,9 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 3 : playerActor.MovementInformation.Sprinting;
                     playerActor.MovementInformation.ADS = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 1 : playerActor.MovementInformation.ADS;
                     playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
+                    playerActor.MovementInformation.IsInWater = playerPawnC.ReplicatedWaterBody != null ? playerPawnC.ReplicatedWaterBody.Value > 0 : playerActor.MovementInformation.IsInWater;
 
-                    
+
                     if (playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
                     {
                         playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;

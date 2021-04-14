@@ -28,6 +28,7 @@ namespace FortniteReplayReader.Models
         public bool JumpedForceApplied { get; internal set; }
         public bool ADS { get; internal set; }
         public bool Sprinting { get; internal set; }
+        public bool IsInWater { get; internal set; }
 
         public PlayerMovementInformation Copy()
         {
@@ -43,7 +44,8 @@ namespace FortniteReplayReader.Models
                 ADS = ADS,
                 Sprinting = Sprinting,
                 Skydiving = Skydiving,
-                JumpedForceApplied = JumpedForceApplied
+                JumpedForceApplied = JumpedForceApplied,
+                IsInWater = IsInWater
             };
         }
     }

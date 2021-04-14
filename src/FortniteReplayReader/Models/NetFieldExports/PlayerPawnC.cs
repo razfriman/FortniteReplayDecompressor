@@ -442,7 +442,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public uint? GravityFloorGravityScalar { get; set; } //Type:  Bits: 32
 
 		[NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.Property)]
-		public DebuggingObject ReplicatedWaterBody { get; set; } //Type:  Bits: 16
+		public ItemDefinitionGUID ReplicatedWaterBody { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyByte)]
 		public byte? DBNORevivalStacking { get; set; } //Type:  Bits: 8
@@ -926,7 +926,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					GravityFloorGravityScalar = (uint)value;
 					break;
 				case "ReplicatedWaterBody":
-					ReplicatedWaterBody = (DebuggingObject)value;
+					ReplicatedWaterBody = (ItemDefinitionGUID)value;
 					break;
 				case "DBNORevivalStacking":
 					DBNORevivalStacking = (byte)value;
