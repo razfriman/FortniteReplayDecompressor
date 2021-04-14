@@ -61,6 +61,9 @@ namespace Unreal.Core.Models
                 if (group.StartsWith(partialRedirectKvp.Key))
                 {
                     _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
+                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
+
+                    break;
                 }
             }
         }
@@ -96,8 +99,6 @@ namespace Unreal.Core.Models
                 {
                     return null;
                 }
-
-                
 
                 path = CoreRedirects.GetRedirect(path);
 

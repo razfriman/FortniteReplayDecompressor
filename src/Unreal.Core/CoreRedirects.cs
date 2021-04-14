@@ -21,10 +21,10 @@ namespace Unreal.Core
             foreach(Type type in netFields)
             {
                 NetFieldExportGroupAttribute exportGroupAttribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-                PartialNetFieldExportGroup partialAttribute = type.GetCustomAttribute<PartialNetFieldExportGroup>();
+                IEnumerable<PartialNetFieldExportGroup> partialAttributes = type.GetCustomAttributes<PartialNetFieldExportGroup>();
                 IEnumerable<RedirectPathAttribute> redirectAttributes = type.GetCustomAttributes<RedirectPathAttribute>();
 
-                if(partialAttribute != null)
+                foreach(PartialNetFieldExportGroup partialAttribute in partialAttributes)
                 {
                     PartialRedirects.Add(partialAttribute.PartialPath, exportGroupAttribute.Path);
                 }

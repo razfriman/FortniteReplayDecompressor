@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
     public sealed class PartialNetFieldExportGroup : Attribute
     {
         public string PartialPath { get; private set; }
