@@ -152,6 +152,24 @@ namespace FortniteReplayReader.Models
                     case "Rarity.Mythic":
                         ItemRarity = ItemRarity.Mythic;
                         break;
+                    case "Item.Weapon.Ranged.Assault.Scrap":
+                        ItemType = ItemType.MakeshiftAssaultRifle;
+                        break;
+                    case "Item.Weapon.Ranged.SMG.Scrap":
+                        ItemType = ItemType.MakeshiftSmg;
+                        break;
+                    case "Item.Weapon.Ranged.Shotgun.Scrap":
+                        ItemType = ItemType.MakeshiftShotgun;
+                        break;
+                    case "Item.Weapon.Ranged.Assault.Bone":
+                        ItemType = ItemType.PrimalAssaultRifle;
+                        break;
+                    case "Item.Weapon.Ranged.SMG.Bone":
+                        ItemType = ItemType.PrimalSmg;
+                        break;
+                    case "Item.Weapon.Ranged.Shotgun.Bone":
+                        ItemType = ItemType.PrimalShotgun;
+                        break;
                 }
 
                 if(Biome == null && deathTag.StartsWith("Athena.Location.Biome", StringComparison.OrdinalIgnoreCase))
