@@ -76,7 +76,8 @@ namespace ConsoleReader
 
             var reader = new ReplayReader(null, new FortniteReplaySettings
             {
-                PlayerLocationType = LocationTypes.None
+                PlayerLocationType = LocationTypes.User,
+                LocationChangeDeltaMS = 100
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");

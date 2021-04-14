@@ -498,7 +498,25 @@ namespace FortniteReplayReader.Models
                 case Player playerActor:
                     playerActor.LastTransformUpdate = playerPawnC.ReplayLastTransformUpdateTimeStamp ?? playerActor.LastTransformUpdate;
 
-                    if (!IgnoreLocationUpdate(playerActor))
+                    //Update movement info
+                    playerActor.MovementInformation.Skydiving = playerPawnC.bIsSkydiving ?? playerActor.MovementInformation.Skydiving;
+                    playerActor.MovementInformation.Crouched = playerPawnC.bIsCrouched ?? playerActor.MovementInformation.Crouched;
+                    playerActor.MovementInformation.GliderOpen = playerPawnC.bIsParachuteOpen ?? playerActor.MovementInformation.GliderOpen;
+                    playerActor.MovementInformation.IsEmoting = playerPawnC.bIsPlayingEmote ?? playerActor.MovementInformation.IsEmoting;
+                    playerActor.MovementInformation.IsInteracting = playerPawnC.bStartedInteractSearch ?? playerActor.MovementInformation.IsInteracting;
+                    playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
+                    playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
+                    playerActor.MovementInformation.MovementType = playerPawnC.CurrentMovementStyle ?? playerActor.MovementInformation.MovementType;
+                    playerActor.MovementInformation.BuildingState = playerPawnC.BuildingState ?? playerActor.MovementInformation.BuildingState;
+
+                    if(playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
+                    {
+                        playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
+                    }
+
+                    float currentMovementDeltaTime = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value - playerActor.InitialMovementTimestamp;
+
+                    if (!IgnoreLocationUpdate(playerActor, currentMovementDeltaTime))
                     {
                         PlayerLocationRepMovement fRepMovement = null;
 
@@ -512,6 +530,8 @@ namespace FortniteReplayReader.Models
                                     fRepMovement = vehicle.CurrentLocation;
                                     fRepMovement.InVehicle = true;
                                     fRepMovement.VehicleChannel = actorChannel;
+                                    fRepMovement.CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive;
+                                    fRepMovement.DeltaGameTimeSeconds = currentMovementDeltaTime;
                                 }
                                 else
                                 {
@@ -526,6 +546,8 @@ namespace FortniteReplayReader.Models
                                 fRepMovement = vehicle.CurrentLocation;
                                 fRepMovement.InVehicle = true;
                                 fRepMovement.VehicleChannel = playerActor.LastKnownLocation.VehicleChannel;
+                                fRepMovement.CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive;
+                                fRepMovement.DeltaGameTimeSeconds = currentMovementDeltaTime;
                             }
                         }
 
@@ -536,7 +558,9 @@ namespace FortniteReplayReader.Models
                                 RepLocation = playerPawnC.ReplicatedMovement,
                                 WorldTime = GameState.CurrentWorldTime,
                                 LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp,
-                                DeltaGameTimeSeconds = GameState.DeltaGameTime
+                                DeltaGameTimeSeconds = currentMovementDeltaTime,
+                                CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive,
+                                MovementInformation = playerActor.MovementInformation.Copy()
                             };
                         }
 
@@ -866,7 +890,7 @@ namespace FortniteReplayReader.Models
                 }
 
                 //Ignores issue with playstate actor id not being found at first
-                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState) && privateInfo.LastRepLocation != null) 
+                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState, GameState.DeltaGameTime) && privateInfo.LastRepLocation != null) 
                 {
                     item.LastLocation = privateInfo.LastRepLocation;
                     item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
@@ -1111,7 +1135,7 @@ namespace FortniteReplayReader.Models
             }
         }
 
-        private bool IgnoreLocationUpdate(Player player)
+        private bool IgnoreLocationUpdate(Player player, float currentUpdateDeltaTime)
         {
             bool isPlayer = player.IsPlayersReplay == true;
             bool isTeammate = _replayPlayer?.Teamindex == player.Teamindex;
@@ -1145,16 +1169,11 @@ namespace FortniteReplayReader.Models
                 return shouldIgnore;
             }
 
-            double lastLocationTime = lastLocation?.WorldTime ?? privateTeamLocation.WorldTime;
-
-            if(privateTeamLocation != null && lastLocationTime < privateTeamLocation?.WorldTime)
-            {
-                lastLocationTime = privateTeamLocation.WorldTime;
-            }
+            double lastLocationDeltaTime = lastLocation?.DeltaGameTimeSeconds ?? privateTeamLocation.DeltaGameTimeSeconds;
 
             double delta = (double)Settings.LocationChangeDeltaMS / 1000;
 
-            if(delta != 0 && GameState.CurrentWorldTime - lastLocationTime < delta)
+            if(delta != 0 && currentUpdateDeltaTime - lastLocationDeltaTime < delta)
             {
                 return true;
             }

@@ -61,18 +61,50 @@ namespace FortniteReplayReader.Models
         internal float LastTransformUpdate { get; set; }
         internal ActorGUID PrivateTeamActorId { get; set; } //Used to set the team data later
         internal uint ReplayPawnId { get; set; }
+        internal PlayerMovementInformation MovementInformation { get; set; } = new PlayerMovementInformation();
+        internal float InitialMovementTimestamp { get; set; }
+    }
+
+    public class PlayerMovementInformation
+    {
+        public bool InAircraft { get; internal set; }
+        public bool Crouched { get; internal set; }
+        public bool IsSlopeSliding { get; internal set; }
+        public bool GliderOpen { get; internal set; }
+        public bool Skydiving { get; internal set; }
+        public bool IsInteracting { get; internal set; }
+        public bool IsEmoting { get; internal set; }
+        public bool IsTargeting { get; internal set; }
+
+        public int MovementType { get; internal set; }
+        public int BuildingState { get; internal set; }
+
+        public PlayerMovementInformation Copy()
+        {
+            return new PlayerMovementInformation
+            {
+                InAircraft = InAircraft,
+                BuildingState = BuildingState,
+                Crouched = Crouched,
+                GliderOpen = GliderOpen,
+                IsEmoting = IsEmoting,
+                IsInteracting = IsInteracting,
+                IsSlopeSliding = IsSlopeSliding,
+                IsTargeting = IsTargeting,
+                MovementType = MovementType,
+                Skydiving = Skydiving
+            };
+        }
     }
 
     public class PlayerLocation
     {
-        public virtual FVector Location { get; set; }
-        public virtual float Yaw { get; set; }
+        public virtual FVector Location { get; internal set; }
+        public virtual float Yaw { get; internal set; }
 
-        public float WorldTime { get; set; }
-        public float DeltaGameTimeSeconds { get; set; }
-        public bool InVehicle { get; set; }
+        public float WorldTime { get; internal set; }
+        public float DeltaGameTimeSeconds { get; internal set; }
 
-        internal uint VehicleChannel { get; set; }
     }
 
     public class PlayerLocationRepMovement : PlayerLocation
@@ -80,27 +112,32 @@ namespace FortniteReplayReader.Models
         public override FVector Location => RepLocation?.Location;
         public override float Yaw => RepLocation.Rotation.Yaw;
 
-        public FRepMovement RepLocation { get; set; }
-        public float? LastUpdateTime { get; set; }
+        public bool InVehicle { get; internal set; }
+        public PlayerState CurrentPlayerState { get; internal set; } = PlayerState.Alive;
+        public PlayerMovementInformation MovementInformation { get; internal set; }
+        public FRepMovement RepLocation { get; internal set; }
+        public float? LastUpdateTime { get; internal set; }
+
+        internal uint VehicleChannel { get; set; }
     }
 
     public class WeaponShot
     {
-        public PlayerPawn ShotByPlayerPawn { get; set; }
-        public PlayerPawn HitPlayerPawn { get; set; }
-        public Weapon Weapon { get; set;}
-        public float DeltaGameTimeSeconds { get; set; }
-        public FVector Location { get; set; } 
-        public FVector Normal { get; set; }
-        public float Damage { get; set; }
-        public bool WeaponActivate { get; set; }
-        public bool IsFatal { get; set; }
-        public bool IsCritical { get; set; }
-        public bool IsShield { get; set; }
-        public bool IsShieldDestroyed { get; set; }
-        public bool IsBallistic { get; set; } 
-        public bool FatalHitNonPlayer { get; set; }
-        public bool CriticalHitNonPlayer { get; set; }
+        public PlayerPawn ShotByPlayerPawn { get; internal set; }
+        public PlayerPawn HitPlayerPawn { get; internal set; }
+        public Weapon Weapon { get; internal set; }
+        public float DeltaGameTimeSeconds { get; internal set; }
+        public FVector Location { get; internal set; }
+        public FVector Normal { get; internal set; }
+        public float Damage { get; internal set; }
+        public bool WeaponActivate { get; internal set; }
+        public bool IsFatal { get; internal set; }
+        public bool IsCritical { get; internal set; }
+        public bool IsShield { get; internal set; }
+        public bool IsShieldDestroyed { get; internal set; }
+        public bool IsBallistic { get; internal set; }
+        public bool FatalHitNonPlayer { get; internal set; }
+        public bool CriticalHitNonPlayer { get; internal set; }
         public bool HitPlayer => HitPlayerPawn != null;
     }
 }
