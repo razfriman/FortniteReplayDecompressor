@@ -377,9 +377,9 @@ namespace FortniteReplayReader.Models
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
             newPlayer.AnonMode = playerState.bUsingAnonymousMode ?? newPlayer.AnonMode;
             newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
-            newPlayer.Cosmetics.CharacterBodyType = playerState.CharacterBodyType ?? newPlayer.Cosmetics.CharacterBodyType;
+            newPlayer.Cosmetics.ECharacterBodyType = playerState.CharacterBodyType == EFortCustomBodyType.EFortCustomBodyType_MAX ? playerState.CharacterBodyType : newPlayer.Cosmetics.ECharacterBodyType;
             newPlayer.Cosmetics.HeroType = GetPathName(playerState.HeroType) ?? newPlayer.Cosmetics.HeroType;
-            newPlayer.Cosmetics.CharacterGender = playerState.CharacterGender ?? newPlayer.Cosmetics.CharacterGender;
+            newPlayer.Cosmetics.ECharacterGender = playerState.CharacterGender == EFortCustomGender.EFortCustomGender_MAX ? playerState.CharacterGender : newPlayer.Cosmetics.ECharacterGender;
             newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
             newPlayer.MovementInformation.InBus = playerState.bInAircraft ?? newPlayer.MovementInformation.InBus;
 

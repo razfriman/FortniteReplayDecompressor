@@ -48,6 +48,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Radius", RepLayoutCmdType.PropertyFloat)]
 		public float? Radius { get; set; } //Type:  Bits: 32
 
+		[NetFieldExport("TimeRemainingWhenPhasePaused", RepLayoutCmdType.PropertyFloat)]
+		public float? TimeRemainingWhenPhasePaused { get; set; } //Type:  Bits: 32
+
 
 		public override bool ManualRead(string property, object value)
 		{
@@ -91,6 +94,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					break;
 				case "Radius":
 					Radius = (float)value;
+					break;
+				case "TimeRemainingWhenPhasePaused":
+					TimeRemainingWhenPhasePaused = (float)value;
 					break;
 				default:
 					return base.ManualRead(property, value);

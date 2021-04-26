@@ -104,10 +104,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ElapsedTime", RepLayoutCmdType.PropertyInt)]
         public int? ElapsedTime { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("WorldLevel", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("WorldLevel", RepLayoutCmdType.PropertyInt)]
         public int? WorldLevel { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("CraftingBonus", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("CraftingBonus", RepLayoutCmdType.PropertyInt)]
         public int? CraftingBonus { get; set; } //Type: int32 Bits: 32
 
         [NetFieldExport("TeamCount", RepLayoutCmdType.PropertyInt)]
@@ -116,7 +116,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("TeamSize", RepLayoutCmdType.PropertyInt)]
         public int? TeamSize { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("GameFlagData", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("GameFlagData", RepLayoutCmdType.PropertyInt)]
         public int? GameFlagData { get; set; } //Type:  Bits: 32
 
         [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.DynamicArray)]
@@ -125,8 +125,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.Ignore)]
         public int? WorldDaysElapsed { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("GameplayState", RepLayoutCmdType.Ignore)]
-        public int? GameplayState { get; set; } //Type: TEnumAsByte<EFortGameplayState::Type> Bits: 3
+		[NetFieldExport("GameplayState", RepLayoutCmdType.Enum)]
+		public EFortGameplayState GameplayState { get; set; } = EFortGameplayState.EFortGameplayState_MAX; //Type: TEnumAsByte<EFortGameplayState::Type> Bits: 3
 
         [NetFieldExport("GameSessionId", RepLayoutCmdType.PropertyString)]
         public string GameSessionId { get; set; } //Type: FString Bits: 296
@@ -152,16 +152,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bAllowLayoutRequirementsFeature", RepLayoutCmdType.Ignore)]
         public bool? bAllowLayoutRequirementsFeature { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("ServerStability", RepLayoutCmdType.Ignore)]
-        public int? ServerStability { get; set; } //Type:  Bits: 3
+		[NetFieldExport("ServerStability", RepLayoutCmdType.Enum)]
+		public EServerStability ServerStability { get; set; } = EServerStability.EServerStability_MAX; //Type:  Bits: 3
 
-        [NetFieldExport("RoundTimeAccumulated", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("RoundTimeAccumulated", RepLayoutCmdType.PropertyInt)]
         public int? RoundTimeAccumulated { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("RoundTimeCriticalThreshold", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("RoundTimeCriticalThreshold", RepLayoutCmdType.PropertyInt)]
         public int? RoundTimeCriticalThreshold { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.PropertyInt)]
         public int? ServerChangelistNumber { get; set; } //Type: int32 Bits: 32
 
         [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.Ignore)]
@@ -179,13 +179,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AircraftStartTime", RepLayoutCmdType.PropertyFloat)]
         public float? AircraftStartTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bSkyTubesShuttingDown", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("bSkyTubesShuttingDown", RepLayoutCmdType.PropertyBool)]
         public bool? bSkyTubesShuttingDown { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("SafeZonesStartTime", RepLayoutCmdType.PropertyFloat)]
         public float? SafeZonesStartTime { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("bSkyTubesDisabled", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("bSkyTubesDisabled", RepLayoutCmdType.PropertyBool)]
         public bool? bSkyTubesDisabled { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("PlayersLeft", RepLayoutCmdType.PropertyInt)]
@@ -257,17 +257,17 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("LobbyAction", RepLayoutCmdType.Ignore)]
         public int? LobbyAction { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.Ignore)]
-        public uint? WinningPlayerState { get; set; } //Type:  Bits: 16
+        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.Property)]
+        public ActorGUID WinningPlayerState { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningTeam { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("CurrentHighScore", RepLayoutCmdType.Ignore)]
-        public uint? CurrentHighScore { get; set; } //Type:  Bits: 32
+        [NetFieldExport("CurrentHighScore", RepLayoutCmdType.PropertyInt)]
+        public int? CurrentHighScore { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("CurrentHighScoreTeam", RepLayoutCmdType.Ignore)]
-        public uint? CurrentHighScoreTeam { get; set; } //Type:  Bits: 32
+        [NetFieldExport("CurrentHighScoreTeam", RepLayoutCmdType.PropertyInt)]
+        public int? CurrentHighScoreTeam { get; set; } //Type:  Bits: 32
 
         [NetFieldExport("bStormReachedFinalPosition", RepLayoutCmdType.Ignore)]
         public bool? bStormReachedFinalPosition { get; set; } //Type:  Bits: 1
@@ -275,7 +275,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SpectateAPartyMemberAvailable", RepLayoutCmdType.Ignore)]
         public bool? SpectateAPartyMemberAvailable { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("HopRockDuration", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("HopRockDuration", RepLayoutCmdType.PropertyFloat)]
         public float? HopRockDuration { get; set; } //Type: float Bits: 32
 
         [NetFieldExport("bIsLargeTeamGame", RepLayoutCmdType.PropertyBool)]
@@ -284,16 +284,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ActiveTeamNums", RepLayoutCmdType.DynamicArray)]
         public byte[] ActiveTeamNums { get; set; } //Type:  Bits: 2416
 
-        [NetFieldExport("AirCraftBehavior", RepLayoutCmdType.Ignore)]
-        public int? AirCraftBehavior { get; set; } //Type:  Bits: 2
+		[NetFieldExport("AirCraftBehavior", RepLayoutCmdType.Enum)]
+		public EAirCraftBehavior AirCraftBehavior { get; set; } = EAirCraftBehavior.EAirCraftBehavior_MAX; //Type:  Bits: 2
 
-        [NetFieldExport("DefaultGliderRedeployCanRedeploy", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("DefaultGliderRedeployCanRedeploy", RepLayoutCmdType.PropertyFloat)]
         public float? DefaultGliderRedeployCanRedeploy { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("DefaultRedeployGliderLateralVelocityMult", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("DefaultRedeployGliderLateralVelocityMult", RepLayoutCmdType.PropertyFloat)]
         public float? DefaultRedeployGliderLateralVelocityMult { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("DefaultRedeployGliderHeightLimit", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("DefaultRedeployGliderHeightLimit", RepLayoutCmdType.PropertyFloat)]
         public float? DefaultRedeployGliderHeightLimit { get; set; } //Type: float Bits: 32
 
 		[NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum)]
@@ -302,41 +302,41 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyInt)]
         public int? PlayerBotsLeft { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("DefaultParachuteDeployTraceForGroundDistance", RepLayoutCmdType.PropertyFloat)]
         public float? DefaultParachuteDeployTraceForGroundDistance { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("DefaultRebootMachineHotfix", RepLayoutCmdType.PropertyFloat)]
         public float? DefaultRebootMachineHotfix { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("SignalInStormRegenSpeed", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("SignalInStormRegenSpeed", RepLayoutCmdType.PropertyFloat)]
         public float? SignalInStormRegenSpeed { get; set; } //Type:  Bits: 32
 
         [NetFieldExport("MutatorGenericInt", RepLayoutCmdType.Ignore)]
         public uint? MutatorGenericInt { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("SignalInStormLostSpeed", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("SignalInStormLostSpeed", RepLayoutCmdType.PropertyFloat)]
         public float? SignalInStormLostSpeed { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel0", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel0", RepLayoutCmdType.PropertyFloat)]
         public float? StormCNDamageVulnerabilityLevel0 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel1", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel1", RepLayoutCmdType.PropertyFloat)]
         public float? StormCNDamageVulnerabilityLevel1 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel2", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel2", RepLayoutCmdType.PropertyFloat)]
         public float? StormCNDamageVulnerabilityLevel2 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("StormCNDamageVulnerabilityLevel3", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("StormCNDamageVulnerabilityLevel3", RepLayoutCmdType.PropertyFloat)]
         public float? StormCNDamageVulnerabilityLevel3 { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("bEnabled", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("bEnabled", RepLayoutCmdType.PropertyBool)]
         public bool? bEnabled { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("bConnectedToRoot", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("bConnectedToRoot", RepLayoutCmdType.PropertyBool)]
         public bool? bConnectedToRoot { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("GameServerNodeType", RepLayoutCmdType.Ignore)]
-        public int? GameServerNodeType { get; set; } //Type:  Bits: 3
+		[NetFieldExport("GameServerNodeType", RepLayoutCmdType.Enum)]
+		public EMeshNetworkNodeType GameServerNodeType { get; set; } = EMeshNetworkNodeType.EMeshNetworkNodeType_MAX; //Type:  Bits: 3
 
         [NetFieldExport("VolumeManager", RepLayoutCmdType.Ignore)]
         public uint? VolumeManager { get; set; } //Type:  Bits: 16
@@ -472,7 +472,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					WorldDaysElapsed = (int)value;
 					break;
 				case "GameplayState":
-					GameplayState = (int)value;
+					GameplayState = (EFortGameplayState)value;
 					break;
 				case "GameSessionId":
 					GameSessionId = (string)value;
@@ -499,7 +499,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					bAllowLayoutRequirementsFeature = (bool)value;
 					break;
 				case "ServerStability":
-					ServerStability = (int)value;
+					ServerStability = (EServerStability)value;
 					break;
 				case "RoundTimeAccumulated":
 					RoundTimeAccumulated = (int)value;
@@ -604,16 +604,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					LobbyAction = (int)value;
 					break;
 				case "WinningPlayerState":
-					WinningPlayerState = (uint)value;
+					WinningPlayerState = (ActorGUID)value;
 					break;
 				case "WinningTeam":
 					WinningTeam = (uint)value;
 					break;
 				case "CurrentHighScore":
-					CurrentHighScore = (uint)value;
+					CurrentHighScore = (int)value;
 					break;
 				case "CurrentHighScoreTeam":
-					CurrentHighScoreTeam = (uint)value;
+					CurrentHighScoreTeam = (int)value;
 					break;
 				case "bStormReachedFinalPosition":
 					bStormReachedFinalPosition = (bool)value;
@@ -631,7 +631,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					ActiveTeamNums = (byte[])value;
 					break;
 				case "AirCraftBehavior":
-					AirCraftBehavior = (int)value;
+					AirCraftBehavior = (EAirCraftBehavior)value;
 					break;
 				case "DefaultGliderRedeployCanRedeploy":
 					DefaultGliderRedeployCanRedeploy = (float)value;
@@ -682,7 +682,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					bConnectedToRoot = (bool)value;
 					break;
 				case "GameServerNodeType":
-					GameServerNodeType = (int)value;
+					GameServerNodeType = (EMeshNetworkNodeType)value;
 					break;
 				case "VolumeManager":
 					VolumeManager = (uint)value;

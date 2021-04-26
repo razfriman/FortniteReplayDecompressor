@@ -232,8 +232,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bIsWaterSprintBoostPending", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsWaterSprintBoostPending { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("StasisMode", RepLayoutCmdType.Ignore)]
-		public object StasisMode { get; set; } //Type: Enum Bits: 3
+		[NetFieldExport("StasisMode", RepLayoutCmdType.Enum)]
+		public EFortPawnStasisMode StasisMode { get; set; } = EFortPawnStasisMode.EFortPawnStasisMode_MAX; //Type: Enum Bits: 3
 
 		[NetFieldExport("BuildingState", RepLayoutCmdType.Enum)]
 		public EFortBuildingState BuildingState { get; set; } = EFortBuildingState.EFortBuildingState_MAX;
@@ -717,7 +717,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					bIsWaterSprintBoostPending = (bool)value;
 					break;
 				case "StasisMode":
-					StasisMode = value;
+					StasisMode = (EFortPawnStasisMode)value;
 					break;
 				case "BuildingState":
 					BuildingState = (EFortBuildingState)value;

@@ -79,8 +79,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray)]
         public FortPickup[] StateValues { get; set; } //Type: TArray Bits: 343
 
-        [NetFieldExport("StateType", RepLayoutCmdType.Ignore)]
-        public DebuggingObject StateType { get; set; } //Type:  Bits: 0
+		[NetFieldExport("StateType", RepLayoutCmdType.Enum)]
+		public EFortItemEntryState StateType { get; set; } = EFortItemEntryState.EFortItemEntryState_MAX; //Type:  Bits: 0
 
         [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt)]
         public int? IntValue { get; set; } //Type: int32 Bits: 0
@@ -219,7 +219,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					StateValues = (FortPickup[])value;
 					break;
 				case "StateType":
-					StateType = (DebuggingObject)value;
+					StateType = (EFortItemEntryState)value;
 					break;
 				case "IntValue":
 					IntValue = (int)value;

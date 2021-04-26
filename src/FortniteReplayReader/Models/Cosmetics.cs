@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReader.Models.NetFieldExports.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,12 @@ namespace FortniteReplayReader.Models
 {
     public class Cosmetics
     {
-        public int? CharacterGender { get; set; }
-        public int? CharacterBodyType { get; set; }
+        public int CharacterGender => (int)ECharacterGender;
+        public EFortCustomGender ECharacterGender { get; set; } = EFortCustomGender.EFortCustomGender_MAX;
+
+        public int CharacterBodyType => (int)ECharacterBodyType;
+        public EFortCustomBodyType ECharacterBodyType { get; set; } = EFortCustomBodyType.EFortCustomBodyType_MAX;
+
         public string Parts { get; set; }
         public IEnumerable<string> VariantRequiredCharacterParts { get; set; }
         public string HeroType { get; set; }

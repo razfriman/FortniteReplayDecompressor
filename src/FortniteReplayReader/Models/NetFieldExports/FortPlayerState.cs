@@ -76,11 +76,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Platform", RepLayoutCmdType.PropertyString)]
 		public string Platform { get; set; } //Type: FString Bits: 64
 
-		[NetFieldExport("CharacterGender", RepLayoutCmdType.Ignore)]
-		public int? CharacterGender { get; set; } //Type: TEnumAsByte<EFortCustomGender::Type> Bits: 2
+		[NetFieldExport("CharacterGender", RepLayoutCmdType.Enum)]
+		public EFortCustomGender CharacterGender { get; set; } = EFortCustomGender.EFortCustomGender_MAX; //Type: TEnumAsByte<EFortCustomGender::Type> Bits: 2
 
-		[NetFieldExport("CharacterBodyType", RepLayoutCmdType.Ignore)]
-		public int? CharacterBodyType { get; set; } //Type: TEnumAsByte<EFortCustomBodyType::Type> Bits: 4
+		[NetFieldExport("CharacterBodyType", RepLayoutCmdType.Enum)]
+		public EFortCustomBodyType CharacterBodyType { get; set; } = EFortCustomBodyType.EFortCustomBodyType_MAX; //Type: TEnumAsByte<EFortCustomBodyType::Type> Bits: 4
 
 		[NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.Ignore)]
 		public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
@@ -91,8 +91,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.Ignore)]
 		public uint? WasPartReplicatedFlags { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.Ignore)]
-		public uint? RequiredVariantPartFlags { get; set; } //Type:  Bits: 32
+		[NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.PropertyInt)]
+		public int? RequiredVariantPartFlags { get; set; } //Type:  Bits: 32
 
 		[NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray)]
 		public ItemDefinitionGUID[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
@@ -109,7 +109,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Place", RepLayoutCmdType.PropertyInt)]
 		public int? Place { get; set; } //Type: int32 Bits: 32
 
-		[NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Ignore)]
+		[NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Enum)]
 		public int? ReplicatedTeamMemberState { get; set; } //Type:  Bits: 4
 
 		[NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.PropertyBool)]
@@ -211,8 +211,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyFloat)]
 		public float? ResurrectionExpirationLength { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore)]
-		public DebuggingObject WorldLocation { get; set; } //Type:  Bits: 96
+		[NetFieldExport("WorldLocation", RepLayoutCmdType.PropertyVector)]
+		public FVector WorldLocation { get; set; } //Type:  Bits: 96
 
 		[NetFieldExport("bResurrectingNow", RepLayoutCmdType.PropertyBool)]
 		public bool? bResurrectingNow { get; set; } //Type:  Bits: 1
@@ -325,10 +325,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					Platform = (string)value;
 					break;
 				case "CharacterGender":
-					CharacterGender = (int)value;
+					CharacterGender = (EFortCustomGender)value;
 					break;
 				case "CharacterBodyType":
-					CharacterBodyType = (int)value;
+					CharacterBodyType = (EFortCustomBodyType)value;
 					break;
 				case "WasReplicatedFlags":
 					WasReplicatedFlags = (byte)value;
@@ -340,7 +340,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					WasPartReplicatedFlags = (uint)value;
 					break;
 				case "RequiredVariantPartFlags":
-					RequiredVariantPartFlags = (uint)value;
+					RequiredVariantPartFlags = (int)value;
 					break;
 				case "VariantRequiredCharacterParts":
 					VariantRequiredCharacterParts = (ItemDefinitionGUID[])value;
@@ -460,7 +460,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					ResurrectionExpirationLength = (float)value;
 					break;
 				case "WorldLocation":
-					WorldLocation = (DebuggingObject)value;
+					WorldLocation = (FVector)value;
 					break;
 				case "bResurrectingNow":
 					bResurrectingNow = (bool)value;
