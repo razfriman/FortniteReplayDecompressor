@@ -7,6 +7,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
@@ -161,7 +162,7 @@ namespace FortniteReplayReader.Models
             GameState.InitialSafeZoneStartTime = gameState.SafeZonesStartTime ?? GameState.InitialSafeZoneStartTime;
             GameState.SessionId = gameState.GameSessionId ?? GameState.SessionId;
             GameState.MatchTime = gameState.UtcTimeStartedMatch?.Time ?? GameState.MatchTime;
-            GameState.EventTournamentRound = gameState.EventTournamentRound ?? GameState.EventTournamentRound;
+            GameState.EEventTournamentRound = gameState.EventTournamentRound != EEventTournamentRound.EEventTournamentRound_MAX ? gameState.EventTournamentRound : GameState.EEventTournamentRound;
             GameState.LargeTeamGame = gameState.bIsLargeTeamGame ?? GameState.LargeTeamGame;
             GameState.MaxPlayers = gameState.TeamCount ?? GameState.MaxPlayers;
             GameState.MatchEndTime = gameState.EndGameStartTime ?? GameState.MatchEndTime;
@@ -234,7 +235,7 @@ namespace FortniteReplayReader.Models
                     if (playerState.FinisherOrDowner == 0)
                     {
                         //DBNO revives?
-                        if(playerState.DeathCause != null)
+                        if(playerState.DeathCause != EDeathCause.EDeathCause_MAX)
                         {
                             entry.Player = channelPlayer;
                             entry.CurrentPlayerState = PlayerState.Alive;
@@ -266,7 +267,16 @@ namespace FortniteReplayReader.Models
                     entry.Player = channelPlayer;
                     entry.FinisherOrDowner = eliminator;
                     entry.CurrentPlayerState = playerState.bDBNO == true ? PlayerState.Knocked : PlayerState.Killed;
-                    entry.ItemId = playerState.DeathCause ?? channelPlayer.LastKnockedEntry?.ItemId ?? 0; //0 would technically be unknown. Occurs with grenades, but we can pull that information through tags
+
+                    entry.DeathCause = playerState.DeathCause;
+
+                    if(entry.DeathCause == EDeathCause.EDeathCause_MAX)
+                    {
+                        if(channelPlayer.LastKnockedEntry?.DeathCause != null)
+                        {
+                            entry.DeathCause = channelPlayer.LastKnockedEntry.DeathCause;
+                        }
+                    }
 
                     if (entry.DeathTags == null)
                     {
@@ -278,7 +288,7 @@ namespace FortniteReplayReader.Models
                     entry.Player = channelPlayer;
                     entry.FinisherOrDowner = eliminator;
                     entry.CurrentPlayerState = PlayerState.Killed;
-                    entry.ItemId = playerState.DeathCause ?? 0;
+                    entry.DeathCause = playerState.DeathCause;
                 }
             }
 
@@ -507,9 +517,12 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.IsInteracting = playerPawnC.bStartedInteractSearch ?? playerActor.MovementInformation.IsInteracting;
                     playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
                     playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
-                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 3 : playerActor.MovementInformation.Sprinting;
+                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ? 
+                        playerPawnC.CurrentMovementStyle == EFortMovementStyle.Sprinting : playerActor.MovementInformation.Sprinting;
                     playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
                     playerActor.MovementInformation.IsInWater = playerPawnC.ReplicatedWaterBody != null ? playerPawnC.ReplicatedWaterBody.Value > 0 : playerActor.MovementInformation.IsInWater;
+
+                    playerActor.MovementInformation.MovementStyle = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ? playerPawnC.CurrentMovementStyle : playerActor.MovementInformation.MovementStyle;
 
                     float currentMovementDeltaTime = 0;
 
@@ -883,7 +896,7 @@ namespace FortniteReplayReader.Models
                 item.PlayerId = privateInfo.PlayerID ?? item.PlayerId;
 
                 item.LastYaw = privateInfo.LastRepYaw ?? item.LastYaw;
-                item.PawnStateMask = privateInfo.PawnStateMask ?? item.PawnStateMask;
+                item.PawnStateMask = privateInfo.PawnStateMask != EFortPawnState.EFortPawnState_MAX ? privateInfo.PawnStateMask : item.PawnStateMask;
 
                 if(privateInfo.PlayerState != null)
                 {
@@ -1267,8 +1280,8 @@ namespace FortniteReplayReader.Models
             MinigameInformation.RoundScoreDisplayTime = minigame.RoundScoreDisplayTime ?? MinigameInformation.RoundScoreDisplayTime;
             MinigameInformation.GameScoreDisplayTime = minigame.GameScoreDisplayTime ?? MinigameInformation.GameScoreDisplayTime;
             MinigameInformation.WinnerDisplayTime = minigame.GameWinnerDisplayTime ?? MinigameInformation.WinnerDisplayTime;
-            MinigameInformation.WinCondition = minigame.WinCondition ?? MinigameInformation.WinCondition;
-            MinigameInformation.State = (RoundState?)minigame.CurrentState ?? MinigameInformation.State;
+            MinigameInformation.WinCondition = minigame.WinCondition != EMinigameWinCondition.EMinigameWinCondition_MAX ? minigame.WinCondition : MinigameInformation.WinCondition;
+            MinigameInformation.State = minigame.CurrentState != EFortMinigameState.EFortMinigameState_MAX ? minigame.CurrentState : MinigameInformation.State;
             MinigameInformation.CurrentRound = minigame.CurrentRound ?? MinigameInformation.CurrentRound;
 
             GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
@@ -1279,18 +1292,18 @@ namespace FortniteReplayReader.Models
             }
 
             //New round
-            if ((RoundState?)minigame.CurrentState == RoundState.Initializing)
+            if (minigame.CurrentState == EFortMinigameState.Transitioning)
             {
                 MinigameInformation.Rounds.Add(new GameRound());
             }
 
             //Updates the team at the start to handle scoreboard
-            if(minigame.CurrentState == (int)RoundState.RoundPlaying)
+            if(minigame.CurrentState == EFortMinigameState.InProgress)
             {
                 MinigameInformation.CurrentRoundTeams = new HashSet<int>(MinigameInformation.TeamInfo.Where(x => x.CurrentTeamSize > 0).Select(x => x.TeamIndex));
             }
 
-            bool roundOver = MinigameInformation.State == RoundState.StartingNewRound || MinigameInformation.State == RoundState.GameoverScoreboard;
+            bool roundOver = MinigameInformation.State == EFortMinigameState.PostGameReset || MinigameInformation.State == EFortMinigameState.PostGameEnd;
 
             if (roundOver)
             {

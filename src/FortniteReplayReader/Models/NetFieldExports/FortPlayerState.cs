@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -186,8 +187,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bWasDBNOOnDeath", RepLayoutCmdType.PropertyBool)]
         public bool? bWasDBNOOnDeath { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
-		public int? DeathCause { get; set; } //Type:  Bits: 6
+		[NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
+		public EDeathCause DeathCause { get; set; } = EDeathCause.EDeathCause_MAX; //Type:  Bits: 6
 
 		[NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
 		public float? Distance { get; set; } //Type:  Bits: 32
@@ -231,8 +232,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Property)]
         public DebuggingObject SimulatedAttributes { get; set; }
 
-        [NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
-        public int? KickedFromSessionReason { get; set; }
+		[NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
+		public EFortKickReason KickedFromSessionReason { get; set; } = EFortKickReason.EFortKickReason_MAX;
 
 		[NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
 		public FVector DeathLocation { get; set; }
@@ -435,7 +436,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					bWasDBNOOnDeath = (bool)value;
 					break;
 				case "DeathCause":
-					DeathCause = (int)value;
+					DeathCause = (EDeathCause)value;
 					break;
 				case "Distance":
 					Distance = (float)value;
@@ -480,7 +481,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					SimulatedAttributes = (DebuggingObject)value;
 					break;
 				case "KickedFromSessionReason":
-					KickedFromSessionReason = (int)value;
+					KickedFromSessionReason = (EFortKickReason)value;
 					break;
 				case "DeathLocation":
 					DeathLocation = (FVector)value;

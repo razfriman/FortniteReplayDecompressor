@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
@@ -118,7 +119,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public FVector LinearVelocity { get; set; } //Type: FVector_NetQuantize10 Bits: 26
 
 		[NetFieldExport("CurrentMovementStyle", RepLayoutCmdType.Enum)]
-		public int? CurrentMovementStyle { get; set; } //Type: TEnumAsByte<EFortMovementStyle::Type> Bits: 3
+		public EFortMovementStyle CurrentMovementStyle { get; set; } = EFortMovementStyle.EFortMovementStyle_MAX; //Type: TEnumAsByte<EFortMovementStyle::Type> Bits: 3
 
 		[NetFieldExport("bIgnoreNextFallingDamage", RepLayoutCmdType.PropertyBool)]
 		public bool? bIgnoreNextFallingDamage { get; set; } //Type:  Bits: 1
@@ -235,7 +236,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public object StasisMode { get; set; } //Type: Enum Bits: 3
 
 		[NetFieldExport("BuildingState", RepLayoutCmdType.Enum)]
-		public int? BuildingState { get; set; } //Type: TEnumAsByte<EFortBuildingState::Type> Bits: 2
+		public EFortBuildingState BuildingState { get; set; } = EFortBuildingState.EFortBuildingState_MAX;
 
 		[NetFieldExport("bIsTargeting", RepLayoutCmdType.PropertyBool)]
 		public bool? bIsTargeting { get; set; } //Type: bool Bits: 1
@@ -412,7 +413,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public ActorGUID DBNOHoister { get; set; } //Type:  Bits: 16
 
 		[NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Enum)]
-		public int? DBNOCarryEvent { get; set; } //Type:  Bits: 2
+		public EFortDBNOCarryEvent DBNOCarryEvent { get; set; } = EFortDBNOCarryEvent.EFortDBNOCarryEvent_MAX; //Type:  Bits: 2
 
 		[NetFieldExport("Backpack", RepLayoutCmdType.Property)]
 		public ItemDefinitionGUID Backpack { get; set; } //Type: UAthenaBackpackItemDefinition* Bits: 16
@@ -602,7 +603,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					LinearVelocity = (FVector)value;
 					break;
 				case "CurrentMovementStyle":
-					CurrentMovementStyle = (int)value;
+					CurrentMovementStyle = (EFortMovementStyle)value;
 					break;
 				case "bIgnoreNextFallingDamage":
 					bIgnoreNextFallingDamage = (bool)value;
@@ -719,7 +720,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					StasisMode = value;
 					break;
 				case "BuildingState":
-					BuildingState = (int)value;
+					BuildingState = (EFortBuildingState)value;
 					break;
 				case "bIsTargeting":
 					bIsTargeting = (bool)value;
@@ -896,7 +897,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					DBNOHoister = (ActorGUID)value;
 					break;
 				case "DBNOCarryEvent":
-					DBNOCarryEvent = (int)value;
+					DBNOCarryEvent = (EFortDBNOCarryEvent)value;
 					break;
 				case "Backpack":
 					Backpack = (ItemDefinitionGUID)value;
@@ -988,6 +989,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 			return true;
 		}
-
 	}
 }

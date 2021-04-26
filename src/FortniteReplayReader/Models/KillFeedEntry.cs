@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FortniteReplayReader.Models.Enums;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
@@ -14,7 +15,9 @@ namespace FortniteReplayReader.Models
         public PlayerState CurrentPlayerState { get; internal set; }
         public ItemRarity ItemRarity { get; internal set; }
         public ItemType ItemType { get; internal set; }
-        public int ItemId { get; internal set; }
+        public int ItemId => DeathCause == EDeathCause.EDeathCause_MAX ? 0 : (int)DeathCause;
+        public EDeathCause DeathCause { get; internal set; } = EDeathCause.EDeathCause_MAX;
+
         public float DeltaGameTimeSeconds { get; internal set; }
         public float Distance { get; internal set; }
         public Weapon Weapon { get; internal set; }

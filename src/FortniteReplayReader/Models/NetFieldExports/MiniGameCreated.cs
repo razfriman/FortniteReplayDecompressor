@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReader.Models.NetFieldExports.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -104,7 +105,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public int? BucketIndex { get; set; }
 
 		[NetFieldExport("CurrentState", RepLayoutCmdType.Enum)]
-		public int? CurrentState { get; set; }
+		public EFortMinigameState CurrentState { get; set; } = EFortMinigameState.EFortMinigameState_MAX;
 
 		[NetFieldExport("SetupTime", RepLayoutCmdType.PropertyFloat)]
 		public float? SetupTime { get; set; }
@@ -140,10 +141,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public int? MinigameMapWidget { get; set; }
 
 		[NetFieldExport("WinCondition", RepLayoutCmdType.Enum)]
-		public int? WinCondition { get; set; }
+		public EMinigameWinCondition WinCondition { get; set; } = EMinigameWinCondition.EMinigameWinCondition_MAX;
 
 		[NetFieldExport("GameEndCallout", RepLayoutCmdType.Enum)]
-		public int? GameEndCallout { get; set; }
+		public EMinigameGameEndCallout GameEndCallout { get; set; } = EMinigameGameEndCallout.EMinigameGameEndCallout_MAX;
 
 		[NetFieldExport("bShowCumulativeScoreboard", RepLayoutCmdType.PropertyBool)]
 		public bool? bShowCumulativeScoreboard { get; set; }
@@ -270,7 +271,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					BucketIndex = (int)value;
 					break;
 				case "CurrentState":
-					CurrentState = (int)value;
+					CurrentState = (EFortMinigameState)value;
 					break;
 				case "SetupTime":
 					SetupTime = (float)value;
@@ -306,10 +307,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					MinigameMapWidget = (int)value;
 					break;
 				case "WinCondition":
-					WinCondition = (int)value;
+					WinCondition = (EMinigameWinCondition)value;
 					break;
 				case "GameEndCallout":
-					GameEndCallout = (int)value;
+					GameEndCallout = (EMinigameGameEndCallout)value;
 					break;
 				case "bShowCumulativeScoreboard":
 					bShowCumulativeScoreboard = (bool)value;

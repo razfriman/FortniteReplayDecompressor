@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using Unreal.Core.Attributes;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -33,8 +34,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         [NetFieldExport("bPlayedSpinDownAudio", RepLayoutCmdType.PropertyBool)]
         public bool? bPlayedSpinDownAudio { get; set; }
 
-        [NetFieldExport("OverheatState", RepLayoutCmdType.Enum)]
-        public int? OverheatState { get; set; }
+		[NetFieldExport("OverheatState", RepLayoutCmdType.Enum)]
+		public EFortWeaponOverheatState OverheatState { get; set; } = EFortWeaponOverheatState.EFortWeaponOverheatState_MAX;
 
         [NetFieldExport("TimeOverheatedBegan", RepLayoutCmdType.PropertyFloat)]
         public float? TimeOverheatedBegan { get; set; }
@@ -62,7 +63,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 					bPlayedSpinDownAudio = (bool)value;
 					break;
 				case "OverheatState":
-					OverheatState = (int)value;
+					OverheatState = (EFortWeaponOverheatState)value;
 					break;
 				case "TimeOverheatedBegan":
 					TimeOverheatedBegan = (float)value;

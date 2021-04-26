@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -214,8 +215,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("TeamFlightPaths", RepLayoutCmdType.DynamicArray)]
         public GameStateC[] TeamFlightPaths { get; set; } //Type: TArray Bits: 403
 
-        [NetFieldExport("StormCapState", RepLayoutCmdType.Enum)]
-        public int? StormCapState { get; set; } //Type:  Bits: 3
+		[NetFieldExport("StormCapState", RepLayoutCmdType.Enum)]
+		public EAthenaStormCapState StormCapState { get; set; } = EAthenaStormCapState.EAthenaStormCapState_MAX; //Type:  Bits: 3
 
         [NetFieldExport("WinningPlayerList", RepLayoutCmdType.DynamicArray)]
         public int[] WinningPlayerList { get; set; } //Type:  Bits: 160
@@ -244,8 +245,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SafeZonePhase", RepLayoutCmdType.PropertyByte)]
         public byte? SafeZonePhase { get; set; } //Type: uint8 Bits: 8
 
-        [NetFieldExport("GamePhase", RepLayoutCmdType.Enum)]
-        public int? GamePhase { get; set; } //Type: EAthenaGamePhase Bits: 3
+		[NetFieldExport("GamePhase", RepLayoutCmdType.Enum)]
+		public EAthenaGamePhase GamePhase { get; set; } = EAthenaGamePhase.EAthenaGamePhase_MAX; //Type: EAthenaGamePhase Bits: 3
 
         [NetFieldExport("Aircrafts", RepLayoutCmdType.Ignore)]
         public DebuggingObject Aircrafts { get; set; } //Type: TArray Bits: 64
@@ -295,8 +296,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("DefaultRedeployGliderHeightLimit", RepLayoutCmdType.Ignore)]
         public float? DefaultRedeployGliderHeightLimit { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum)]
-        public int? EventTournamentRound { get; set; } //Type:  Bits: 3
+		[NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum)]
+		public EEventTournamentRound EventTournamentRound { get; set; } = EEventTournamentRound.EEventTournamentRound_MAX;//Type:  Bits: 3
 
         [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyInt)]
         public int? PlayerBotsLeft { get; set; } //Type:  Bits: 32
@@ -561,7 +562,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					TeamFlightPaths = (GameStateC[])value;
 					break;
 				case "StormCapState":
-					StormCapState = (int)value;
+					StormCapState = (EAthenaStormCapState)value;
 					break;
 				case "WinningPlayerList":
 					WinningPlayerList = (int[])value;
@@ -591,7 +592,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					SafeZonePhase = (byte)value;
 					break;
 				case "GamePhase":
-					GamePhase = (int)value;
+					GamePhase = (EAthenaGamePhase)value;
 					break;
 				case "Aircrafts":
 					Aircrafts = (DebuggingObject)value;
@@ -642,7 +643,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					DefaultRedeployGliderHeightLimit = (float)value;
 					break;
 				case "EventTournamentRound":
-					EventTournamentRound = (int)value;
+					EventTournamentRound = (EEventTournamentRound)value;
 					break;
 				case "PlayerBotsLeft":
 					PlayerBotsLeft = (int)value;

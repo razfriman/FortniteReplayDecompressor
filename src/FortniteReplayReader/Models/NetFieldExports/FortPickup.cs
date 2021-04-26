@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -114,8 +115,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("FinalTossRestLocation", RepLayoutCmdType.PropertyVector10)]
         public FVector FinalTossRestLocation { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
-        [NetFieldExport("TossState", RepLayoutCmdType.Enum)]
-        public int? TossState { get; set; } //Type: EFortPickupTossState Bits: 2
+		[NetFieldExport("TossState", RepLayoutCmdType.Enum)]
+		public EFortPickupTossState TossState { get; set; } = EFortPickupTossState.EFortPickupTossState_MAX; //Type: EFortPickupTossState Bits: 2
 
         [NetFieldExport("bCombinePickupsWhenTossCompletes", RepLayoutCmdType.PropertyBool)]
         public bool? bCombinePickupsWhenTossCompletes { get; set; } //Type:  Bits: 1
@@ -254,7 +255,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					FinalTossRestLocation = (FVector)value;
 					break;
 				case "TossState":
-					TossState = (int)value;
+					TossState = (EFortPickupTossState)value;
 					break;
 				case "bCombinePickupsWhenTossCompletes":
 					bCombinePickupsWhenTossCompletes = (bool)value;

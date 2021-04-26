@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReader.Models.NetFieldExports.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,7 @@ namespace FortniteReplayReader.Models
         public bool JumpedForceApplied { get; internal set; }
         public bool Sprinting { get; internal set; }
         public bool IsInWater { get; internal set; }
+        public EFortMovementStyle MovementStyle { get; internal set; } = EFortMovementStyle.EFortMovementStyle_MAX;
 
         public PlayerMovementInformation Copy()
         {
