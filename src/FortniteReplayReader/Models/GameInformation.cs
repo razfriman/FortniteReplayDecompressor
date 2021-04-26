@@ -508,17 +508,20 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
                     playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
                     playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 3 : playerActor.MovementInformation.Sprinting;
-                    playerActor.MovementInformation.ADS = playerPawnC.CurrentMovementStyle.HasValue ? playerPawnC.CurrentMovementStyle.Value == 1 : playerActor.MovementInformation.ADS;
                     playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
                     playerActor.MovementInformation.IsInWater = playerPawnC.ReplicatedWaterBody != null ? playerPawnC.ReplicatedWaterBody.Value > 0 : playerActor.MovementInformation.IsInWater;
 
+                    float currentMovementDeltaTime = 0;
 
-                    if (playerActor.InitialMovementTimestamp == 0 && playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
+                    if (playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
                     {
-                        playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
-                    }
+                        if (playerActor.InitialMovementTimestamp == 0)
+                        {
+                            playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
+                        }
 
-                    float currentMovementDeltaTime = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value - playerActor.InitialMovementTimestamp;
+                        currentMovementDeltaTime = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value - playerActor.InitialMovementTimestamp;
+                    }
 
                     if (!IgnoreLocationUpdate(playerActor, currentMovementDeltaTime))
                     {

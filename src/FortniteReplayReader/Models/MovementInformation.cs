@@ -26,7 +26,6 @@ namespace FortniteReplayReader.Models
         public bool IsEmoting { get; internal set; }
         public bool IsTargeting { get; internal set; }
         public bool JumpedForceApplied { get; internal set; }
-        public bool ADS { get; internal set; }
         public bool Sprinting { get; internal set; }
         public bool IsInWater { get; internal set; }
 
@@ -41,7 +40,6 @@ namespace FortniteReplayReader.Models
                 IsInteracting = IsInteracting,
                 IsSlopeSliding = IsSlopeSliding,
                 IsTargeting = IsTargeting,
-                ADS = ADS,
                 Sprinting = Sprinting,
                 Skydiving = Skydiving,
                 JumpedForceApplied = JumpedForceApplied,
