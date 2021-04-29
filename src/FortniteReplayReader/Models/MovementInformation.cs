@@ -7,15 +7,6 @@ using System.Threading.Tasks;
 
 namespace FortniteReplayReader.Models
 {
-    public enum MovementType { 
-        /// <summary>
-        /// Value is set whenever sprinting has stopped
-        /// </summary>
-        NotSprinting = 0,
-        ADS = 1, //Always when ADS
-        Sprinting = 3 
-    };
-
     public class PlayerMovementInformation
     {
         public bool InBus { get; internal set; }
