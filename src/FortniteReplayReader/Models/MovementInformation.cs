@@ -45,7 +45,8 @@ namespace FortniteReplayReader.Models
                 Sprinting = Sprinting,
                 Skydiving = Skydiving,
                 JumpedForceApplied = JumpedForceApplied,
-                IsInWater = IsInWater
+                IsInWater = IsInWater,
+                MovementStyle = MovementStyle
             };
         }
     }
