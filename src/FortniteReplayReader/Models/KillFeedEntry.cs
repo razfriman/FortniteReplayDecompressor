@@ -173,6 +173,43 @@ namespace FortniteReplayReader.Models
                     case "Item.Weapon.Ranged.Shotgun.Bone":
                         ItemType = ItemType.PrimalShotgun;
                         break;
+                    case "Item.Weapon.Ranged.Launcher.Junkgun":
+                    case "Weapon.Ranged.Heavy.Junkgun":
+                        ItemType = ItemType.Recycler;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Scrap":
+                        ItemType = ItemType.MakeshiftBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Metal":
+                        ItemType = ItemType.MechBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Bone":
+                        ItemType = ItemType.PrimalBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.ClusterBomb":
+                        ItemType = ItemType.MechExplosiveBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Stink":
+                        ItemType = ItemType.StinkBow;
+                        break;
+                    case "Item.Weapon.Ranged.Bow.Flame":
+                        ItemType = ItemType.FlameBow;
+                        break;
+                    case "Pawn.Athena.NPC.Wildlife.Predator.SpicySake":
+                        ItemType = ItemType.Shark;
+                        break;
+                    case "Pawn.Athena.NPC.Wildlife.Predator.Robert":
+                        ItemType = ItemType.Raptor;
+                        break;
+                    case "Pawn.Athena.NPC.Wildlife.Predator.Grandma":
+                        ItemType = ItemType.Wolf;
+                        break;
+                    case "Gameplay.Effect.InstantDeath.Environment.UnderLandscape":
+                        break;
+                    case "Gameplay.Effect.InstantDeath.Environment":
+                        break;
+                    case "Gameplay.Effect.InstantDeath":
+                        break;
                 }
 
                 if(Biome == null && deathTag.StartsWith("Athena.Location.Biome", StringComparison.OrdinalIgnoreCase))
