@@ -2063,7 +2063,7 @@ namespace Unreal.Core
                 return;
             }
 
-            var lastByte = packet.Data[^1];
+            var lastByte = packet.Data[packet.Data.Length - 1];
 
             if (lastByte != 0)
             {

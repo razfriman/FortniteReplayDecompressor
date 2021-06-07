@@ -22,7 +22,7 @@ namespace Unreal.Core.Attributes
 
             if (typePathname.Length > name.Length)
             {
-                IsFunction = typePathname[^(name.Length + 1)] == ':';
+                IsFunction = typePathname[typePathname.Length - (name.Length + 1)] == ':';
             }
         }
     }

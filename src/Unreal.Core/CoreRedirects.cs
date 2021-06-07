@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Unreal.Core.Attributes;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core
 {

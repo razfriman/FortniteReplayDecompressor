@@ -13,6 +13,7 @@ using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using FortniteReplayReader.Models.NetFieldExports.Vehicles;
 using Unreal.Core.Models;
+using Unreal.Core.Extensions;
 
 namespace FortniteReplayReader.Models
 {

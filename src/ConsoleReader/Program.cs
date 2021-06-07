@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/testReplay.replay"; //Used for testing
+            var replayFile = "Replays/broken.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -100,6 +100,14 @@ namespace ConsoleReader
                     var alive = nonBots.Where(x => x.StatusChanges.LastOrDefault()?.CurrentPlayerState == PlayerState.Alive);
 
                     var a = replay.GameInformation.Players.Where(x => x.IsPlayersReplay).SelectMany(x => x.Locations).Where(x => x.MovementInformation?.InBus == true);
+
+                    var test = replay.GameInformation.Players.OrderBy(x => x.Placement);
+
+                    foreach(var asdfklj in test)
+                    {
+                        Console.WriteLine($"Team: {asdfklj.Teamindex - 2}: Placement: {asdfklj.Placement}");
+                    }
+
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 

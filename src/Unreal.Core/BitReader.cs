@@ -128,7 +128,7 @@ namespace Unreal.Core
                 }
             }
 
-            return (int)result;
+            return result;
         }
 
         /// <summary>
@@ -148,7 +148,12 @@ namespace Unreal.Core
 
             //Buffer.BlockCopy(Bits.Items, _position, result, 0, bitCount);
 
+
+#if NETSTANDARD2_0
+            Array.Copy(Bits.Items, _position, result, 0, bitCount);
+#else
             Bits.AsSpan(_position, bitCount).CopyTo(result);
+#endif
 
             _position += bitCount;
 
@@ -405,13 +410,22 @@ namespace Unreal.Core
         public override short ReadInt16()
         {
             var value = ReadBytes(2);
+#if NETSTANDARD2_0
+            return IsError ? (short)0 : BitConverter.ToInt16(value, 0);
+#else
             return IsError ? (short)0 : BitConverter.ToInt16(value);
+#endif
         }
 
         public override int ReadInt32()
         {
             var value = ReadBytes(4);
+
+#if NETSTANDARD2_0
+            return IsError ? 0 : BitConverter.ToInt32(value, 0);
+#else
             return IsError ? 0 : BitConverter.ToInt32(value);
+#endif
         }
 
         public override bool ReadInt32AsBoolean()
@@ -424,7 +438,12 @@ namespace Unreal.Core
         public override long ReadInt64()
         {
             var value = ReadBytes(8);
+
+#if NETSTANDARD2_0
+            return IsError ? 0 : BitConverter.ToInt64(value, 0);
+#else
             return IsError ? 0 : BitConverter.ToInt64(value);
+#endif
         }
 
         /// <summary>
@@ -600,7 +619,11 @@ namespace Unreal.Core
                 return 0;
             }
 
+#if NETSTANDARD2_0
+            return BitConverter.ToSingle(arr, 0);
+#else
             return BitConverter.ToSingle(arr);
+#endif
         }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)
@@ -617,7 +640,11 @@ namespace Unreal.Core
                 return 0;
             }
 
+#if NETSTANDARD2_0
+            return BitConverter.ToUInt16(arr, 0);
+#else
             return BitConverter.ToUInt16(arr);
+#endif
         }
 
         public override uint ReadUInt32()
@@ -629,7 +656,11 @@ namespace Unreal.Core
                 return 0;
             }
 
+#if NETSTANDARD2_0
+            return BitConverter.ToUInt32(arr, 0);
+#else
             return BitConverter.ToUInt32(arr);
+#endif
         }
 
         public override bool ReadUInt32AsBoolean()
@@ -651,7 +682,12 @@ namespace Unreal.Core
                 return 0;
             }
 
+
+#if NETSTANDARD2_0
+            return BitConverter.ToUInt32(arr, 0);
+#else
             return BitConverter.ToUInt64(arr);
+#endif
         }
 
         /// <summary>

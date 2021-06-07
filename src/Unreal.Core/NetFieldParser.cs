@@ -12,6 +12,7 @@ using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core
 {
@@ -82,7 +83,7 @@ namespace Unreal.Core
             StringBuilder builder = new StringBuilder();
 
             builder.AppendLine($"\t[NetFieldExportGroup(\"{debuggingGroup.ExportGroup.PathName}\", ParseType.Normal)]");
-            builder.AppendLine($"\tpublic class {debuggingGroup.ExportGroup.PathName.Split("/").Last()} : INetFieldExportGroup");
+            builder.AppendLine($"\tpublic class {debuggingGroup.ExportGroup.PathName.Split('/').Last()} : INetFieldExportGroup");
             builder.AppendLine("\t{");
 
             HashSet<string> alreadyAdded = new HashSet<string>();
@@ -170,7 +171,7 @@ namespace Unreal.Core
 
                         if (add)
                         {
-                            lines.InsertRange(insertLine, text.Split(Environment.NewLine));
+                            lines.InsertRange(insertLine, text.Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
                         }
 
                         i = insertLine; //Skip ahead
