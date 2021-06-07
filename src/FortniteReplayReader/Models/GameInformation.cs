@@ -7,11 +7,13 @@ using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Builds;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Custom;
 using FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions;
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using FortniteReplayReader.Models.NetFieldExports.Items.Containers;
 using FortniteReplayReader.Models.NetFieldExports.Items.Weapons;
 using FortniteReplayReader.Models.NetFieldExports.Sets;
 using FortniteReplayReader.Models.NetFieldExports.Vehicles;
 using Unreal.Core.Models;
+using Unreal.Core.Extensions;
 
 namespace FortniteReplayReader.Models
 {
@@ -34,6 +36,7 @@ namespace FortniteReplayReader.Models
         public GameState GameState { get; private set; } = new GameState();
         public EncryptionKey PlayerStateEncryptionKey { get; internal set; }
         public FortniteReplaySettings Settings { get; internal set; }
+        public MinigameInformation MinigameInformation { get; internal set; }
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
@@ -53,6 +56,7 @@ namespace FortniteReplayReader.Models
         private Dictionary<uint, PlayerStructure> _playerStructures = new Dictionary<uint, PlayerStructure>(); //Channel to player structures
         private Dictionary<string, uint> _healthSetStartingHandles = new Dictionary<string, uint>(); //Starting handle ids for a health set
         private Dictionary<uint, Vehicle> _vehicles = new Dictionary<uint, Vehicle>(); //Channel id to vehicle
+        private Dictionary<string, Player> _playerById = new Dictionary<string, Player>(); //Used only for minigame replays
         private Player _replayPlayer;
 
         //Delta updates
@@ -82,7 +86,7 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePrivateTeamInfo(uint channelId, FortTeamPrivateInfo privateTeamInfo)
         {
-            _privateTeamInfo.TryAdd(channelId, new NetDeltaArray<PrivateTeamInfo>());
+            _privateTeamInfo[channelId] = new NetDeltaArray<PrivateTeamInfo>();
         }
 
         internal void UpdateLlama(uint channelId, SupplyDropLlamaC supplyDropLlama)
@@ -159,7 +163,7 @@ namespace FortniteReplayReader.Models
             GameState.InitialSafeZoneStartTime = gameState.SafeZonesStartTime ?? GameState.InitialSafeZoneStartTime;
             GameState.SessionId = gameState.GameSessionId ?? GameState.SessionId;
             GameState.MatchTime = gameState.UtcTimeStartedMatch?.Time ?? GameState.MatchTime;
-            GameState.EventTournamentRound = gameState.EventTournamentRound ?? GameState.EventTournamentRound;
+            GameState.EEventTournamentRound = gameState.EventTournamentRound != EEventTournamentRound.EEventTournamentRound_MAX ? gameState.EventTournamentRound : GameState.EEventTournamentRound;
             GameState.LargeTeamGame = gameState.bIsLargeTeamGame ?? GameState.LargeTeamGame;
             GameState.MaxPlayers = gameState.TeamCount ?? GameState.MaxPlayers;
             GameState.MatchEndTime = gameState.EndGameStartTime ?? GameState.MatchEndTime;
@@ -232,7 +236,7 @@ namespace FortniteReplayReader.Models
                     if (playerState.FinisherOrDowner == 0)
                     {
                         //DBNO revives?
-                        if(playerState.DeathCause != null)
+                        if(playerState.DeathCause != EDeathCause.EDeathCause_MAX)
                         {
                             entry.Player = channelPlayer;
                             entry.CurrentPlayerState = PlayerState.Alive;
@@ -264,7 +268,16 @@ namespace FortniteReplayReader.Models
                     entry.Player = channelPlayer;
                     entry.FinisherOrDowner = eliminator;
                     entry.CurrentPlayerState = playerState.bDBNO == true ? PlayerState.Knocked : PlayerState.Killed;
-                    entry.ItemId = playerState.DeathCause ?? channelPlayer.LastKnockedEntry?.ItemId ?? 0; //0 would technically be unknown. Occurs with grenades, but we can pull that information through tags
+
+                    entry.DeathCause = playerState.DeathCause;
+
+                    if(entry.DeathCause == EDeathCause.EDeathCause_MAX)
+                    {
+                        if(channelPlayer.LastKnockedEntry?.DeathCause != null)
+                        {
+                            entry.DeathCause = channelPlayer.LastKnockedEntry.DeathCause;
+                        }
+                    }
 
                     if (entry.DeathTags == null)
                     {
@@ -276,7 +289,7 @@ namespace FortniteReplayReader.Models
                     entry.Player = channelPlayer;
                     entry.FinisherOrDowner = eliminator;
                     entry.CurrentPlayerState = PlayerState.Killed;
-                    entry.ItemId = playerState.DeathCause ?? 0;
+                    entry.DeathCause = playerState.DeathCause;
                 }
             }
 
@@ -310,12 +323,13 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(playerState.bOnlySpectator == true)
+            if (playerState.bOnlySpectator == true)
             {
                 return;
             }
 
             bool isNewPlayer = !_players.TryGetValue(channelId, out Player newPlayer);
+
 
             if (isNewPlayer)
             {
@@ -324,9 +338,11 @@ namespace FortniteReplayReader.Models
                 _players.TryAdd(channelId, newPlayer);
             }
 
-            if (playerState.DeathTags != null && networkGameplayTagNode != null)
+            if (networkGameplayTagNode != null)
             {
-                playerState.DeathTags.UpdateTags(networkGameplayTagNode);
+                playerState.DeathTags?.UpdateTags(networkGameplayTagNode);
+                playerState.VictimTags?.UpdateTags(networkGameplayTagNode);
+                playerState.FinisherOrDownerTags?.UpdateTags(networkGameplayTagNode);
             }
 
             //Attempt to update private team info to correct object
@@ -360,11 +376,13 @@ namespace FortniteReplayReader.Models
             newPlayer.TotalKills = playerState.KillScore ?? newPlayer.TotalKills;
             newPlayer.TeamKills = playerState.TeamKillScore ?? newPlayer.TeamKills;
             newPlayer.Disconnected = playerState.bIsDisconnected ?? newPlayer.Disconnected;
+            newPlayer.AnonMode = playerState.bUsingAnonymousMode ?? newPlayer.AnonMode;
             newPlayer.PrivateTeamActorId = playerState.PlayerTeamPrivate ?? newPlayer.PrivateTeamActorId;
-            newPlayer.Cosmetics.CharacterBodyType = playerState.CharacterBodyType ?? newPlayer.Cosmetics.CharacterBodyType;
+            newPlayer.Cosmetics.ECharacterBodyType = playerState.CharacterBodyType == EFortCustomBodyType.EFortCustomBodyType_MAX ? playerState.CharacterBodyType : newPlayer.Cosmetics.ECharacterBodyType;
             newPlayer.Cosmetics.HeroType = GetPathName(playerState.HeroType) ?? newPlayer.Cosmetics.HeroType;
-            newPlayer.Cosmetics.CharacterGender = playerState.CharacterGender ?? newPlayer.Cosmetics.CharacterGender;
+            newPlayer.Cosmetics.ECharacterGender = playerState.CharacterGender == EFortCustomGender.EFortCustomGender_MAX ? playerState.CharacterGender : newPlayer.Cosmetics.ECharacterGender;
             newPlayer.Cosmetics.Parts = GetPathName(playerState.Parts) ?? newPlayer.Cosmetics.Parts;
+            newPlayer.MovementInformation.InBus = playerState.bInAircraft ?? newPlayer.MovementInformation.InBus;
 
             if (playerState.VariantRequiredCharacterParts != null)
             {
@@ -390,21 +408,40 @@ namespace FortniteReplayReader.Models
 
             if (playerState.TeamIndex != null)
             {
-                if(!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
+                //Only should populate the teams when we aren't in a round game. Should use the round teams to determine teams
+                if(MinigameInformation == null || MinigameInformation.TotalRounds <= 1)
                 {
-                    team = new Team();
+                    if (!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
+                    {
+                        team = new Team();
 
-                    _teams.TryAdd(playerState.TeamIndex.Value, team);
+                        _teams.TryAdd(playerState.TeamIndex.Value, team);
+                    }
+
+                    team.Players.Add(newPlayer);
+                    newPlayer.Team = team;
                 }
-                
-                team.Players.Add(newPlayer);
-                newPlayer.Team = team;
             }
             
             //Add to killfeed
             if (playerState.bDBNO != null || playerState.FinisherOrDowner != null || playerState.RebootCounter != null)
             {
                 UpdateKillFeed(channelId, playerState);
+            }
+
+            if(playerState.bIsDisconnected == true && newPlayer.StatusChanges.LastOrDefault()?.CurrentPlayerState != PlayerState.Killed)
+            {
+                KillFeedEntry entry = new KillFeedEntry
+                {
+                    FinisherOrDowner = newPlayer,
+                    CurrentPlayerState = PlayerState.Killed,
+                    Player = newPlayer,
+                    DeltaGameTimeSeconds = GameState.DeltaGameTime
+                };
+
+                newPlayer.StatusChanges.Add(entry);
+
+                _killFeed.Add(entry);
             }
 
             if(playerState.bHasEverSkydivedFromBusAndLanded != null)
@@ -421,6 +458,11 @@ namespace FortniteReplayReader.Models
             if(isNewPlayer)
             {
                 HandleQueuedPlayerPawns(newPlayer);
+            }
+
+            if(MinigameInformation != null)
+            {
+                _playerById[newPlayer.EpicId] = newPlayer;
             }
         }
 
@@ -468,7 +510,34 @@ namespace FortniteReplayReader.Models
                 case Player playerActor:
                     playerActor.LastTransformUpdate = playerPawnC.ReplayLastTransformUpdateTimeStamp ?? playerActor.LastTransformUpdate;
 
-                    if (!IgnoreLocationUpdate(playerActor))
+                    //Update movement info
+                    playerActor.MovementInformation.Skydiving = playerPawnC.bIsSkydiving ?? playerActor.MovementInformation.Skydiving;
+                    playerActor.MovementInformation.Crouched = playerPawnC.bIsCrouched ?? playerActor.MovementInformation.Crouched;
+                    playerActor.MovementInformation.GliderOpen = playerPawnC.bIsParachuteOpen ?? playerActor.MovementInformation.GliderOpen;
+                    playerActor.MovementInformation.IsEmoting = playerPawnC.bIsPlayingEmote ?? playerActor.MovementInformation.IsEmoting;
+                    playerActor.MovementInformation.IsInteracting = playerPawnC.bStartedInteractSearch ?? playerActor.MovementInformation.IsInteracting;
+                    playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
+                    playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
+                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ? 
+                        playerPawnC.CurrentMovementStyle == EFortMovementStyle.Sprinting : playerActor.MovementInformation.Sprinting;
+                    playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
+                    playerActor.MovementInformation.IsInWater = playerPawnC.ReplicatedWaterBody != null ? playerPawnC.ReplicatedWaterBody.Value > 0 : playerActor.MovementInformation.IsInWater;
+
+                    playerActor.MovementInformation.MovementStyle = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ? playerPawnC.CurrentMovementStyle : playerActor.MovementInformation.MovementStyle;
+
+                    float currentMovementDeltaTime = 0;
+
+                    if (playerPawnC.ReplayLastTransformUpdateTimeStamp.HasValue)
+                    {
+                        if (playerActor.InitialMovementTimestamp == 0)
+                        {
+                            playerActor.InitialMovementTimestamp = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value;
+                        }
+
+                        currentMovementDeltaTime = playerPawnC.ReplayLastTransformUpdateTimeStamp.Value - playerActor.InitialMovementTimestamp;
+                    }
+
+                    if (!IgnoreLocationUpdate(playerActor, currentMovementDeltaTime))
                     {
                         PlayerLocationRepMovement fRepMovement = null;
 
@@ -482,6 +551,8 @@ namespace FortniteReplayReader.Models
                                     fRepMovement = vehicle.CurrentLocation;
                                     fRepMovement.InVehicle = true;
                                     fRepMovement.VehicleChannel = actorChannel;
+                                    fRepMovement.CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive;
+                                    fRepMovement.DeltaGameTimeSeconds = currentMovementDeltaTime;
                                 }
                                 else
                                 {
@@ -491,11 +562,13 @@ namespace FortniteReplayReader.Models
                         }
                         else if (playerActor.LastKnownLocation?.InVehicle == true) //Still in vehicle, use vehicle locations
                         {
-                            if(_vehicles.TryGetValue(playerActor.LastKnownLocation.VehicleChannel, out Vehicle vehicle))
+                            if (_vehicles.TryGetValue(playerActor.LastKnownLocation.VehicleChannel, out Vehicle vehicle))
                             {
                                 fRepMovement = vehicle.CurrentLocation;
                                 fRepMovement.InVehicle = true;
                                 fRepMovement.VehicleChannel = playerActor.LastKnownLocation.VehicleChannel;
+                                fRepMovement.CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive;
+                                fRepMovement.DeltaGameTimeSeconds = currentMovementDeltaTime;
                             }
                         }
 
@@ -506,7 +579,9 @@ namespace FortniteReplayReader.Models
                                 RepLocation = playerPawnC.ReplicatedMovement,
                                 WorldTime = GameState.CurrentWorldTime,
                                 LastUpdateTime = playerPawnC.ReplayLastTransformUpdateTimeStamp,
-                                DeltaGameTimeSeconds = GameState.DeltaGameTime
+                                DeltaGameTimeSeconds = currentMovementDeltaTime,
+                                CurrentPlayerState = playerActor.StatusChanges.LastOrDefault()?.CurrentPlayerState ?? PlayerState.Alive,
+                                MovementInformation = playerActor.MovementInformation.Copy()
                             };
                         }
 
@@ -541,8 +616,10 @@ namespace FortniteReplayReader.Models
                             else
                             {
                                 //Useful to debug weapons that aren't added
-                                //var a = Channels[weaponChannel];
-                                //Console.WriteLine(a.Group.First());
+                                /*var a = Channels[weaponChannel];
+
+                                Console.WriteLine($"{GameState.DeltaGameTime} - {(a.Group.FirstOrDefault() ?? "Empty")}");
+                                */
                             }
                         }
                         else
@@ -701,29 +778,47 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateFortInventory(uint channelId, FortInventory inventory)
         {
-            if(inventory.ReplayPawn > 0)
+            if (inventory.ReplayPawn > 0)
             {
-                //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                if(!_inventories.TryAdd(channelId, inventory))
-                {
-                    _inventories[channelId] = inventory;
-                }
+                _inventories[channelId] = inventory;
             }
         }
 
         //Only occur on main player's inventory or server replays
         internal void UpdateNetDeltaFortInventory(NetDeltaUpdate deltaUpdate)
         {
+            uint channel = 0;
+
             if (!_inventories.TryGetValue(deltaUpdate.ChannelIndex, out FortInventory inventory) || 
-               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out uint channel) || 
+               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out channel) || 
                !_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
             {
+                QueuedPlayerPawn queuedPlayerSpawn = _queuedPlayerPawns.Values.FirstOrDefault(x => x.FirstOrDefault()?.ChannelId == channel)?.First();
+
+                if (queuedPlayerSpawn == null)
+                {
+                    //Gets here when entering the bus. Items are deleted later
+                    return;
+                }
+
+                queuedPlayerSpawn.InventoryUpdates.Add(deltaUpdate);
+
                 return;
             }
 
             if (!(playerPawn is Player player))
             {
                 return;
+            }
+
+            //Got on bus, possibly respawn too?
+            if (player.ReplayPawnId != inventory.ReplayPawn.Value)
+            {
+                player.InventoryBeforeDeletes.Clear();
+                player.InventoryBeforeDeletes.AddRange(player.CurrentInventory.Items);
+                player.CurrentInventory.Clear();
+
+                player.ReplayPawnId = inventory.ReplayPawn.Value;
             }
 
             if (deltaUpdate.Deleted)
@@ -802,7 +897,7 @@ namespace FortniteReplayReader.Models
                 item.PlayerId = privateInfo.PlayerID ?? item.PlayerId;
 
                 item.LastYaw = privateInfo.LastRepYaw ?? item.LastYaw;
-                item.PawnStateMask = privateInfo.PawnStateMask ?? item.PawnStateMask;
+                item.PawnStateMask = privateInfo.PawnStateMask != EFortPawnState.EFortPawnState_MAX ? privateInfo.PawnStateMask : item.PawnStateMask;
 
                 if(privateInfo.PlayerState != null)
                 {
@@ -816,7 +911,7 @@ namespace FortniteReplayReader.Models
                 }
 
                 //Ignores issue with playstate actor id not being found at first
-                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState) && privateInfo.LastRepLocation != null) 
+                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState, GameState.DeltaGameTime) && privateInfo.LastRepLocation != null) 
                 {
                     item.LastLocation = privateInfo.LastRepLocation;
                     item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
@@ -891,7 +986,7 @@ namespace FortniteReplayReader.Models
         {
             if (_players.TryGetValue(channelId, out Player player))
             {
-                if(_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("/Script/FortniteGame.FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
+                if (_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("/Script/FortniteGame.FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
                 {
                     List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
 
@@ -1026,19 +1121,19 @@ namespace FortniteReplayReader.Models
 
         internal void HandleDeltaNetRead(NetDeltaUpdate deltaUpdate)
         {
-            if (_inventories.ContainsKey(deltaUpdate.ChannelIndex))
+            switch (deltaUpdate.ExportGroup.PathName)
             {
-                if(Settings.IgnoreInventory)
-                {
-                    return;
-                }
+                case "FortTeamPrivateInfo_ClassNetCache":
+                    UpdateNetDeltaPrivateTeamInfo(deltaUpdate);
+                    break;
+                case "FortInventory_ClassNetCache":
+                    if (Settings.IgnoreInventory)
+                    {
+                        return;
+                    }
 
-                UpdateNetDeltaFortInventory(deltaUpdate);
-            }
-
-            if(_privateTeamInfo.ContainsKey(deltaUpdate.ChannelIndex))
-            {
-                UpdateNetDeltaPrivateTeamInfo(deltaUpdate);
+                    UpdateNetDeltaFortInventory(deltaUpdate);
+                    break;
             }
 
             //GameMemberInfoArray
@@ -1052,11 +1147,16 @@ namespace FortniteReplayReader.Models
                 foreach(QueuedPlayerPawn playerPawn in playerPawns)
                 {
                     UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
+
+                    foreach (NetDeltaUpdate inventoryUpdate in playerPawn.InventoryUpdates)
+                    {
+                        UpdateNetDeltaFortInventory(inventoryUpdate);
+                    }
                 }
             }
         }
 
-        private bool IgnoreLocationUpdate(Player player)
+        private bool IgnoreLocationUpdate(Player player, float currentUpdateDeltaTime)
         {
             bool isPlayer = player.IsPlayersReplay == true;
             bool isTeammate = _replayPlayer?.Teamindex == player.Teamindex;
@@ -1090,16 +1190,11 @@ namespace FortniteReplayReader.Models
                 return shouldIgnore;
             }
 
-            double lastLocationTime = lastLocation?.WorldTime ?? privateTeamLocation.WorldTime;
-
-            if(privateTeamLocation != null && lastLocationTime < privateTeamLocation?.WorldTime)
-            {
-                lastLocationTime = privateTeamLocation.WorldTime;
-            }
+            double lastLocationDeltaTime = lastLocation?.DeltaGameTimeSeconds ?? privateTeamLocation.DeltaGameTimeSeconds;
 
             double delta = (double)Settings.LocationChangeDeltaMS / 1000;
 
-            if(delta != 0 && GameState.CurrentWorldTime - lastLocationTime < delta)
+            if(delta != 0 && currentUpdateDeltaTime - lastLocationDeltaTime < delta)
             {
                 return true;
             }
@@ -1172,6 +1267,202 @@ namespace FortniteReplayReader.Models
                 case BaseStairsStructure stairs:
                     newStructure.BaseStructureType = BaseStructureType.Stairs;
                     break;
+            }
+        }
+
+        internal void MiniGameUpdate(uint channelId, MiniGameCreated minigame, NetFieldExportGroup networkGameplayTagNode)
+        {
+            MinigameInformation ??= new MinigameInformation();
+
+            MinigameInformation.TimeLimit = minigame.TimeLimit ?? MinigameInformation.TimeLimit;
+            MinigameInformation.TotalRounds = minigame.TotalRounds ?? MinigameInformation.TotalRounds;
+            MinigameInformation.WarmupDuration = minigame.WarmupDuration ?? MinigameInformation.WarmupDuration;
+            MinigameInformation.GameResetDelay = minigame.PostGameResetDelay ?? MinigameInformation.GameResetDelay;
+            MinigameInformation.RoundScoreDisplayTime = minigame.RoundScoreDisplayTime ?? MinigameInformation.RoundScoreDisplayTime;
+            MinigameInformation.GameScoreDisplayTime = minigame.GameScoreDisplayTime ?? MinigameInformation.GameScoreDisplayTime;
+            MinigameInformation.WinnerDisplayTime = minigame.GameWinnerDisplayTime ?? MinigameInformation.WinnerDisplayTime;
+            MinigameInformation.WinCondition = minigame.WinCondition != EMinigameWinCondition.EMinigameWinCondition_MAX ? minigame.WinCondition : MinigameInformation.WinCondition;
+            MinigameInformation.State = minigame.CurrentState != EFortMinigameState.EFortMinigameState_MAX ? minigame.CurrentState : MinigameInformation.State;
+            MinigameInformation.CurrentRound = minigame.CurrentRound ?? MinigameInformation.CurrentRound;
+
+            GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
+
+            if (currentRound != null && minigame.StartTime != null)
+            {
+                currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime;
+            }
+
+            //New round
+            if (minigame.CurrentState == EFortMinigameState.Transitioning)
+            {
+                MinigameInformation.Rounds.Add(new GameRound());
+            }
+
+            //Updates the team at the start to handle scoreboard
+            if(minigame.CurrentState == EFortMinigameState.InProgress)
+            {
+                MinigameInformation.CurrentRoundTeams = new HashSet<int>(MinigameInformation.TeamInfo.Where(x => x.CurrentTeamSize > 0).Select(x => x.TeamIndex));
+            }
+
+            bool roundOver = MinigameInformation.State == EFortMinigameState.PostGameReset || MinigameInformation.State == EFortMinigameState.PostGameEnd;
+
+            if (roundOver)
+            {
+                currentRound.Teams = MinigameInformation.TeamInfo.Where(x => MinigameInformation.CurrentRoundTeams.Contains(x.TeamIndex)).ToList();
+            }
+
+            if (minigame.TeamArray != null)
+            {
+                for (int i = 0; i < minigame.TeamArray.Length; i++)
+                {
+                    if(MinigameInformation.TeamInfo == null)
+                    {
+                        MinigameInformation.TeamInfo = new RoundTeam[minigame.TeamArray.Length];
+                    }
+
+                    if(MinigameInformation.TeamInfo[i] == null)
+                    {
+                        MinigameInformation.TeamInfo[i] = new RoundTeam();
+                    }
+                    else if(roundOver)
+                    {
+                        MinigameInformation.TeamInfo[i] = new RoundTeam(MinigameInformation.TeamInfo[i]);
+
+                        //Update bucket reference
+                        var bucket = MinigameInformation.PlayerBuckets.FirstOrDefault(x => x.TeamIndex == MinigameInformation.TeamInfo[i].TeamIndex);
+
+                        if(bucket != null)
+                        {
+                            bucket.Team = MinigameInformation.TeamInfo[i];
+                        }
+                    }
+
+                    var teamInfo = minigame.TeamArray[i];
+                    RoundTeam roundTeam = MinigameInformation.TeamInfo[i];
+
+                    if (teamInfo != null)
+                    {
+                        roundTeam.CurrentTeamSize = teamInfo.TeamSize ?? roundTeam.CurrentTeamSize;
+                        roundTeam.MaxSize = teamInfo.MaxInitTeamSize ?? roundTeam.MaxSize;
+                        roundTeam.TeamIndex = teamInfo.TeamIndex ?? roundTeam.TeamIndex;
+                        roundTeam.TeamColorIndex = teamInfo.TeamColorIndex ?? roundTeam.TeamColorIndex;
+                        roundTeam.Eliminations = teamInfo.EliminatedCount ?? roundTeam.Eliminations;
+
+                        if(roundTeam.MaxSize == -1)
+                        {
+                            roundTeam.MaxSize = 1;
+                        }
+                    }
+                }
+            }
+
+            if(minigame.PlayerBuckets != null && (int)MinigameInformation.State > 0)
+            {
+                if(MinigameInformation.PlayerBuckets == null)
+                {
+                    MinigameInformation.PlayerBuckets = new MinigameInformation.PlayerBucket[minigame.PlayerBuckets.Length];
+                }
+
+                for(int i = 0; i < minigame.PlayerBuckets.Length; i++)
+                {
+                    if(MinigameInformation.PlayerBuckets[i] == null)
+                    {
+                        MinigameInformation.PlayerBuckets[i] = new MinigameInformation.PlayerBucket();
+                    }
+
+                    var bucket = minigame.PlayerBuckets[i];
+                    var miniGameBucket = MinigameInformation.PlayerBuckets[i];
+
+                    if (bucket != null)
+                    {
+                        miniGameBucket.TeamIndex = bucket.TeamIdAtGameStart ?? miniGameBucket.TeamIndex;
+
+                        if (bucket.TeamIdAtGameStart > 0)
+                        {
+                            RoundTeam teamInfo = MinigameInformation.TeamInfo.FirstOrDefault(x => x.TeamIndex == bucket.TeamIdAtGameStart);
+
+                            miniGameBucket.Team = teamInfo;
+                        }
+
+                        if (miniGameBucket.Team.PlayerIds == null)
+                        {
+                            miniGameBucket.Team.PlayerIds = new RoundPlayer[MinigameInformation.TeamInfo[i].MaxSize];
+                        }
+
+                        if (bucket.PlayerIds != null)
+                        {
+                            if(bucket.PlayerIds.RemoveAll)
+                            {
+                                foreach(RoundPlayer player in miniGameBucket.Team.PlayerIds)
+                                {
+                                    if (player != null)
+                                    {
+                                        player.HasLeft = true;
+                                    }
+                                }
+                            }
+                            else if (bucket.PlayerIds.RemoveId.HasValue)
+                            {
+                                RoundPlayer roundPlayer = miniGameBucket.Team.PlayerIds[bucket.PlayerIds.RemoveId.Value];
+
+                                if (roundPlayer != null)
+                                {
+                                    roundPlayer.HasLeft = true;
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            else
+                            {
+                                for(int z = 0; z < (bucket.PlayerIds.Ids?.Length ?? 0); z++)
+                                {
+                                    string id = bucket.PlayerIds.Ids[z];
+
+                                    if(id == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    //Player left + reordering of indexes
+                                    if (miniGameBucket.Team.PlayerIds[z] != null)
+                                    {
+                                        RoundPlayer leftPlayer = miniGameBucket.Team.PlayerIds[z];
+
+                                        leftPlayer.HasLeft = true;
+
+                                        for (int x = z + 1; x < miniGameBucket.Team.PlayerIds.Length; x++)
+                                        {
+                                            //Swap locations to handle "has left" property
+                                            if (miniGameBucket.Team.PlayerIds[x].PlayerId == id)
+                                            {
+                                                miniGameBucket.Team.PlayerIds[z] = miniGameBucket.Team.PlayerIds[x];
+                                                miniGameBucket.Team.PlayerIds[x] = leftPlayer;
+
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        RoundPlayer roundPlayer = new RoundPlayer
+                                        {
+                                            PlayerId = id
+                                        };
+
+                                        if (_playerById.TryGetValue(id, out Player player))
+                                        {
+                                            roundPlayer.Player = player;
+                                        }
+
+                                        miniGameBucket.Team.PlayerIds[z] = roundPlayer;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

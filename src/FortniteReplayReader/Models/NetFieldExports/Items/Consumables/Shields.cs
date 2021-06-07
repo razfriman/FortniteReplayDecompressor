@@ -24,4 +24,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
     public class ChugJug : ShieldConsumable
     {
     }
+    
+    [NetFieldExportGroup("/Game/Athena/Items/Consumables/ForagedItemVersions/ShieldMushroom/B_ShieldMushroom_Weap_Athena.B_ShieldMushroom_Weap_Athena_C", ParseType.Normal)]
+    public class ShieldMushroom : ShieldConsumable
+    {
+    }
 }

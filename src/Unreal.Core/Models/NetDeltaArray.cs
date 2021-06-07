@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
 {
@@ -25,6 +26,11 @@ namespace Unreal.Core.Models
         public bool TryGetItem(int index, out T item)
         {
             return _items.TryGetValue(index, out item);
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
         }
     }
 }

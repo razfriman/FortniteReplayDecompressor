@@ -78,7 +78,7 @@ namespace Unreal.Core
             _pauseWaiter.Reset();
             _timePassed.Restart();
             _currentReadTimeSeconds = 0;
-            _buffer.Clear();
+            ClearBuffer();
 
             using var archive = new BinaryReader(stream);
 
@@ -130,7 +130,7 @@ namespace Unreal.Core
 
             _pauseWaiter.Set();
             _bufferWaiter.Set();
-            _buffer.Clear();
+            ClearBuffer();
         }
 
         /// <summary>
@@ -235,6 +235,17 @@ namespace Unreal.Core
             }
         }
 
+        private void ClearBuffer()
+        {
+#if NET5_0_OR_GREATER
+            _buffer.Clear();
+#else
+            while(_buffer.TryDequeue(out var _))
+            {
+
+            }
+#endif
+        }
         protected override void ReceivedRawPacket(PlaybackPacket packet)
         {
             _currentReadTimeSeconds = packet.TimeSeconds;

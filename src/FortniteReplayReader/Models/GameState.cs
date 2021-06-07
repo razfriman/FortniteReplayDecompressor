@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReader.Models.NetFieldExports.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Unreal.Core.Models;
@@ -38,7 +39,9 @@ namespace FortniteReplayReader.Models
         public List<Aircraft> BusPaths { get; internal set; } = new List<Aircraft>();
 
         public bool LargeTeamGame { get; internal set; }
-        public int EventTournamentRound { get; internal set; }
+        public int EventTournamentRound => (int)EEventTournamentRound;
+
+        public EEventTournamentRound EEventTournamentRound { get; internal set; } = EEventTournamentRound.EEventTournamentRound_MAX;
 
         public float CurrentWorldTime { get; internal set; }
 

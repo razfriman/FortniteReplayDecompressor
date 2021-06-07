@@ -220,7 +220,7 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            if (!archive.CanRead(info.SizeInBytes))
+            if (!archive.CanRead(info.SizeInBytes * 8))
             {
                 _logger?.LogError($"Can't read checkpoint data {info.Id}");
 
@@ -1869,7 +1869,7 @@ namespace Unreal.Core
 
                     archive.Read(buffer, (int)numBits);
 
-                    var cmdReader = new NetBitReader(_tempBuffer, (int)numBits)
+                    var cmdReader = new NetBitReader(buffer, (int)numBits)
                     {
                         EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                         NetworkVersion = Replay.Header.NetworkVersion
@@ -2063,7 +2063,7 @@ namespace Unreal.Core
                 return;
             }
 
-            var lastByte = packet.Data[^1];
+            var lastByte = packet.Data[packet.Data.Length - 1];
 
             if (lastByte != 0)
             {

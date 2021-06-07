@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -41,7 +42,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
         public int? TeamIndex { get; set; }
 
         [NetFieldExport("BuildingAnimation", RepLayoutCmdType.Enum)]
-        public int? BuildingAnimation { get; set; }
+        public EBuildingAnim BuildingAnimation { get; set; }
 
         [NetFieldExport("BuildTime", RepLayoutCmdType.Ignore)]
         public FQuantizedBuildingAttribute BuildTime { get; set; }
@@ -123,7 +124,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
 					TeamIndex = (int)value;
 					break;
 				case "BuildingAnimation":
-					BuildingAnimation = (int)value;
+					BuildingAnimation = (EBuildingAnim)value;
 					break;
 				case "BuildTime":
 					BuildTime = (FQuantizedBuildingAttribute)value;
@@ -224,6 +225,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
     {
 
     }
-
-    //Maybe add base edits?
+	//Maybe add base edits?
 }

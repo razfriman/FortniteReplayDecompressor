@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -78,8 +79,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray)]
         public FortPickup[] StateValues { get; set; } //Type: TArray Bits: 343
 
-        [NetFieldExport("StateType", RepLayoutCmdType.Ignore)]
-        public DebuggingObject StateType { get; set; } //Type:  Bits: 0
+		[NetFieldExport("StateType", RepLayoutCmdType.Enum)]
+		public EFortItemEntryState StateType { get; set; } = EFortItemEntryState.EFortItemEntryState_MAX; //Type:  Bits: 0
 
         [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt)]
         public int? IntValue { get; set; } //Type: int32 Bits: 0
@@ -114,8 +115,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("FinalTossRestLocation", RepLayoutCmdType.PropertyVector10)]
         public FVector FinalTossRestLocation { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
-        [NetFieldExport("TossState", RepLayoutCmdType.Enum)]
-        public int? TossState { get; set; } //Type: EFortPickupTossState Bits: 2
+		[NetFieldExport("TossState", RepLayoutCmdType.Enum)]
+		public EFortPickupTossState TossState { get; set; } = EFortPickupTossState.EFortPickupTossState_MAX; //Type: EFortPickupTossState Bits: 2
 
         [NetFieldExport("bCombinePickupsWhenTossCompletes", RepLayoutCmdType.PropertyBool)]
         public bool? bCombinePickupsWhenTossCompletes { get; set; } //Type:  Bits: 1
@@ -218,7 +219,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					StateValues = (FortPickup[])value;
 					break;
 				case "StateType":
-					StateType = (DebuggingObject)value;
+					StateType = (EFortItemEntryState)value;
 					break;
 				case "IntValue":
 					IntValue = (int)value;
@@ -254,7 +255,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					FinalTossRestLocation = (FVector)value;
 					break;
 				case "TossState":
-					TossState = (int)value;
+					TossState = (EFortPickupTossState)value;
 					break;
 				case "bCombinePickupsWhenTossCompletes":
 					bCombinePickupsWhenTossCompletes = (bool)value;

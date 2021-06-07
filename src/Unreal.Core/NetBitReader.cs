@@ -204,7 +204,13 @@ namespace Unreal.Core
         public int SerializePropertyByte(int enumMaxValue)
         {
             //Ar.SerializeBits( Data, Enum ? FMath::CeilLogTwo(Enum->GetMaxEnumValue()) : 8 );
-            return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
+
+#if NETSTANDARD
+            var log2 = Math.Log(enumMaxValue, 2);
+#else
+            var log2 = Math.Log2(enumMaxValue);
+#endif
+            return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(log2) : 8);
         }
 
         public byte SerializePropertyByte()

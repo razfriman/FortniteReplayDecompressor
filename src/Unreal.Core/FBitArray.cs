@@ -55,10 +55,13 @@ namespace Unreal.Core
             }
         }
 
+#if !NETSTANDARD2_0
         public Span<bool> AsSpan(int start, int count)
         {
             return Items.AsSpan(start, count);
         }
+#endif
+
         public void CopyTo(bool[] array, int arrayIndex)
         {
             Items.CopyTo(array, arrayIndex);

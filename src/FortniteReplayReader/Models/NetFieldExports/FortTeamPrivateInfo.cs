@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -35,8 +36,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("LastRepYaw", RepLayoutCmdType.PropertyFloat)]
         public float? LastRepYaw { get; set; }
 
-        [NetFieldExport("PawnStateMask", RepLayoutCmdType.Enum)]
-        public int? PawnStateMask { get; set; }
+		[NetFieldExport("PawnStateMask", RepLayoutCmdType.Enum)]
+		public EFortPawnState PawnStateMask { get; set; } = EFortPawnState.EFortPawnState_MAX;
 
 		public override bool ManualRead(string property, object value)
 		{
@@ -67,7 +68,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					LastRepYaw = (float)value;
 					break;
 				case "PawnStateMask":
-					PawnStateMask = (int)value;
+					PawnStateMask = (EFortPawnState)value;
 					break;
 				default:
 					return base.ManualRead(property, value);

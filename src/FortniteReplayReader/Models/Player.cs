@@ -34,6 +34,7 @@ namespace FortniteReplayReader.Models
         public PlayerLocationRepMovement LastKnownLocation { get; internal set; }
         public int WorldPlayerId { get; internal set; }
         public Cosmetics Cosmetics { get; internal set; } = new Cosmetics();
+        public bool AnonMode { get; internal set; }
 
         //Extended information
         public List<PlayerLocationRepMovement> Locations { get; private set; } = new List<PlayerLocationRepMovement>();
@@ -59,18 +60,19 @@ namespace FortniteReplayReader.Models
         internal int InventoryBaseReplicationKey { get; set; }
         internal float LastTransformUpdate { get; set; }
         internal ActorGUID PrivateTeamActorId { get; set; } //Used to set the team data later
+        internal uint ReplayPawnId { get; set; }
+        internal PlayerMovementInformation MovementInformation { get; set; } = new PlayerMovementInformation();
+        internal float InitialMovementTimestamp { get; set; }
     }
 
     public class PlayerLocation
     {
-        public virtual FVector Location { get; set; }
-        public virtual float Yaw { get; set; }
+        public virtual FVector Location { get; internal set; }
+        public virtual float Yaw { get; internal set; }
 
-        public float WorldTime { get; set; }
-        public float DeltaGameTimeSeconds { get; set; }
-        public bool InVehicle { get; set; }
+        public float WorldTime { get; internal set; }
+        public float DeltaGameTimeSeconds { get; internal set; }
 
-        internal uint VehicleChannel { get; set; }
     }
 
     public class PlayerLocationRepMovement : PlayerLocation
@@ -78,27 +80,12 @@ namespace FortniteReplayReader.Models
         public override FVector Location => RepLocation?.Location;
         public override float Yaw => RepLocation.Rotation.Yaw;
 
-        public FRepMovement RepLocation { get; set; }
-        public float? LastUpdateTime { get; set; }
-    }
+        public bool InVehicle { get; internal set; }
+        public PlayerState CurrentPlayerState { get; internal set; } = PlayerState.Alive;
+        public PlayerMovementInformation MovementInformation { get; internal set; }
+        public FRepMovement RepLocation { get; internal set; }
+        public float? LastUpdateTime { get; internal set; }
 
-    public class WeaponShot
-    {
-        public PlayerPawn ShotByPlayerPawn { get; set; }
-        public PlayerPawn HitPlayerPawn { get; set; }
-        public Weapon Weapon { get; set;}
-        public float DeltaGameTimeSeconds { get; set; }
-        public FVector Location { get; set; } 
-        public FVector Normal { get; set; }
-        public float Damage { get; set; }
-        public bool WeaponActivate { get; set; }
-        public bool IsFatal { get; set; }
-        public bool IsCritical { get; set; }
-        public bool IsShield { get; set; }
-        public bool IsShieldDestroyed { get; set; }
-        public bool IsBallistic { get; set; } 
-        public bool FatalHitNonPlayer { get; set; }
-        public bool CriticalHitNonPlayer { get; set; }
-        public bool HitPlayer => HitPlayerPawn != null;
+        internal uint VehicleChannel { get; set; }
     }
 }

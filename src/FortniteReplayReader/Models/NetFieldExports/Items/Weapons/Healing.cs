@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,14 +15,14 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     public class BandageBazooka : Healing
     {
         [NetFieldExport("OverheatState", RepLayoutCmdType.Enum)]
-        public int? OverheatState { get; set; }
+        public EFortWeaponOverheatState OverheatState { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{
 			switch(property)
 			{
 				case "OverheatState":
-					OverheatState = (int)value;
+					OverheatState = (EFortWeaponOverheatState)value;
 					break;
 				default:
 					return base.ManualRead(property, value);

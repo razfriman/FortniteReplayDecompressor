@@ -1,3 +1,4 @@
+using FortniteReplayReader.Models.NetFieldExports.Enums;
 using System.Collections.Generic;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
@@ -73,13 +74,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public string NameValue { get; set; } 
 
         [NetFieldExport("StateType", RepLayoutCmdType.Enum)]
-        public int? StateType { get; set; } 
+        public EFortItemEntryState StateType { get; set; }
 
         [NetFieldExport("ParentInventory", RepLayoutCmdType.PropertyObject)]
         public uint? ParentInventory { get; set; } 
 
         [NetFieldExport("Handle", RepLayoutCmdType.PropertyInt)]
-        public int Handle { get; set; } 
+        public int? Handle { get; set; } 
 
         [NetFieldExport("AlterationInstances", RepLayoutCmdType.DynamicArray)]
         public DebuggingObject[] AlterationInstances { get; set; } 
@@ -162,7 +163,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 					NameValue = (string)value;
 					break;
 				case "StateType":
-					StateType = (int)value;
+					StateType = (EFortItemEntryState)value;
 					break;
 				case "ParentInventory":
 					ParentInventory = (uint)value;
@@ -188,6 +189,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 			return true;
 		}
-
-    }
+	}
 }

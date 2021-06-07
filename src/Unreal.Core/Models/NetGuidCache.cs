@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
 {
@@ -61,6 +62,9 @@ namespace Unreal.Core.Models
                 if (group.StartsWith(partialRedirectKvp.Key))
                 {
                     _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
+                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
+
+                    break;
                 }
             }
         }
@@ -97,8 +101,6 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
-                
-
                 path = CoreRedirects.GetRedirect(path);
 
                 if (_partialPathNames.TryGetValue(path, out string redirectPath))
@@ -122,7 +124,7 @@ namespace Unreal.Core.Models
                         groupPathKvp.Value.CleanedPath = RemoveAllPathPrefixes(groupPath);
                     }
 
-                    if (path.Contains(groupPathKvp.Value.CleanedPath, StringComparison.Ordinal))
+                    if (path.Contains(groupPathKvp.Value.CleanedPath))
                     {
                         NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
                         _archTypeToExportGroup[guid] = groupPathKvp.Value;
@@ -138,7 +140,7 @@ namespace Unreal.Core.Models
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
-                    if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath, StringComparison.Ordinal))
+                    if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath))
                     {
                         NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
                         _archTypeToExportGroup[guid] = groupPathKvp.Value;
