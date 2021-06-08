@@ -1416,7 +1416,7 @@ namespace Unreal.Core
             //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
 
             //  Read chunks of actor content
-            while (!bunch.Archive.AtEnd())
+            while (!bunch.Archive.AtEnd() && !bunch.Archive.IsError)
             {
                 var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var reader);
 
@@ -2044,7 +2044,7 @@ namespace Unreal.Core
 
             if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
             {
-                var bActorIsOuter = bunch.Archive.ReadBit();
+                var bActorIsOuter = bunch.Archive.AtEnd() ? true : bunch.Archive.ReadBit();
                 if (!bActorIsOuter)
                 {
                     // outerobject

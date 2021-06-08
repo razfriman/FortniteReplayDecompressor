@@ -44,7 +44,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/broken.replay"; //Used for testing
+            var replayFile = "Replays/loop.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -74,9 +74,9 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(null, new FortniteReplaySettings
+            var reader = new ReplayReader(logger, new FortniteReplaySettings
             {
-                PlayerLocationType = LocationTypes.User,
+                PlayerLocationType = LocationTypes.None,
             });
 
             string demoPath = Path.Combine(appData, "FortniteGame", "Saved", "Demos");
@@ -85,7 +85,7 @@ namespace ConsoleReader
             {
                 Console.WriteLine(path);
 
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     ++count;
 
@@ -93,21 +93,6 @@ namespace ConsoleReader
                     var replay = reader.ReadReplay(replayFile, ParseType.Debug);
 
                     sw.Stop();
-
-                    var bots = replay.GameInformation.Players.Where(x => !String.IsNullOrEmpty(x.BotId)).ToList();
-                    var nonBots = replay.GameInformation.Players.Where(x => !x.IsBot).OrderBy(x => x.Placement).ToList();
-
-                    var alive = nonBots.Where(x => x.StatusChanges.LastOrDefault()?.CurrentPlayerState == PlayerState.Alive);
-
-                    var a = replay.GameInformation.Players.Where(x => x.IsPlayersReplay).SelectMany(x => x.Locations).Where(x => x.MovementInformation?.InBus == true);
-
-                    var test = replay.GameInformation.Players.OrderBy(x => x.Placement);
-
-                    foreach(var asdfklj in test)
-                    {
-                        Console.WriteLine($"Team: {asdfklj.Teamindex - 2}: Placement: {asdfklj.Placement}");
-                    }
-
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 

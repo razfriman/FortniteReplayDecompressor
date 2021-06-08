@@ -93,7 +93,7 @@ namespace FortniteReplayReader.Models
         {
             Llama newLlama = new Llama();
 
-            if(!_llamas.TryAdd(channelId, newLlama))
+            if (!_llamas.TryAdd(channelId, newLlama))
             {
                 _llamas.TryGetValue(channelId, out newLlama);
             }
@@ -185,9 +185,9 @@ namespace FortniteReplayReader.Models
                 GameState.GameWorldStartTime = gameState.ReplicatedWorldTimeSeconds ?? GameState.AirCraftStartTime;
             }
 
-            if(gameState.TeamFlightPaths != null)
+            if (gameState.TeamFlightPaths != null)
             {
-                foreach(GameStateC flightPath in gameState.TeamFlightPaths)
+                foreach (GameStateC flightPath in gameState.TeamFlightPaths)
                 {
                     GameState.BusPaths.Add(new Aircraft
                     {
@@ -210,7 +210,7 @@ namespace FortniteReplayReader.Models
             entry.DeathTags = playerState.DeathTags?.Tags.Select(x => x.TagName).ToArray();
             entry.Distance = playerState.Distance ?? 0;
 
-            if(!_players.TryGetValue(channelId, out Player channelPlayer))
+            if (!_players.TryGetValue(channelId, out Player channelPlayer))
             {
                 //Shouldn't happen
                 entry.HasError = true;
@@ -230,13 +230,13 @@ namespace FortniteReplayReader.Models
             else
             {
                 Player eliminator = channelPlayer.LastKnockedEntry?.FinisherOrDowner;
-                
-                if(playerState.FinisherOrDowner != null)
+
+                if (playerState.FinisherOrDowner != null)
                 {
                     if (playerState.FinisherOrDowner == 0)
                     {
                         //DBNO revives?
-                        if(playerState.DeathCause != EDeathCause.EDeathCause_MAX)
+                        if (playerState.DeathCause != EDeathCause.EDeathCause_MAX)
                         {
                             entry.Player = channelPlayer;
                             entry.CurrentPlayerState = PlayerState.Alive;
@@ -271,9 +271,9 @@ namespace FortniteReplayReader.Models
 
                     entry.DeathCause = playerState.DeathCause;
 
-                    if(entry.DeathCause == EDeathCause.EDeathCause_MAX)
+                    if (entry.DeathCause == EDeathCause.EDeathCause_MAX)
                     {
-                        if(channelPlayer.LastKnockedEntry?.DeathCause != null)
+                        if (channelPlayer.LastKnockedEntry?.DeathCause != null)
                         {
                             entry.DeathCause = channelPlayer.LastKnockedEntry.DeathCause;
                         }
@@ -348,9 +348,9 @@ namespace FortniteReplayReader.Models
             //Attempt to update private team info to correct object
             if (newPlayer.PrivateTeamActorId != null && newPlayer.PrivateTeamInfo == null)
             {
-                if(_actorToChannel.TryGetValue(newPlayer.PrivateTeamActorId.Value, out uint teamActorChannel))
+                if (_actorToChannel.TryGetValue(newPlayer.PrivateTeamActorId.Value, out uint teamActorChannel))
                 {
-                    if(_privateTeamInfo.TryGetValue(teamActorChannel, out NetDeltaArray<PrivateTeamInfo> teamInfo))
+                    if (_privateTeamInfo.TryGetValue(teamActorChannel, out NetDeltaArray<PrivateTeamInfo> teamInfo))
                     {
                         newPlayer.PrivateTeamInfo = teamInfo;
                     }
@@ -409,7 +409,7 @@ namespace FortniteReplayReader.Models
             if (playerState.TeamIndex != null)
             {
                 //Only should populate the teams when we aren't in a round game. Should use the round teams to determine teams
-                if(MinigameInformation == null || MinigameInformation.TotalRounds <= 1)
+                if (MinigameInformation == null || MinigameInformation.TotalRounds <= 1)
                 {
                     if (!_teams.TryGetValue(playerState.TeamIndex.Value, out Team team))
                     {
@@ -422,14 +422,14 @@ namespace FortniteReplayReader.Models
                     newPlayer.Team = team;
                 }
             }
-            
+
             //Add to killfeed
             if (playerState.bDBNO != null || playerState.FinisherOrDowner != null || playerState.RebootCounter != null)
             {
                 UpdateKillFeed(channelId, playerState);
             }
 
-            if(playerState.bIsDisconnected == true && newPlayer.StatusChanges.LastOrDefault()?.CurrentPlayerState != PlayerState.Killed)
+            if (playerState.bIsDisconnected == true && newPlayer.StatusChanges.LastOrDefault()?.CurrentPlayerState != PlayerState.Killed)
             {
                 KillFeedEntry entry = new KillFeedEntry
                 {
@@ -444,9 +444,9 @@ namespace FortniteReplayReader.Models
                 _killFeed.Add(entry);
             }
 
-            if(playerState.bHasEverSkydivedFromBusAndLanded != null)
+            if (playerState.bHasEverSkydivedFromBusAndLanded != null)
             {
-                if(newPlayer.Locations.Count > 0)
+                if (newPlayer.Locations.Count > 0)
                 {
                     newPlayer.LandingLocation = newPlayer.Locations.Last();
                 }
@@ -455,12 +455,12 @@ namespace FortniteReplayReader.Models
             //Internal info
             newPlayer.WorldPlayerId = playerState.WorldPlayerId ?? newPlayer.WorldPlayerId;
 
-            if(isNewPlayer)
+            if (isNewPlayer)
             {
                 HandleQueuedPlayerPawns(newPlayer);
             }
 
-            if(MinigameInformation != null)
+            if (MinigameInformation != null)
             {
                 _playerById[newPlayer.EpicId] = newPlayer;
             }
@@ -468,10 +468,10 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePlayerPawn(uint channelId, PlayerPawnC playerPawnC, bool trackLocations = true)
         {
-            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn playerpawn))
+            if (!_playerPawns.TryGetValue(channelId, out PlayerPawn playerpawn))
             {
                 //Check for PlayerState
-                if(playerPawnC.PlayerState != null)
+                if (playerPawnC.PlayerState != null)
                 {
                     if (_actorToChannel.TryGetValue(playerPawnC.PlayerState.Value, out uint playerStateChannel) && _players.TryGetValue(playerStateChannel, out Player player))
                     {
@@ -504,7 +504,7 @@ namespace FortniteReplayReader.Models
                     return;
                 }
             }
-            
+
             switch (playerpawn)
             {
                 case Player playerActor:
@@ -518,7 +518,7 @@ namespace FortniteReplayReader.Models
                     playerActor.MovementInformation.IsInteracting = playerPawnC.bStartedInteractSearch ?? playerActor.MovementInformation.IsInteracting;
                     playerActor.MovementInformation.IsSlopeSliding = playerPawnC.bIsSlopeSliding ?? playerActor.MovementInformation.IsSlopeSliding;
                     playerActor.MovementInformation.IsTargeting = playerPawnC.bIsTargeting ?? playerActor.MovementInformation.IsTargeting;
-                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ? 
+                    playerActor.MovementInformation.Sprinting = playerPawnC.CurrentMovementStyle != EFortMovementStyle.EFortMovementStyle_MAX ?
                         playerPawnC.CurrentMovementStyle == EFortMovementStyle.Sprinting : playerActor.MovementInformation.Sprinting;
                     playerActor.MovementInformation.JumpedForceApplied = playerPawnC.bProxyIsJumpForceApplied ?? playerActor.MovementInformation.JumpedForceApplied;
                     playerActor.MovementInformation.IsInWater = playerPawnC.ReplicatedWaterBody != null ? playerPawnC.ReplicatedWaterBody.Value > 0 : playerActor.MovementInformation.IsInWater;
@@ -597,11 +597,11 @@ namespace FortniteReplayReader.Models
                     }
 
                     //Update current weapon
-                    if(!Settings.IgnoreWeaponSwitches && playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
+                    if (!Settings.IgnoreWeaponSwitches && playerPawnC.CurrentWeapon != null && playerPawnC.CurrentWeapon.Value > 0) //0 Occurs on death
                     {
                         if (_actorToChannel.TryGetValue(playerPawnC.CurrentWeapon.Value, out uint weaponChannel))
                         {
-                            if(_weapons.TryGetValue(weaponChannel, out Weapon weapon))
+                            if (_weapons.TryGetValue(weaponChannel, out Weapon weapon))
                             {
                                 //Handle weapon changes
                                 playerActor.WeaponSwitches.Add(new WeaponSwitch
@@ -656,12 +656,12 @@ namespace FortniteReplayReader.Models
                 playerActor.Cosmetics.Pickaxe = GetPathName(playerPawnC.Pickaxe) ?? playerActor.Cosmetics.Pickaxe;
                 playerActor.Cosmetics.SkyDiveContrail = GetPathName(playerPawnC.SkyDiveContrail) ?? playerActor.Cosmetics.SkyDiveContrail;
 
-                if(playerPawnC.Dances != null)
+                if (playerPawnC.Dances != null)
                 {
                     playerActor.Cosmetics.Dances = playerPawnC.Dances.Select(x => GetPathName(x)).ToList();
                 }
 
-                if(playerPawnC.ItemWraps != null)
+                if (playerPawnC.ItemWraps != null)
                 {
                     playerActor.Cosmetics.ItemWraps = playerPawnC.ItemWraps.Select(x => GetPathName(x)).ToList();
                 }
@@ -699,13 +699,13 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateBatchedDamage(uint channelId, BatchedDamage batchedDamage)
         {
-            if(!_playerPawns.TryGetValue(channelId, out PlayerPawn playerPawn))
+            if (!_playerPawns.TryGetValue(channelId, out PlayerPawn playerPawn))
             {
                 //Shouldn't happen
                 return;
             }
 
-            if(!(playerPawn is Player))
+            if (!(playerPawn is Player))
             {
                 //Nothing else currently
                 return;
@@ -731,7 +731,7 @@ namespace FortniteReplayReader.Models
                 Weapon = player.CurrentWeapon
             };
 
-            if(batchedDamage.HitActor > 0)
+            if (batchedDamage.HitActor > 0)
             {
                 if (_actorToChannel.TryGetValue(batchedDamage.HitActor, out uint actorChannel))
                 {
@@ -763,7 +763,7 @@ namespace FortniteReplayReader.Models
 
         internal void UpdatePoiManager(FortPoiManager poiManager, NetFieldExportGroup networkGameplayTagNode)
         {
-            if(networkGameplayTagNode == null || poiManager.PoiTagContainerTable == null)
+            if (networkGameplayTagNode == null || poiManager.PoiTagContainerTable == null)
             {
                 return;
             }
@@ -789,8 +789,8 @@ namespace FortniteReplayReader.Models
         {
             uint channel = 0;
 
-            if (!_inventories.TryGetValue(deltaUpdate.ChannelIndex, out FortInventory inventory) || 
-               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out channel) || 
+            if (!_inventories.TryGetValue(deltaUpdate.ChannelIndex, out FortInventory inventory) ||
+               !_actorToChannel.TryGetValue(inventory.ReplayPawn.Value, out channel) ||
                !_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
             {
                 QueuedPlayerPawn queuedPlayerSpawn = _queuedPlayerPawns.Values.FirstOrDefault(x => x.FirstOrDefault()?.ChannelId == channel)?.First();
@@ -847,7 +847,7 @@ namespace FortniteReplayReader.Models
                 {
                     string itemName = String.Empty;
 
-                    if(fortInventory.ItemDefinition != null)
+                    if (fortInventory.ItemDefinition != null)
                     {
                         NetGUIDToPathName.TryGetValue(fortInventory.ItemDefinition.Value, out itemName);
                     }
@@ -874,12 +874,12 @@ namespace FortniteReplayReader.Models
 
         internal void UpdateNetDeltaPrivateTeamInfo(NetDeltaUpdate deltaUpdate)
         {
-            if(!_privateTeamInfo.TryGetValue(deltaUpdate.ChannelIndex, out NetDeltaArray<PrivateTeamInfo> teamInfo))
+            if (!_privateTeamInfo.TryGetValue(deltaUpdate.ChannelIndex, out NetDeltaArray<PrivateTeamInfo> teamInfo))
             {
                 return;
             }
 
-            if(deltaUpdate.Deleted)
+            if (deltaUpdate.Deleted)
             {
                 teamInfo.DeleteIndex(deltaUpdate.ElementIndex);
             }
@@ -887,7 +887,7 @@ namespace FortniteReplayReader.Models
             {
                 FortTeamPrivateInfo privateInfo = deltaUpdate.Export as FortTeamPrivateInfo;
 
-                if(!teamInfo.TryGetItem(deltaUpdate.ElementIndex, out PrivateTeamInfo item))
+                if (!teamInfo.TryGetItem(deltaUpdate.ElementIndex, out PrivateTeamInfo item))
                 {
                     item = new PrivateTeamInfo();
                     teamInfo.TryAddItem(deltaUpdate.ElementIndex, item);
@@ -899,11 +899,11 @@ namespace FortniteReplayReader.Models
                 item.LastYaw = privateInfo.LastRepYaw ?? item.LastYaw;
                 item.PawnStateMask = privateInfo.PawnStateMask != EFortPawnState.EFortPawnState_MAX ? privateInfo.PawnStateMask : item.PawnStateMask;
 
-                if(privateInfo.PlayerState != null)
+                if (privateInfo.PlayerState != null)
                 {
-                    if(_actorToChannel.TryGetValue(privateInfo.PlayerState.Value, out uint playerStateChannel))
+                    if (_actorToChannel.TryGetValue(privateInfo.PlayerState.Value, out uint playerStateChannel))
                     {
-                        if(_players.TryGetValue(playerStateChannel, out Player player))
+                        if (_players.TryGetValue(playerStateChannel, out Player player))
                         {
                             item.PlayerState = player;
                         }
@@ -911,7 +911,7 @@ namespace FortniteReplayReader.Models
                 }
 
                 //Ignores issue with playstate actor id not being found at first
-                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState, GameState.DeltaGameTime) && privateInfo.LastRepLocation != null) 
+                if (item.PlayerState != null && !IgnoreLocationUpdate(item.PlayerState, GameState.DeltaGameTime) && privateInfo.LastRepLocation != null)
                 {
                     item.LastLocation = privateInfo.LastRepLocation;
                     item.PlayerState.PrivateTeamLocations.Add(new PlayerLocation
@@ -963,14 +963,14 @@ namespace FortniteReplayReader.Models
             {
                 if (_actorToChannel.TryGetValue(pickup.CombineTarget.Value, out uint actorChannel))
                 {
-                    if(_floorLoot.TryGetValue(actorChannel, out InventoryItem combinedItem))
+                    if (_floorLoot.TryGetValue(actorChannel, out InventoryItem combinedItem))
                     {
                         newItem.CombineTarget = combinedItem;
                     }
                 }
             }
 
-            if(pickup.PawnWhoDroppedPickup != null)
+            if (pickup.PawnWhoDroppedPickup != null)
             {
                 if (_actorToChannel.TryGetValue(pickup.PawnWhoDroppedPickup.Value, out uint actorChannel))
                 {
@@ -990,7 +990,7 @@ namespace FortniteReplayReader.Models
                 {
                     List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
 
-                    if(maxHandles.Count > 0)
+                    if (maxHandles.Count > 0)
                     {
                         _healthSetStartingHandles.TryAdd("Health", maxHandles[0].Handle - 3);
                     }
@@ -1001,7 +1001,7 @@ namespace FortniteReplayReader.Models
                     }
                 }
 
-                if(_healthSetStartingHandles.TryGetValue("Health", out uint healthHandle))
+                if (_healthSetStartingHandles.TryGetValue("Health", out uint healthHandle))
                 {
                     health.HealthFortSet = CreateFortSet(healthHandle);
                 }
@@ -1036,7 +1036,7 @@ namespace FortniteReplayReader.Models
 
             float? GetValue(uint handle)
             {
-                if(health.UnknownHandles.Remove(handle, out DebuggingObject val))
+                if (health.UnknownHandles.Remove(handle, out DebuggingObject val))
                 {
                     return val.FloatValue;
                 }
@@ -1050,7 +1050,7 @@ namespace FortniteReplayReader.Models
             bool isNewWeapon = !_weapons.TryGetValue(channelId, out Weapon newWeapon);
 
             //Updates the current weapon instead of creating a new one
-            if(isNewWeapon)
+            if (isNewWeapon)
             {
                 isNewWeapon = !_unknownWeapons.TryGetValue(weapon.ChannelActor.ActorNetGUID.Value, out newWeapon);
                 _unknownWeapons.Remove(weapon.ChannelActor.ActorNetGUID.Value);
@@ -1098,17 +1098,17 @@ namespace FortniteReplayReader.Models
             {
                 if (_actorToChannel.TryGetValue(weapon.Owner.Value, out uint channel))
                 {
-                    if(_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
+                    if (_playerPawns.TryGetValue(channel, out PlayerPawn playerPawn))
                     {
                         Player player = playerPawn as Player;
 
                         newWeapon.Owner = player;
 
-                        if(player.CurrentInventory.Count > 0)
+                        if (player.CurrentInventory.Count > 0)
                         {
                             InventoryItem inventoryItem = player.CurrentInventory.Items.FirstOrDefault(x => x.UniqueWeaponId.Equals(newWeapon.UniqueItemId));
 
-                            if(inventoryItem != null)
+                            if (inventoryItem != null)
                             {
                                 inventoryItem.Weapon = newWeapon;
                                 newWeapon.InventoryItem = inventoryItem;
@@ -1142,9 +1142,9 @@ namespace FortniteReplayReader.Models
 
         private void HandleQueuedPlayerPawns(Player player)
         {
-            if(_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out List<QueuedPlayerPawn> playerPawns))
+            if (_queuedPlayerPawns.Remove(player.Actor.ActorNetGUID.Value, out List<QueuedPlayerPawn> playerPawns))
             {
-                foreach(QueuedPlayerPawn playerPawn in playerPawns)
+                foreach (QueuedPlayerPawn playerPawn in playerPawns)
                 {
                     UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
 
@@ -1176,7 +1176,7 @@ namespace FortniteReplayReader.Models
                     break;
             }
 
-            if(shouldIgnore || Settings.LocationChangeDeltaMS == 0)
+            if (shouldIgnore || Settings.LocationChangeDeltaMS == 0)
             {
                 return shouldIgnore;
             }
@@ -1185,7 +1185,7 @@ namespace FortniteReplayReader.Models
             PlayerLocationRepMovement lastLocation = player.Locations.LastOrDefault();
             PlayerLocation privateTeamLocation = player.PrivateTeamLocations.LastOrDefault();
 
-            if(lastLocation == null && privateTeamLocation == null)
+            if (lastLocation == null && privateTeamLocation == null)
             {
                 return shouldIgnore;
             }
@@ -1194,7 +1194,7 @@ namespace FortniteReplayReader.Models
 
             double delta = (double)Settings.LocationChangeDeltaMS / 1000;
 
-            if(delta != 0 && currentUpdateDeltaTime - lastLocationDeltaTime < delta)
+            if (delta != 0 && currentUpdateDeltaTime - lastLocationDeltaTime < delta)
             {
                 return true;
             }
@@ -1204,12 +1204,12 @@ namespace FortniteReplayReader.Models
 
         private string GetPathName(ItemDefinitionGUID guid)
         {
-            if(guid == null || !guid.IsValid())
+            if (guid == null || !guid.IsValid())
             {
                 return null;
             }
 
-            if(NetGUIDToPathName.TryGetValue(guid.Value, out string pathname))
+            if (NetGUIDToPathName.TryGetValue(guid.Value, out string pathname))
             {
                 return pathname;
             }
@@ -1231,9 +1231,9 @@ namespace FortniteReplayReader.Models
             newStructure.CurrentHealth = baseBuild.Health ?? newStructure.CurrentHealth;
             newStructure.MaxHealth = baseBuild.MaxHealth ?? newStructure.MaxHealth;
 
-            if(baseBuild.TeamIndex != null)
+            if (baseBuild.TeamIndex != null)
             {
-                if(_teams.TryGetValue(baseBuild.TeamIndex.Value, out Team team))
+                if (_teams.TryGetValue(baseBuild.TeamIndex.Value, out Team team))
                 {
                     newStructure.Team = team;
                 }
@@ -1286,6 +1286,7 @@ namespace FortniteReplayReader.Models
             MinigameInformation.CurrentRound = minigame.CurrentRound ?? MinigameInformation.CurrentRound;
 
             GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
+            bool roundOver = MinigameInformation.State == EFortMinigameState.PostGameReset || MinigameInformation.State == EFortMinigameState.PostGameEnd;
 
             if (currentRound != null && minigame.StartTime != null)
             {
@@ -1297,41 +1298,33 @@ namespace FortniteReplayReader.Models
             {
                 MinigameInformation.Rounds.Add(new GameRound());
             }
-
-            //Updates the team at the start to handle scoreboard
-            if(minigame.CurrentState == EFortMinigameState.InProgress)
+            else if (minigame.CurrentState == EFortMinigameState.InProgress && MinigameInformation.Rounds.Count == 0) //Join in progress?
             {
-                MinigameInformation.CurrentRoundTeams = new HashSet<int>(MinigameInformation.TeamInfo.Where(x => x.CurrentTeamSize > 0).Select(x => x.TeamIndex));
-            }
-
-            bool roundOver = MinigameInformation.State == EFortMinigameState.PostGameReset || MinigameInformation.State == EFortMinigameState.PostGameEnd;
-
-            if (roundOver)
-            {
-                currentRound.Teams = MinigameInformation.TeamInfo.Where(x => MinigameInformation.CurrentRoundTeams.Contains(x.TeamIndex)).ToList();
+                currentRound = new GameRound();
+                MinigameInformation.Rounds.Add(currentRound);
             }
 
             if (minigame.TeamArray != null)
             {
                 for (int i = 0; i < minigame.TeamArray.Length; i++)
                 {
-                    if(MinigameInformation.TeamInfo == null)
+                    if (MinigameInformation.TeamInfo == null)
                     {
                         MinigameInformation.TeamInfo = new RoundTeam[minigame.TeamArray.Length];
                     }
 
-                    if(MinigameInformation.TeamInfo[i] == null)
+                    if (MinigameInformation.TeamInfo[i] == null)
                     {
                         MinigameInformation.TeamInfo[i] = new RoundTeam();
                     }
-                    else if(roundOver)
+                    else if (roundOver)
                     {
                         MinigameInformation.TeamInfo[i] = new RoundTeam(MinigameInformation.TeamInfo[i]);
 
                         //Update bucket reference
                         var bucket = MinigameInformation.PlayerBuckets.FirstOrDefault(x => x.TeamIndex == MinigameInformation.TeamInfo[i].TeamIndex);
 
-                        if(bucket != null)
+                        if (bucket != null)
                         {
                             bucket.Team = MinigameInformation.TeamInfo[i];
                         }
@@ -1348,7 +1341,7 @@ namespace FortniteReplayReader.Models
                         roundTeam.TeamColorIndex = teamInfo.TeamColorIndex ?? roundTeam.TeamColorIndex;
                         roundTeam.Eliminations = teamInfo.EliminatedCount ?? roundTeam.Eliminations;
 
-                        if(roundTeam.MaxSize == -1)
+                        if (roundTeam.MaxSize == -1)
                         {
                             roundTeam.MaxSize = 1;
                         }
@@ -1356,16 +1349,35 @@ namespace FortniteReplayReader.Models
                 }
             }
 
-            if(minigame.PlayerBuckets != null && (int)MinigameInformation.State > 0)
+            //Updates the team at the start to handle scoreboard
+            if (minigame.CurrentState == EFortMinigameState.InProgress)
             {
-                if(MinigameInformation.PlayerBuckets == null)
+                MinigameInformation.CurrentRoundTeams = new HashSet<int>(MinigameInformation.TeamInfo.Where(x => x.CurrentTeamSize > 0).Select(x => x.TeamIndex));
+            }
+
+            if (roundOver)
+            {
+                currentRound.Teams = MinigameInformation.TeamInfo.Where(x => MinigameInformation.CurrentRoundTeams.Contains(x.TeamIndex)).ToList();
+            }
+
+            if (minigame.PlayerBuckets != null && (int)MinigameInformation.State > 0)
+            {
+                if (MinigameInformation.PlayerBuckets == null)
                 {
                     MinigameInformation.PlayerBuckets = new MinigameInformation.PlayerBucket[minigame.PlayerBuckets.Length];
                 }
-
-                for(int i = 0; i < minigame.PlayerBuckets.Length; i++)
+                else if (minigame.PlayerBuckets.Length > MinigameInformation.PlayerBuckets.Length)
                 {
-                    if(MinigameInformation.PlayerBuckets[i] == null)
+                    MinigameInformation.PlayerBucket[] arr = MinigameInformation.PlayerBuckets;
+
+                    Array.Resize(ref arr, minigame.PlayerBuckets.Length);
+
+                    MinigameInformation.PlayerBuckets = arr;
+                }
+
+                for (int i = 0; i < minigame.PlayerBuckets.Length; i++)
+                {
+                    if (MinigameInformation.PlayerBuckets[i] == null)
                     {
                         MinigameInformation.PlayerBuckets[i] = new MinigameInformation.PlayerBucket();
                     }
@@ -1391,9 +1403,9 @@ namespace FortniteReplayReader.Models
 
                         if (bucket.PlayerIds != null)
                         {
-                            if(bucket.PlayerIds.RemoveAll)
+                            if (bucket.PlayerIds.RemoveAll)
                             {
-                                foreach(RoundPlayer player in miniGameBucket.Team.PlayerIds)
+                                foreach (RoundPlayer player in miniGameBucket.Team.PlayerIds)
                                 {
                                     if (player != null)
                                     {
@@ -1416,11 +1428,11 @@ namespace FortniteReplayReader.Models
                             }
                             else
                             {
-                                for(int z = 0; z < (bucket.PlayerIds.Ids?.Length ?? 0); z++)
+                                for (int z = 0; z < (bucket.PlayerIds.Ids?.Length ?? 0); z++)
                                 {
                                     string id = bucket.PlayerIds.Ids[z];
 
-                                    if(id == null)
+                                    if (id == null)
                                     {
                                         continue;
                                     }

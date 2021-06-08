@@ -6,6 +6,7 @@
     <RootNamespace>FortniteReplayReader</RootNamespace>
     <Platforms>AnyCPU;x64</Platforms>
     <LangVersion>preview</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
