@@ -101,12 +101,8 @@ namespace Unreal.Core
             Pin(); //Pin new
 
             MemoryHandle afterPin = after.Pin();
-            bool* afterPointer = (bool*)afterPin.Pointer;
 
-            for(int i = 0; i < after.Length; i++)
-            {
-                *(_pointer + oldLength + i) = *(afterPointer + i);
-            }
+            Buffer.MemoryCopy(afterPin.Pointer, _pointer + oldLength, after.Length, after.Length);
 
             afterPin.Dispose();
 
