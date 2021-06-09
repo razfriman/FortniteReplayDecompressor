@@ -40,7 +40,7 @@ namespace Unreal.Core
         protected ILogger _logger;
         protected T Replay { get; set; }
         protected ParseType ParseType;
-        protected NetGuidCache GuidCache = new NetGuidCache();
+        protected NetGuidCache GuidCache;
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
@@ -78,6 +78,7 @@ namespace Unreal.Core
         {
             _logger = logger;
             _netFieldParser = new NetFieldParser(GetType().Assembly);
+            GuidCache = new NetGuidCache(_netFieldParser);
         }
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
@@ -1679,7 +1680,7 @@ namespace Unreal.Core
 
             NetFieldExportGroup propertyExportGroup = GuidCache.GetNetFieldExportGroup(pathName);
 
-            bool readProperties = propertyExportGroup != null ? (_netFieldParser.WillReadType(propertyExportGroup.PathName, ParseType, out bool _) || ParseType == ParseType.Debug) : false;
+            bool readProperties = propertyExportGroup != null ? (_netFieldParser.WillReadType(propertyExportGroup.GroupId, ParseType, out bool _) || ParseType == ParseType.Debug) : false;
 
             if (!readProperties)
             {
@@ -1799,7 +1800,7 @@ namespace Unreal.Core
 
             if (!isDeltaRead) //Makes sure delta reads don't cause the channel to be ignored
             {
-                if (ParseType != ParseType.Debug && !_netFieldParser.WillReadType(group.PathName, ParseType, out bool ignoreChannel))
+                if (ParseType != ParseType.Debug && !_netFieldParser.WillReadType(group.GroupId, ParseType, out bool ignoreChannel))
                 {
                     if (ignoreChannel)
                     {
@@ -1817,7 +1818,7 @@ namespace Unreal.Core
 
             //Debug("types", $"\n{group.PathName}");
 
-            INetFieldExportGroup exportGroup = _netFieldParser.CreateType(group.PathName);
+            INetFieldExportGroup exportGroup = _netFieldParser.CreateType(group.GroupId);
 
             if(exportGroup == null || exportGroup is DebuggingExportGroup)
             {

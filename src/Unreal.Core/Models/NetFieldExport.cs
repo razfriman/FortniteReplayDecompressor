@@ -13,5 +13,6 @@
         public bool Incompatible { get; set; }
 
         internal string CleanedName { get; set; }
+        internal int PropertyId { get; set; } = -1;
     }
 }

@@ -25,6 +25,13 @@ namespace Unreal.Core.Models
 
         private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new Dictionary<string, NetFieldExportGroup>();
 
+        private NetFieldParser _parser;
+
+        internal NetGuidCache(NetFieldParser parser)
+        {
+            _parser = parser;
+        }
+
         public void ClearCache()
         {
             NetFieldExportGroupMap.Clear();
@@ -54,7 +61,10 @@ namespace Unreal.Core.Models
                 exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
             }
 
+
             NetFieldExportGroupMap[group] = exportGroup;
+
+            _parser.UpdateExportGroup(exportGroup);
 
             //Check if partial path
             foreach (KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)

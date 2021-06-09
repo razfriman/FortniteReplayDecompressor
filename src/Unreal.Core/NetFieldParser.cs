@@ -47,8 +47,8 @@ namespace Unreal.Core
             List<Type> propertyTypes = new List<Type>();
 
             //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>() != null));
-            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>() != null));
+            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
+            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
             propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
 
             _parserInfo = new NetFieldParserInfo();
@@ -61,7 +61,7 @@ namespace Unreal.Core
 
         internal bool SetMinimalParseType(string path, ParseType type)
         {
-            if(!_parserInfo.NetFieldGroups.TryGetValue(path, out NetFieldGroupInfo netFieldGroup))
+            if (!_parserInfo.NetFieldGroups.TryGetValue(path, out NetFieldGroupInfo netFieldGroup))
             {
                 return false;
             }
@@ -71,10 +71,14 @@ namespace Unreal.Core
             return true;
         }
 
+        //TODO: FIX
         internal Dictionary<string, ParseType> GetNetFieldExportTypes()
         {
-            return _parserInfo.NetFieldGroups.ToDictionary(x => x.Key, x => x.Value.Attribute.MinimumParseType);
+            return new Dictionary<string, ParseType>();
+
+            //return _parserInfo.NetFieldGroupsList.ToDictionary(x => x., x => x.Value.Attribute.MinimumParseType);
         }
+
 
 #if DEBUG
 
@@ -90,7 +94,7 @@ namespace Unreal.Core
 
             foreach (KeyValuePair<uint, string> kvp in debuggingGroup.HandleNames)
             {
-                if(alreadyAdded.Contains(kvp.Value))
+                if (alreadyAdded.Contains(kvp.Value))
                 {
                     continue;
                 }
@@ -133,7 +137,7 @@ namespace Unreal.Core
 
             foreach (string file in allFiles)
             {
-                if(file.Contains("BaseStructure"))
+                if (file.Contains("BaseStructure"))
                 {
 
                 }
@@ -181,7 +185,7 @@ namespace Unreal.Core
                 File.WriteAllLines(file.Replace(".bak", ""), lines);
             }
         }
-        
+
         private int FindInsertLine(List<string> lines, int startLine)
         {
             int braceCount = 0;
@@ -216,12 +220,12 @@ namespace Unreal.Core
         {
             static string GetTypeName(Type type)
             {
-                if(type.Name == "Nullable`1")
+                if (type.Name == "Nullable`1")
                 {
                     return GetTypeName(type.GenericTypeArguments[0]);
                 }
 
-                if(type == typeof(int))
+                if (type == typeof(int))
                 {
                     return "int";
                 }
@@ -269,7 +273,7 @@ namespace Unreal.Core
                 {
                     return "object";
                 }
-                else if(type.IsPrimitive)
+                else if (type.IsPrimitive)
                 {
                     return null;
                 }
@@ -296,11 +300,11 @@ namespace Unreal.Core
             builder.AppendLine("\t\t\tswitch(property)");
             builder.AppendLine("\t\t\t{");
 
-            foreach(PropertyInfo info in props)
+            foreach (PropertyInfo info in props)
             {
                 NetFieldExportAttribute export = info.GetCustomAttribute<NetFieldExportAttribute>();
 
-                if(export == null)
+                if (export == null)
                 {
                     continue;
                 }
@@ -322,6 +326,14 @@ namespace Unreal.Core
             return builder.ToString();
         }
 #endif
+
+        internal void UpdateExportGroup(NetFieldExportGroup group)
+        {
+            if (_parserInfo.NetFieldGroups.TryGetIndex(group.PathName, out int val))
+            {
+                group.GroupId = val;
+            }
+        }
 
         private HashSet<Assembly> GetAllReferencedAssemblies(Assembly assembly, Dictionary<string, Assembly> allAssemblies)
         {
@@ -363,35 +375,35 @@ namespace Unreal.Core
 
                 info.Type = type;
                 info.Attribute = attribute;
+                info.UsesHandles = typeof(IHandleNetFieldExportGroup).IsAssignableFrom(type);
 
-                _parserInfo.NetFieldGroups[attribute.Path] = info;
+                _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
                 foreach (PropertyInfo property in type.GetProperties())
                 {
                     NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
                     NetFieldExportHandleAttribute netFieldExportHandleAttribute = property.GetCustomAttribute<NetFieldExportHandleAttribute>(); //Uses handle id
+
                     if (netFieldExportAttribute == null && netFieldExportHandleAttribute == null)
                     {
                         continue;
                     }
 
-                    if (netFieldExportAttribute != null)
+                    if(netFieldExportHandleAttribute != null)
                     {
-                        info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
-                        {
-                            Attribute = netFieldExportAttribute,
-                            PropertyInfo = property
-                        };
-                    }
-                    else
-                    {
-                        info.UsesHandles = true;
-
                         info.HandleProperties[netFieldExportHandleAttribute.Handle] = new NetFieldInfo
                         {
                             Attribute = netFieldExportHandleAttribute,
                             PropertyInfo = property
                         };
+                    }
+                    else if (netFieldExportAttribute != null)
+                    {
+                        info.Properties.Add(netFieldExportAttribute.Name,new NetFieldInfo
+                        {
+                            Attribute = netFieldExportAttribute,
+                            PropertyInfo = property
+                        });
                     }
                 }
             }
@@ -499,28 +511,35 @@ namespace Unreal.Core
             return false;
         }
 
-        internal bool WillReadType(string group, ParseType parseType, out bool ignoreChannel)
+        internal bool WillReadType(int groupId, ParseType parseType, out bool ignoreChannel)
         {
             ignoreChannel = false;
 
-            if (_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo groupInfo))
+            if (groupId == -1)
             {
-                if (parseType >= groupInfo.Attribute.MinimumParseType)
-                {
-                    return true;
-                }
-
-                //Ignore channels where we know the type and outside the parse mode
-                ignoreChannel = true;
-
                 return false;
             }
+
+            NetFieldGroupInfo groupInfo = _parserInfo.NetFieldGroups[groupId];
+
+            if (parseType >= groupInfo.Attribute.MinimumParseType)
+            {
+                return true;
+            }
+
+            //Ignore channels where we know the type and outside the parse mode
+            ignoreChannel = true;
 
             return false;
         }
 
         internal void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
         {
+            if(export.PropertyId == -2)
+            {
+                return;
+            }
+
             string group = exportGroup.PathName;
 
             string fixedExportName = export.CleanedName;
@@ -532,22 +551,42 @@ namespace Unreal.Core
             }
 
             bool isDebug = obj is DebuggingExportGroup;
+            int groupId = exportGroup.GroupId;
 
             if (isDebug)
             {
-                group = "DebuggingExportGroup";
+                _parserInfo.NetFieldGroups.TryGetIndex("DebuggingExportGroup", out groupId);
                 fixedExportName = "Handles";
             }
 
-            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo netGroupInfo))
+            if (exportGroup.GroupId == -1)
             {
                 return;
             }
 
+            NetFieldGroupInfo netGroupInfo = _parserInfo.NetFieldGroups[groupId];
             NetFieldInfo netFieldInfo = null;
 
-            if ((!netGroupInfo.UsesHandles && !netGroupInfo.Properties.TryGetValue(fixedExportName, out netFieldInfo)) ||
-                (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo)))
+            //Update
+            if (!netGroupInfo.UsesHandles)
+            {
+                int propertyIndex = export.PropertyId;
+
+                if(export.PropertyId == -1)
+                {
+                    if (!netGroupInfo.Properties.TryGetIndex(fixedExportName, out propertyIndex))
+                    {
+                        export.PropertyId = -2;
+                        return;
+                    }
+
+                    export.PropertyId = propertyIndex;
+                }
+
+                netFieldInfo = netGroupInfo.Properties[propertyIndex];
+            }
+            
+            if (netGroupInfo.UsesHandles && !netGroupInfo.HandleProperties.TryGetValue(handle, out netFieldInfo))
             {
                 //Clean this up
                 if (obj is IHandleNetFieldExportGroup handleGroup)
@@ -585,7 +624,7 @@ namespace Unreal.Core
 
             if (data != null)
             {
-                if(!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
+                if (!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
                 {
                     TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
                     typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
@@ -791,12 +830,14 @@ namespace Unreal.Core
             }
         }
 
-        internal INetFieldExportGroup CreateType(string group)
+        internal INetFieldExportGroup CreateType(int groupId)
         {
-            if (!_parserInfo.NetFieldGroups.TryGetValue(group, out NetFieldGroupInfo exportGroup))
+            if (groupId == -1)
             {
                 return null;
             }
+
+            NetFieldGroupInfo exportGroup = _parserInfo.NetFieldGroups[groupId];
 
             return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
         }
@@ -853,14 +894,14 @@ namespace Unreal.Core
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
             public bool UsesHandles { get; set; }
-            public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
+
+            public KeyList<string, NetFieldInfo> Properties { get; set; } = new KeyList<string, NetFieldInfo>();
             public Dictionary<uint, NetFieldInfo> HandleProperties { get; set; } = new Dictionary<uint, NetFieldInfo>();
         }
 
         private class NetFieldInfo
         {
             public RepLayoutAttribute Attribute { get; set; }
-
             public PropertyInfo PropertyInfo { get; set; }
         }
 
@@ -869,10 +910,11 @@ namespace Unreal.Core
         /// </summary>
         private class NetFieldParserInfo
         {
-            public Dictionary<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } =
-            new Dictionary<string, NetFieldGroupInfo>();
+            public KeyList<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } = new KeyList<string, NetFieldGroupInfo>();
+
             public Dictionary<Type, RepLayoutCmdType> PrimitiveTypeLayout { get; private set; } =
             new Dictionary<Type, RepLayoutCmdType>();
+
             public Dictionary<string, NetRPCFieldGroupInfo> NetRPCStructureTypes { get; private set; } = new Dictionary<string, NetRPCFieldGroupInfo>(); //Mapping from ClassNetCache -> Type path name
             public HashSet<string> PlayerControllers { get; private set; } = new HashSet<string>(); //Player controllers require 1 extra byte to be read when creating actor
             public CompiledLinqCache LinqCache { get; private set; } = new CompiledLinqCache();
