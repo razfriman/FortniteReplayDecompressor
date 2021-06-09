@@ -412,6 +412,7 @@ namespace Unreal.Core
             using var decryptedReader = Decrypt(archive, (int)info.Length);
             using var binaryArchive = Decompress(decryptedReader, memorySizeInBytes);
 
+
             int i = 0;
 
             while (!binaryArchive.AtEnd())
@@ -2360,6 +2361,7 @@ namespace Unreal.Core
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
+
             var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
             var decompressed = new BinaryReader(new MemoryStream(output))
             {

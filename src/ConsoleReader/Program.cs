@@ -63,7 +63,7 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-            
+#if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -71,14 +71,14 @@ namespace ConsoleReader
             Benchmark a = new Benchmark();
             
 
-            var b = a.ReadLongReplay();
+            var b = a.ReadShortReplay();
             ReplayReader reader2 = a._reader;
 
             Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
             Console.WriteLine($"Pins: {FBitArray.Pins}");
 
             return;
-            
+#endif
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
@@ -140,7 +140,7 @@ namespace ConsoleReader
             {
                 Console.WriteLine(path);
 
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 200; i++)
                 {
                     ++count;
 
@@ -151,6 +151,7 @@ namespace ConsoleReader
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
+                    Console.WriteLine($"Pins: {FBitArray.Pins}");
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 

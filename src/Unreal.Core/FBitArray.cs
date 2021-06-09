@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -17,7 +18,7 @@ namespace Unreal.Core
         private bool* _pointer;
 
         public ReadOnlyMemory<bool> Items { get; private set; }
-        private IMemoryOwner<bool> owner;
+        private IMemoryOwner<bool> _owner;
 
         public int Length { get; private set; }
         public bool IsReadOnly => false;
@@ -28,44 +29,42 @@ namespace Unreal.Core
 
         }
 
+        /*
         public FBitArray(ReadOnlyMemory<bool> bits)
         {
             Items = bits;
             Length = bits.Length;
             //_items = Items;
-        }
+        }*/
 
         public FBitArray(byte[] bytes)
         {
+            ByteArrayUsed = bytes;
             int totalBits = bytes.Length * 8;
-            Length = totalBits;
 
+            _owner = MemoryPool<bool>.Shared.Rent(totalBits);
+            Items = _owner.Memory;
+            Length = totalBits;
             Pin();
 
-            bool[] tArray = new bool[bytes.Length * 8];
-            ByteArrayUsed = bytes;
 
             fixed (byte* bytePtr = bytes)
-            fixed (bool* itemPtr = tArray)
             {
                 for (int i = 0; i < bytes.Length; i++)
                 {
                     int offset = i * 8;
 
-                    *(itemPtr + offset) = ((*(bytePtr + i)) & 0x01) == 0x01;
-                    *(itemPtr + offset + 1) = ((*(bytePtr + i) >> 1) & 0x01) == 0x01;
-                    *(itemPtr + offset + 2) = ((*(bytePtr + i) >> 2) & 0x01) == 0x01;
-                    *(itemPtr + offset + 3) = ((*(bytePtr + i) >> 3) & 0x01) == 0x01;
-                    *(itemPtr + offset + 4) = ((*(bytePtr + i) >> 4) & 0x01) == 0x01;
-                    *(itemPtr + offset + 5) = ((*(bytePtr + i) >> 5) & 0x01) == 0x01;
-                    *(itemPtr + offset + 6) = ((*(bytePtr + i) >> 6) & 0x01) == 0x01;
-                    *(itemPtr + offset + 7) = ((*(bytePtr + i) >> 7) & 0x01) == 0x01;
+                    *(_pointer + offset) = ((*(bytePtr + i)) & 0x01) == 0x01;
+                    *(_pointer + offset + 1) = ((*(bytePtr + i) >> 1) & 0x01) == 0x01;
+                    *(_pointer + offset + 2) = ((*(bytePtr + i) >> 2) & 0x01) == 0x01;
+                    *(_pointer + offset + 3) = ((*(bytePtr + i) >> 3) & 0x01) == 0x01;
+                    *(_pointer + offset + 4) = ((*(bytePtr + i) >> 4) & 0x01) == 0x01;
+                    *(_pointer + offset + 5) = ((*(bytePtr + i) >> 5) & 0x01) == 0x01;
+                    *(_pointer + offset + 6) = ((*(bytePtr + i) >> 6) & 0x01) == 0x01;
+                    *(_pointer + offset + 7) = ((*(bytePtr + i) >> 7) & 0x01) == 0x01;
                 }
             }
 
-            Items = tArray;
-            Length = Items.Length;
-            Pin();
         }
 
         public FBitArray Slice(int start, int count)
@@ -86,27 +85,32 @@ namespace Unreal.Core
             }
         }
 
-#if !NETSTANDARD2_0
-        public ReadOnlyMemory<bool> AsSpan(int start, int count)
-        {
-            return Items.Slice(start, count);
-        }
-#endif
-
         public void Append(ReadOnlyMemory<bool> after)
         {
-            Unpin();
+            IMemoryOwner<bool> newOwner = MemoryPool<bool>.Shared.Rent(after.Length + Length);
+            Memory<bool> newMemory = newOwner.Memory;
 
-            bool[] newArray = new bool[Items.Length + after.Length];
+            int oldLength = Length;
+            Length = after.Length + Length;
 
-            Array.Copy(after.ToArray(), 0, newArray, Items.Length, after.Length);
+            //Copy old array
+            Items.CopyTo(newMemory);
+            Items = newMemory;
 
-            Memory<bool> mArray = new Memory<bool>(newArray);
+            Unpin(); //Get rid of old
+            Pin(); //Pin new
 
-            Items.CopyTo(mArray);
-            Items = mArray;
+            MemoryHandle afterPin = after.Pin();
+            bool* afterPointer = (bool*)afterPin.Pointer;
 
-            Pin();
+            for(int i = 0; i < after.Length; i++)
+            {
+                *(_pointer + oldLength + i) = *(afterPointer + i);
+            }
+
+            afterPin.Dispose();
+
+            _owner = newOwner;
         }
 
         public void Dispose()
@@ -118,17 +122,17 @@ namespace Unreal.Core
         {
             _pin = Items.Pin();
             _pointer = (bool*)_pin.Pointer;
-            Interlocked.Increment(ref Pins);
         }
 
         private void Unpin()
         {
-            if (_pin.Pointer != new MemoryHandle().Pointer)
+            if (_owner != null)
             {
+                _owner.Dispose();
+                _owner = null;
                 _pin.Dispose();
                 _pin = new MemoryHandle();
                 _pointer = null;
-                Interlocked.Decrement(ref Pins);
             }
         }
     }
