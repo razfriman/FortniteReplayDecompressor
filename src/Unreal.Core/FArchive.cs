@@ -10,7 +10,7 @@ namespace Unreal.Core
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Serialization/Archive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Serialization/Archive.cpp
     /// </summary>
-    public abstract class FArchive
+    public abstract class FArchive : IDisposable
     {
         public EngineNetworkVersionHistory EngineNetworkVersion { get; set; }
         public ReplayHeaderFlags ReplayHeaderFlags { get; set; }
@@ -83,5 +83,7 @@ namespace Unreal.Core
         public abstract void SkipBytes(uint byteCount);
         public abstract void SkipBytes(int byteCount);
         public abstract void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin);
+
+        public abstract void Dispose();
     }
 }

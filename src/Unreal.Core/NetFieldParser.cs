@@ -772,11 +772,9 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    NetBitReader cmdReader = new NetBitReader(netBitReader.ReadBits(numBits))
-                    {
-                        EngineNetworkVersion = netBitReader.EngineNetworkVersion,
-                        NetworkVersion = netBitReader.NetworkVersion
-                    };
+                    using NetBitReader cmdReader = netBitReader.GetNetBitReader((int)numBits);
+                    cmdReader.EngineNetworkVersion = netBitReader.EngineNetworkVersion;
+                    cmdReader.NetworkVersion = netBitReader.NetworkVersion;
 
                     //Uses the same type for the array
                     if (groupInfo != null)

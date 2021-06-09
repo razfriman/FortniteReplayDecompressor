@@ -1,4 +1,7 @@
-﻿using FortniteReplayReader;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Running;
+using FortniteReplayReader;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
@@ -20,14 +23,66 @@ using Unreal.Encryption;
 
 namespace ConsoleReader
 {
+    [MemoryDiagnoser]
+    [SimpleJob]
+    public class Benchmark
+    {
+        public ReplayReader _reader = new ReplayReader(null, null);
+
+        public Benchmark()
+        {
+
+        }
+
+        [Benchmark]
+        public FortniteReplay ReadLongReplay()
+        {
+            return _reader.ReadReplay("Replays/newSeason.replay", ParseType.Full);
+        }
+
+        [Benchmark]
+        public FortniteReplay ReadShortReplay()
+        {
+            return _reader.ReadReplay("Replays/replay_Bow.replay", ParseType.Full);
+        }
+
+        [Benchmark]
+        public FortniteReplay ReadOldReplay()
+        {
+            return _reader.ReadReplay("Replays/season11.11.replay", ParseType.Full);
+        }
+
+        [Benchmark]
+        public FortniteReplay ReadRoundReplay()
+        {
+            return _reader.ReadReplay("Replays/rounds.replay", ParseType.Full);
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
+            
+            var summary = BenchmarkRunner.Run<Benchmark>();
+
+            Console.WriteLine(summary);
+
+            Benchmark a = new Benchmark();
+            
+
+            var b = a.ReadLongReplay();
+            ReplayReader reader2 = a._reader;
+
+            Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
+            Console.WriteLine($"Pins: {FBitArray.Pins}");
+
+            return;
+            
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Warning));
+                    .SetMinimumLevel(LogLevel.Information));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -44,7 +99,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/loop.replay"; //Used for testing
+            var replayFile = "Replays/newSeason.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -74,7 +129,7 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(logger, new FortniteReplaySettings
+            var reader = new ReplayReader(null, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.None,
             });
@@ -90,7 +145,7 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
-                    var replay = reader.ReadReplay(replayFile, ParseType.Debug);
+                    var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
 

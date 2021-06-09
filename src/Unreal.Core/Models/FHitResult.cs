@@ -108,7 +108,7 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(8);
+            var flags = reader.ReadBits(8).Span;
 
             // Most of the time the vectors are the same values, use that as an optimization
             BlockingHit = flags[0];

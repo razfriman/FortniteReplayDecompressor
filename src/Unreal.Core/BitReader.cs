@@ -14,14 +14,14 @@ namespace Unreal.Core
     /// </summary>
     public class BitReader : FBitArchive
     {
-        private FBitArray Bits { get; set; }
+        protected FBitArray Bits { get; set; }
 
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
         /// </summary>
         public override int Position { get => _position; protected set => _position = value; }
 
-        private int _position;
+        protected int _position;
 
         /// <summary>
         /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
@@ -56,16 +56,10 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="input">The input bool[].</param>
 
-        public BitReader(bool[] input)
+        public BitReader(FBitArray input)
         {
-            Bits = new FBitArray(input);
+            Bits = input;
             LastBit = Bits.Length;
-        }
-
-        public BitReader(bool[] input, int bitCount)
-        {
-            Bits = new FBitArray(input);
-            LastBit = bitCount;
         }
 
         /// <summary>
@@ -99,7 +93,6 @@ namespace Unreal.Core
         /// <seealso cref="PeekBit"/>
         public override bool ReadBit()
         {
-
             if (_position >= LastBit || IsError)
             {
                 IsError = true;
@@ -118,15 +111,15 @@ namespace Unreal.Core
         {
             var result = new byte();
 
-            bool[] bits = ReadBits(bitCount);
-
-            for (var i = 0; i < bits.Length; i++)
+            for (var i = 0; i < bitCount; i++)
             {
-                if (bits[i])
+                if (Bits[i + _position])
                 {
                     result |= (byte)(1 << i);
                 }
             }
+
+            _position += bitCount;
 
             return result;
         }
@@ -136,30 +129,23 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
-        public override bool[] ReadBits(int bitCount)
+        public override ReadOnlyMemory<bool> ReadBits(int bitCount)
         {
             if (!CanRead(bitCount) || bitCount < 0)
             {
                 IsError = true;
-                return Array.Empty<bool>();
+                return ReadOnlyMemory<bool>.Empty;
             }
 
-            var result = new bool[bitCount];
-
-            //Buffer.BlockCopy(Bits.Items, _position, result, 0, bitCount);
-
-
-#if NETSTANDARD2_0
-            Array.Copy(Bits.Items, _position, result, 0, bitCount);
-#else
-            Bits.AsSpan(_position, bitCount).CopyTo(result);
-#endif
+            
+            var result = Bits.Items.Slice(_position, bitCount);
 
             _position += bitCount;
 
             return result;
         }
 
+        /*
         public override void Read(bool[] buffer, int count)
         {
             if (!CanRead(count) || count < 0)
@@ -169,17 +155,17 @@ namespace Unreal.Core
                 return;
             }
 
-            Buffer.BlockCopy(Bits.Items, _position, buffer, 0, count);
+            Buffer.BlockCopy(Bits.Items.ToArray(), _position, buffer, 0, count);
 
             _position += count;
-        }
+        }*/
 
         /// <summary>
         /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
-        public override bool[] ReadBits(uint bitCount)
+        public override ReadOnlyMemory<bool> ReadBits(uint bitCount)
         {
             return ReadBits((int)bitCount);
         }
@@ -274,15 +260,17 @@ namespace Unreal.Core
             }
             else
             {
-                bool[] bits = ReadBits(byteCount * 8);
+                int count = byteCount * 8;
 
-                for (int i = 0; i < bits.Length; i += 8)
+                for (int i = 0; i < count; i += 8)
                 {
                     byte b = new byte();
 
                     for (int x = 0; x < 8; x++)
                     {
-                        if (bits[i + x])
+                        bool bit = Bits[i + _position + x];
+
+                        if (bit)
                         {
                             b |= (byte)(1 << x);
                         }
@@ -290,6 +278,8 @@ namespace Unreal.Core
 
                     result[i / 8] = b;
                 }
+
+                _position += count;
             }
 
             return result;
@@ -767,10 +757,15 @@ namespace Unreal.Core
         /// Append bool array to this archive.
         /// </summary>
         /// <param name="data"></param>
-        public override void AppendDataFromChecked(bool[] data)
+        public override void AppendDataFromChecked(ReadOnlyMemory<bool> data)
         {
             LastBit += data.Length;
             Bits.Append(data);
+        }
+
+        public override void Dispose()
+        {
+            Bits.Dispose();
         }
     }
 }

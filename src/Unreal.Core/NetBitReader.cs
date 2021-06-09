@@ -13,8 +13,16 @@ namespace Unreal.Core
     {
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
-        public NetBitReader(bool[] input) : base(input) { }
-        public NetBitReader(bool[] input, int bitCount) : base(input, bitCount) { }
+        public NetBitReader(FBitArray input) : base(input) { }
+
+        public NetBitReader GetNetBitReader(int bitCount)
+        {
+            NetBitReader reader = new NetBitReader(Bits.Slice(_position, bitCount));
+
+            _position += bitCount;
+
+            return reader;
+        }
 
         public int SerializePropertyInt()
         {
@@ -86,7 +94,7 @@ namespace Unreal.Core
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
-            var flags = ReadBits(2);
+            var flags = ReadBits(2).Span;
 
             repMovement.bSimulatedPhysicSleep = flags[0];
             repMovement.bRepPhysics = flags[1];

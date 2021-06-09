@@ -35,7 +35,7 @@ namespace Unreal.Core.Models
             bIgnoreRPCs = InBunch.bIgnoreRPCs;
             CloseReason = InBunch.CloseReason;
         }
-        public FBitArchive Archive { get; set; }
+        public NetBitReader Archive { get; set; }
         public int PacketId { get; set; }
         //FInBunch* Next;
         //UNetConnection* Connection;

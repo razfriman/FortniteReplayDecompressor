@@ -54,8 +54,9 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
-            _reader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()));
+            _reader = reader.GetNetBitReader(reader.GetBitsLeft());
             _reader.EngineNetworkVersion = reader.EngineNetworkVersion;
+            _reader.Dispose();
 
             TotalBits = _reader.GetBitsLeft();
         }
@@ -264,7 +265,7 @@ namespace Unreal.Core.Models
 
                     DebuggingObject obj = new DebuggingObject();
 
-                    NetBitReader tempReader = new NetBitReader(_reader.ReadBits(numBits));
+                    using NetBitReader tempReader = _reader.GetNetBitReader((int)numBits);
                     tempReader.EngineNetworkVersion = _reader.EngineNetworkVersion;
 
                     obj.Serialize(tempReader);

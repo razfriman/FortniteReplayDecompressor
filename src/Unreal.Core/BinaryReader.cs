@@ -7,7 +7,7 @@ namespace Unreal.Core
     /// <summary>
     /// Custom Binary Reader with methods for Unreal Engine replay files
     /// </summary>
-    public class BinaryReader : FArchive, IDisposable
+    public class BinaryReader : FArchive
     {
         private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
@@ -33,7 +33,7 @@ namespace Unreal.Core
             return Reader.BaseStream.Position + count < Reader.BaseStream.Length;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
