@@ -24,9 +24,9 @@ namespace Unreal.Encryption
         /// <param name="size"></param>
         /// <param name="uncompressedSize"></param>
         /// <returns>byte[]</returns>
-        public static void DecompressReplayData(byte* buffer, int compressedSize, byte* decompressedBuffer, int uncompressedSize)
+        public static void DecompressReplayData(byte* buffer, int bufferLength, byte* uncompressedBuffer, int uncompressedSize)
         {
-            kraken.Decompress(buffer, compressedSize, decompressedBuffer, uncompressedSize);
+            kraken.Decompress(buffer, bufferLength, uncompressedBuffer, uncompressedSize);
         }
     }
 }
