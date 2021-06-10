@@ -167,7 +167,7 @@ namespace ConsoleReader
                     var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
-
+                     
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Success Properties: {reader?.SuccessProperties}");
                     Console.Write($"Pins: {FBitArray.Pins}");
                     totalTime += sw.Elapsed.TotalMilliseconds;
