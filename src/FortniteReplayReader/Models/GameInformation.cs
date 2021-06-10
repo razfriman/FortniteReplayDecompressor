@@ -493,7 +493,7 @@ namespace FortniteReplayReader.Models
                         playerPawns.Add(new QueuedPlayerPawn
                         {
                             ChannelId = channelId,
-                            PlayerPawn = playerPawnC
+                            PlayerPawn = (PlayerPawnC)playerPawnC.Clone() //PlayerPawnC is a single instance class, so need to clone it
                         });
 
                         return;

@@ -17,30 +17,30 @@ namespace FortniteReplayReader.Models.NetFieldExports
     }*/
 
 	[NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Full)]
-	public class PlayerPawnC : INetFieldExportGroup
+	public class PlayerPawnC : INetFieldExportGroup, ISingleInstance
 	{
-		[NetFieldExport("Owner", RepLayoutCmdType.Property)]
+		[NetFieldExport("Owner", RepLayoutCmdType.Ignore)]
 		public NetworkGUID Owner { get; set; }
 
-		[NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]
+		[NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
 		public bool? bHidden { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("bReplicateMovement", RepLayoutCmdType.PropertyBool)]
+		[NetFieldExport("bReplicateMovement", RepLayoutCmdType.Ignore)]
 		public bool? bReplicateMovement { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("bTearOff", RepLayoutCmdType.PropertyBool)]
+		[NetFieldExport("bTearOff", RepLayoutCmdType.Ignore)]
 		public bool? bTearOff { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("bCanBeDamaged", RepLayoutCmdType.PropertyBool)]
+		[NetFieldExport("bCanBeDamaged", RepLayoutCmdType.Ignore)]
 		public bool? bCanBeDamaged { get; set; } //Type: uint8 Bits: 1
 
-		[NetFieldExport("RemoteRole", RepLayoutCmdType.Enum)]
+		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
 		public int? RemoteRole { get; set; } //Type: TEnumAsByte<ENetRole> Bits: 2
 
 		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
 		public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 127
 
-		[NetFieldExport("AttachParent", RepLayoutCmdType.Property)]
+		[NetFieldExport("AttachParent", RepLayoutCmdType.Ignore)]
 		public ActorGUID AttachParent { get; set; } //Type: AActor* Bits: 16
 
 		[NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
@@ -52,31 +52,31 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator)]
 		public FRotator RotationOffset { get; set; } //Type: FRotator Bits: 3
 
-		[NetFieldExport("AttachSocket", RepLayoutCmdType.Property)]
+		[NetFieldExport("AttachSocket", RepLayoutCmdType.Ignore)]
 		public FName AttachSocket { get; set; } //Type: FName Bits: 121
 
-		[NetFieldExport("AttachComponent", RepLayoutCmdType.Property)]
+		[NetFieldExport("AttachComponent", RepLayoutCmdType.Ignore)]
 		public UObjectGUID AttachComponent { get; set; } //Type: USceneComponent* Bits: 16
 
-		[NetFieldExport("Role", RepLayoutCmdType.Enum)]
+		[NetFieldExport("Role", RepLayoutCmdType.Ignore)]
 		public int? Role { get; set; } //Type: Enum Bits: 2
 
-		[NetFieldExport("Instigator", RepLayoutCmdType.Property)]
+		[NetFieldExport("Instigator", RepLayoutCmdType.Ignore)]
 		public ActorGUID Instigator { get; set; } //Type: APawn* Bits: 8
 
-		[NetFieldExport("RemoteViewPitch", RepLayoutCmdType.PropertyByte)]
+		[NetFieldExport("RemoteViewPitch", RepLayoutCmdType.Ignore)]
 		public byte? RemoteViewPitch { get; set; } //Type: uint8 Bits: 8
 
 		[NetFieldExport("PlayerState", RepLayoutCmdType.Property)]
 		public ActorGUID PlayerState { get; set; } //Type: APlayerState* Bits: 8
 
-		[NetFieldExport("Controller", RepLayoutCmdType.Property)]
+		[NetFieldExport("Controller", RepLayoutCmdType.Ignore)]
 		public ActorGUID Controller { get; set; } //Type: AController* Bits: 8
 
 		[NetFieldExport("MovementBase", RepLayoutCmdType.Ignore)]
 		public UObjectGUID MovementBase { get; set; } //Type: UPrimitiveComponent* Bits: 16
 
-		[NetFieldExport("BoneName", RepLayoutCmdType.Property)]
+		[NetFieldExport("BoneName", RepLayoutCmdType.Ignore)]
 		public FName BoneName { get; set; } //Type: FName Bits: 113
 
 		[NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
@@ -85,7 +85,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Rotation", RepLayoutCmdType.PropertyRotator)]
 		public FRotator Rotation { get; set; } //Type: FRotator Bits: 19
 
-		[NetFieldExport("bServerHasBaseComponent", RepLayoutCmdType.PropertyBool)]
+		[NetFieldExport("bServerHasBaseComponent", RepLayoutCmdType.Ignore)]
 		public bool? bServerHasBaseComponent { get; set; } //Type: bool Bits: 1
 
 		[NetFieldExport("bRelativeRotation", RepLayoutCmdType.PropertyBool)]
@@ -499,7 +499,150 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ExitSocketIndex", RepLayoutCmdType.Ignore)]
 		public DebuggingObject ExitSocketIndex { get; set; }
 
-		public override bool ManualRead(string property, object value)
+        public virtual void ClearInstance()
+		{
+			ChannelActor = null;
+			ReplicatedMovement = null; 
+			LocationOffset = null; 
+			RelativeScale3D = null; 
+			RotationOffset = null; 
+			PlayerState = null; 
+			Location = null; 
+			Rotation = null; 
+			bRelativeRotation = null; 
+			bServerHasVelocity = null; 
+			ReplayLastTransformUpdateTimeStamp = null; 
+			ReplicatedMovementMode = null; 
+			bIsCrouched = null; 
+			bProxyIsJumpForceApplied = null; 
+			bIsActive = null; 
+			Position = null; 
+			Acceleration = null; 
+			LinearVelocity = null; 
+			CurrentMovementStyle = EFortMovementStyle.EFortMovementStyle_MAX; 
+			bIgnoreNextFallingDamage = null; 
+			TeleportCounter = null; 
+			PawnUniqueID = null; 
+			bIsDying = null; 
+			CurrentWeapon = null; 
+			bIsInvulnerable = null; 
+			bMovingEmote = null; 
+			bWeaponActivated = null; 
+			bIsDBNO = null; 
+			bWasDBNOOnDeath = null; 
+			JumpFlashCount = null; 
+			bWeaponHolstered = null; 
+			FeedbackAudioComponent = null; 
+			VocalChords = null; 
+			SpawnImmunityTime = null; 
+			bInterruptCurrentLine = null; 
+			LastReplicatedEmoteExecuted = null; 
+			bCanBeInterrupted = null; 
+			bCanQue = null; 
+			ForwardAlpha = null; 
+			RightAlpha = null; 
+			TurnDelta = null; 
+			SteerAlpha = null; 
+			GravityScale = null; 
+			WorldLookDir = null; 
+			bIgnoreForwardInAir = null; 
+			bIsHonking = null; 
+			bIsJumping = null; 
+			bIsSprinting = null; 
+			Vehicle = null; 
+			VehicleApexZ = null; 
+			SeatIndex = null; 
+			bIsWaterJump = null; 
+			bIsWaterSprintBoost = null; 
+			bIsWaterSprintBoostPending = null; 
+			StasisMode = EFortPawnStasisMode.EFortPawnStasisMode_MAX; 
+			BuildingState = EFortBuildingState.EFortBuildingState_MAX;
+			bIsTargeting = null; 
+			PawnMontage = null; 
+			bPlayBit = null; 
+			bIsPlayingEmote = null; 
+			FootstepBankOverride = null; 
+			PackedReplicatedSlopeAngles = null; 
+			bStartedInteractSearch = null; 
+			AccelerationZPack = null; 
+			bIsWaitingForEmoteInteraction = null; 
+			GroupEmoteLookTarget = null; 
+			bIsSkydiving = null; 
+			bIsParachuteOpen = null; 
+			bIsParachuteForcedOpen = null; 
+			bIsSkydivingFromBus = null; 
+			bReplicatedIsInSlipperyMovement = null; 
+			MovementDir = null; 
+			bIsInAnyStorm = null; 
+			bIsSlopeSliding = null; 
+			bIsProxySimulationTimedOut = null; 
+			bIsInsideSafeZone = null; 
+			Zipline = null; 
+			PetState = null; 
+			bIsZiplining = null; 
+			bJumped = null; 
+			ParachuteAttachment = null; 
+			AuthoritativeValue = null; 
+			bNetMovementPrioritized = null; 
+			EntryTime = null; 
+			CapsuleRadiusAthena = null; 
+			CapsuleHalfHeightAthena = null; 
+			WalkSpeed = null; 
+			RunSpeed = null; 
+			SprintSpeed = null; 
+			CrouchedRunSpeed = null; 
+			CrouchedSprintSpeed = null; 
+			AnimMontage = null; 
+			PlayRate = null; 
+			BlendTime = null; 
+			ForcePlayBit = null; 
+			IsStopped = null; 
+			SkipPositionCorrection = null; 			
+			RepAnimMontageStartSection = null; 			
+			SimulatedProxyGameplayCues = null; 			
+			ItemWraps = null; 
+			WeaponActivated = null; 
+			bIsInWaterVolume = null; 
+			BannerIconId = null; 
+			BannerColorId = null; 
+			SkyDiveContrail = null; 
+			Glider = null; 
+			Pickaxe = null; 
+			bIsDefaultCharacter = null; 
+			Character = null; 
+			CharacterVariantChannels = null; 
+			DBNOHoister = null; 
+			DBNOCarryEvent = EFortDBNOCarryEvent.EFortDBNOCarryEvent_MAX; 
+			Backpack = null; 
+			LoadingScreen = null; 
+			Dances = null; 
+			MusicPack = null; 
+			PetSkin = null; 
+			EncryptedPawnReplayData = null; 
+			GravityFloorAltitude = null; 
+			GravityFloorWidth = null; 
+			GravityFloorGravityScalar = null; 
+			ReplicatedWaterBody = null; 
+			DBNORevivalStacking = null; 
+			ServerWorldTimeRevivalTime = null; 
+			FlySpeed = null; 
+			FastReplicationMinimalReplicationTags = null; 
+			bIsCreativeGhostModeActivated = null; 
+			PlayRespawnFXOnSpawn = null; 
+			bReplicatedIsInVortex = null;
+			PitchAlpha = null;
+			StreamerCharacter = null;
+			ReplayRepAnimMontageInfo = null;
+			bIsSkydivingFromLaunchPad = null;
+			bInGliderRedeploy = null;
+		}
+
+        public object Clone()
+        {
+			return this.MemberwiseClone();
+        }
+
+        public override bool ManualRead(string property, object value)
 		{
 			switch (property)
 			{

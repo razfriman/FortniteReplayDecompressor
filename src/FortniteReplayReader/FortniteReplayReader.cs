@@ -78,15 +78,13 @@ namespace FortniteReplayReader
 
         protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
         {
-            return;
-
             Replay.GameInformation.HandleDeltaNetRead(deltaUpdate);
         }
 
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
             ++TotalPropertiesRead;
-            return;
+
 #if DEBUG
             if(Replay.GameInformation.Channels == null)
             {

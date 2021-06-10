@@ -376,6 +376,12 @@ namespace Unreal.Core
                 info.Type = type;
                 info.Attribute = attribute;
                 info.UsesHandles = typeof(IHandleNetFieldExportGroup).IsAssignableFrom(type);
+                info.SingleInstance = typeof(ISingleInstance).IsAssignableFrom(type);
+
+                if(info.SingleInstance)
+                {
+                    info.Instance = (ISingleInstance)Activator.CreateInstance(type);
+                }
 
                 _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
@@ -844,6 +850,14 @@ namespace Unreal.Core
 
             NetFieldGroupInfo exportGroup = _parserInfo.NetFieldGroups[groupId];
 
+            
+            if(exportGroup.SingleInstance)
+            {
+                exportGroup.Instance.ClearInstance();
+
+                return (INetFieldExportGroup)exportGroup.Instance;
+            }
+
             return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
         }
 
@@ -899,6 +913,8 @@ namespace Unreal.Core
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
             public bool UsesHandles { get; set; }
+            public bool SingleInstance { get; set; }
+            public ISingleInstance Instance { get; set; }
 
             public KeyList<string, NetFieldInfo> Properties { get; set; } = new KeyList<string, NetFieldInfo>();
             public Dictionary<uint, NetFieldInfo> HandleProperties { get; set; } = new Dictionary<uint, NetFieldInfo>();
