@@ -850,7 +850,6 @@ namespace Unreal.Core
 
             NetFieldGroupInfo exportGroup = _parserInfo.NetFieldGroups[groupId];
 
-            
             if(exportGroup.SingleInstance)
             {
                 exportGroup.Instance.ClearInstance();

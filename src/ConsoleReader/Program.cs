@@ -57,13 +57,13 @@ namespace ConsoleReader
         {
             return _reader.ReadReplay("Replays/newSeason.replay", ParseType.Full);
         }
-
+        
         [Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", ParseType.Full);
         }
-
+        
         [Benchmark]
         public FortniteReplay ReadOldReplay()
         {
