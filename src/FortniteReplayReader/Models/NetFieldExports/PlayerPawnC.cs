@@ -166,10 +166,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("SpawnImmunityTime", RepLayoutCmdType.PropertyFloat)]
 		public float? SpawnImmunityTime { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("JumpFlashCountPacked", RepLayoutCmdType.Property)]
+		[NetFieldExport("JumpFlashCountPacked", RepLayoutCmdType.Ignore)]
 		public DebuggingObject JumpFlashCountPacked { get; set; } //Type:  Bits: 8
 
-		[NetFieldExport("LandingFlashCountPacked", RepLayoutCmdType.Property)]
+		[NetFieldExport("LandingFlashCountPacked", RepLayoutCmdType.Ignore)]
 		public DebuggingObject LandingFlashCountPacked { get; set; } //Type:  Bits: 8
 
 		[NetFieldExport("bInterruptCurrentLine", RepLayoutCmdType.PropertyBool)]
@@ -319,7 +319,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("AuthoritativeValue", RepLayoutCmdType.PropertyUInt32)]
 		public uint? AuthoritativeValue { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("SocketOffset", RepLayoutCmdType.Property)]
+		[NetFieldExport("SocketOffset", RepLayoutCmdType.Ignore)]
 		public DebuggingObject SocketOffset { get; set; } //Type:  Bits: 96
 
 		[NetFieldExport("RemoteViewData32", RepLayoutCmdType.PropertyUInt32)]
@@ -451,13 +451,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ServerWorldTimeRevivalTime", RepLayoutCmdType.PropertyFloat)]
 		public float? ServerWorldTimeRevivalTime { get; set; } //Type:  Bits: 32
 
-		[NetFieldExport("ItemSpecialActorID", RepLayoutCmdType.Property)]
+		[NetFieldExport("ItemSpecialActorID", RepLayoutCmdType.Ignore)]
 		public DebuggingObject ItemSpecialActorID { get; set; } //Type:  Bits: 225
 
 		[NetFieldExport("FlySpeed", RepLayoutCmdType.PropertyFloat)]
 		public float? FlySpeed { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("NextSectionID", RepLayoutCmdType.Property)]
+		[NetFieldExport("NextSectionID", RepLayoutCmdType.Ignore)]
 		public DebuggingObject NextSectionID { get; set; } //Type:  Bits: 8
 
 		[NetFieldExport("FastReplicationMinimalReplicationTags", RepLayoutCmdType.Property)]
@@ -472,7 +472,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AuthoritativeRootMotion", RepLayoutCmdType.Ignore)]
         public FRootMotionSourceGroup AuthoritativeRootMotion { get; set; }
 
-        [NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Property)]
+        [NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Ignore)]
         public DebuggingObject AnimRootMotionTranslationScale { get; set; }
 
         [NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
@@ -496,7 +496,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
 		public bool? bInGliderRedeploy { get; set; }
 
-		[NetFieldExport("ExitSocketIndex", RepLayoutCmdType.Property)]
+		[NetFieldExport("ExitSocketIndex", RepLayoutCmdType.Ignore)]
 		public DebuggingObject ExitSocketIndex { get; set; }
 
 		public override bool ManualRead(string property, object value)

@@ -22,16 +22,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool? bDestroyed { get; set; }
 
-        [NetFieldExport("BuildTime", RepLayoutCmdType.Property)]
+        [NetFieldExport("BuildTime", RepLayoutCmdType.Ignore)]
         public DebuggingObject BuildTime { get; set; }
 
-        [NetFieldExport("RepairTime", RepLayoutCmdType.Property)]
+        [NetFieldExport("RepairTime", RepLayoutCmdType.Ignore)]
         public DebuggingObject RepairTime { get; set; }
 
-        [NetFieldExport("Health", RepLayoutCmdType.Property)]
+        [NetFieldExport("Health", RepLayoutCmdType.Ignore)]
         public DebuggingObject Health { get; set; }
 
-        [NetFieldExport("MaxHealth", RepLayoutCmdType.Property)]
+        [NetFieldExport("MaxHealth", RepLayoutCmdType.Ignore)]
         public DebuggingObject MaxHealth { get; set; }
     }
 }

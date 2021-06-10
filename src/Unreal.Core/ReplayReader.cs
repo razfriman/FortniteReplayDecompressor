@@ -1514,11 +1514,6 @@ namespace Unreal.Core
                 // if ENABLE_PROPERTY_CHECKSUMS
                 //var doChecksum = archive.ReadBit();
 
-                if(netFieldExportGroup.CleanedPath == "Athena_BeachBall_C")
-                {
-
-                }
-
                 if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex, out INetFieldExportGroup export))
                 {
                     //Either failed to read properties or ignoring the channel
@@ -1543,10 +1538,18 @@ namespace Unreal.Core
                 return false;
             }
 
-            while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport fieldCache, out NetBitReader reader))
+            while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport fieldCache, out uint? payload))
             {
-                using (reader)
+                try
                 {
+                    NetBitReader reader = null;
+
+                    if (payload.HasValue)
+                    {
+                        archive.SetTempEnd((int)payload, 5);
+                        reader = archive;
+                    }
+
                     if (fieldCache == null)
                     {
                         _logger?.LogInformation($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
@@ -1624,6 +1627,13 @@ namespace Unreal.Core
                     else
                     {
                         return true;
+                    }
+                }
+                finally
+                {
+                    if(payload.HasValue)
+                    {
+                        archive.RestoreTemp(5);
                     }
                 }
             }
@@ -1973,11 +1983,12 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        protected virtual bool ReadFieldHeaderAndPayload(NetBitReader bunch, NetFieldExportGroup group, out NetFieldExport outField, out NetBitReader reader)
+        protected virtual bool ReadFieldHeaderAndPayload(NetBitReader bunch, NetFieldExportGroup group, out NetFieldExport outField, out uint? payload)
         {
+            payload = null;
+
             if (bunch.AtEnd())
             {
-                reader = null;
                 outField = null;
                 return false; //We're done
             }
@@ -1987,7 +1998,6 @@ namespace Unreal.Core
 
             if (bunch.IsError)
             {
-                reader = null;
                 outField = null;
                 _logger?.LogError("ReadFieldHeaderAndPayload: Error reading NetFieldExportHandle.");
                 return false;
@@ -1995,7 +2005,6 @@ namespace Unreal.Core
 
             if (netFieldExportHandle >= group.NetFieldExportsLength)
             {
-                reader = null;
                 outField = null;
 
                 _logger?.LogError("ReadFieldHeaderAndPayload: netFieldExportHandle > NetFieldExportsLength.");
@@ -2008,13 +2017,12 @@ namespace Unreal.Core
             var numPayloadBits = bunch.ReadIntPacked();
             if (bunch.IsError)
             {
-                reader = null;
                 outField = null;
                 _logger?.LogError("ReadFieldHeaderAndPayload: Error reading numbits.");
                 return false;
             }
 
-            reader = bunch.GetNetBitReader((int)numPayloadBits);
+            payload = numPayloadBits;
 
             if (bunch.IsError)
             {

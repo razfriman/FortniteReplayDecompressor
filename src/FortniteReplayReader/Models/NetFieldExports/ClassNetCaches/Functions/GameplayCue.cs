@@ -49,7 +49,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
         [NetFieldExport("Def", RepLayoutCmdType.Property)]
         public NetworkGUID Def { get; set; }
 
-        [NetFieldExport("ModifiedAttributes", RepLayoutCmdType.DynamicArray)]
+        [NetFieldExport("ModifiedAttributes", RepLayoutCmdType.Ignore)]
         public DebuggingObject[] ModifiedAttributes { get; set; }
 
         [NetFieldExport("AttributeName", RepLayoutCmdType.PropertyName)]

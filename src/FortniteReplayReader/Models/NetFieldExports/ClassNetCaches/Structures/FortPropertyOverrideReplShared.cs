@@ -23,7 +23,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
         [NetFieldExport("PropertyScopedName", RepLayoutCmdType.PropertyString)]
         public string PropertyScopedName { get; set; }
 
-        [NetFieldExport("PropertyData", RepLayoutCmdType.Property)]
+        [NetFieldExport("PropertyData", RepLayoutCmdType.Ignore)]
         public DebuggingObject PropertyData { get; set; }
 
 		public override bool ManualRead(string property, object value)

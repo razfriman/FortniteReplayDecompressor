@@ -11,7 +11,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
     [NetFieldExportGroup("/Script/FortniteGame.ActiveGameplayModifier", ParseType.Debug)]
     public class ActiveGameplayModifier : INetFieldExportGroup
     {
-        [NetFieldExport("ModifierDef", RepLayoutCmdType.Property)]
+        [NetFieldExport("ModifierDef", RepLayoutCmdType.Ignore)]
         public DebuggingObject ModifierDef { get; set; }
 
 		public override bool ManualRead(string property, object value)

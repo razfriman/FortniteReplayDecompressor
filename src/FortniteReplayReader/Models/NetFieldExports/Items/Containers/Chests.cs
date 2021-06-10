@@ -15,13 +15,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Containers
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Containers/Creative_Tiered_Chest.Creative_Tiered_Chest_C", ParseType.Full)]
     public class CreativeChest : Chest
     {
-        [NetFieldExport("SpawnItems", RepLayoutCmdType.Property)]
+        [NetFieldExport("SpawnItems", RepLayoutCmdType.Ignore)]
         public DebuggingObject SpawnItems { get; set; }
 
-        [NetFieldExport("PrimaryAssetName", RepLayoutCmdType.Property)]
+        [NetFieldExport("PrimaryAssetName", RepLayoutCmdType.Ignore)]
         public DebuggingObject PrimaryAssetName { get; set; }
 
-        [NetFieldExport("Quantity", RepLayoutCmdType.Property)]
+        [NetFieldExport("Quantity", RepLayoutCmdType.Ignore)]
         public DebuggingObject Quantity { get; set; }
 
 		public override bool ManualRead(string property, object value)

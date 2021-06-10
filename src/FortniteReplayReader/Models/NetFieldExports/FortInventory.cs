@@ -82,16 +82,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Handle", RepLayoutCmdType.PropertyInt)]
         public int? Handle { get; set; } 
 
-        [NetFieldExport("AlterationInstances", RepLayoutCmdType.DynamicArray)]
+        [NetFieldExport("AlterationInstances", RepLayoutCmdType.Ignore)]
         public DebuggingObject[] AlterationInstances { get; set; } 
 
-        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray)]
+        [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.Ignore)]
         public DebuggingObject[] GenericAttributeValues { get; set; } 
 
         [NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject)]
 		public uint? ReplayPawn { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("WrapOverride", RepLayoutCmdType.Property)]
+        [NetFieldExport("WrapOverride", RepLayoutCmdType.Ignore)]
         public DebuggingObject WrapOverride { get; set; } //Type:  Bits: 16
 
 		public override bool ManualRead(string property, object value)

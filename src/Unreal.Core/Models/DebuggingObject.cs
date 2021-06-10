@@ -54,11 +54,12 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
+            /*
             _reader = reader.GetNetBitReader(reader.GetBitsLeft());
             _reader.EngineNetworkVersion = reader.EngineNetworkVersion;
             _reader.Dispose();
 
-            TotalBits = _reader.GetBitsLeft();
+            TotalBits = _reader.GetBitsLeft();*/
         }
 
         private byte[] AsByteArray()

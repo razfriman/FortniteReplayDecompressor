@@ -229,7 +229,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayerNameCustomOverride", RepLayoutCmdType.Property)]
         public FText PlayerNameCustomOverride { get; set; } 
         
-        [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Property)]
+        [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Ignore)]
         public DebuggingObject SimulatedAttributes { get; set; }
 
 		[NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]

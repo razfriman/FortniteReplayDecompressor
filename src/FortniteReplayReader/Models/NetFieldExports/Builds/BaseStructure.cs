@@ -80,7 +80,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
         [NetFieldExport("Gnomed", RepLayoutCmdType.PropertyBool)]
         public bool? Gnomed { get; set; }
 
-        [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Property)]
+        [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Ignore)]
         public DebuggingObject InitialOverlappingVehicles { get; set; }
 
         [NetFieldExport("ReplicatedDrawScale3D", RepLayoutCmdType.PropertyVector100)]

@@ -16,7 +16,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Minigun_Athena.B_Minigun_Athena_C", ParseType.Normal)]
     public class Minigun : MachineGun
     {
-        [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Property)]
+        [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Ignore)]
         public DebuggingObject ChargeStatusPack { get; set; }
 
         [NetFieldExport("CurrentSpinAudioComponent", RepLayoutCmdType.Property)]

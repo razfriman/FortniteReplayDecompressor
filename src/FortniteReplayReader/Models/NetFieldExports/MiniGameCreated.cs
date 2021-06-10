@@ -77,10 +77,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("TeamSize", RepLayoutCmdType.PropertyByte)]
 		public byte? TeamSize { get; set; }
 
-		[NetFieldExport("TrackedStats", RepLayoutCmdType.Property)]
+		[NetFieldExport("TrackedStats", RepLayoutCmdType.Ignore)]
 		public DebuggingObject TrackedStats { get; set; }
 
-		[NetFieldExport("ScoreboardStats", RepLayoutCmdType.Property)]
+		[NetFieldExport("ScoreboardStats", RepLayoutCmdType.Ignore)]
 		public DebuggingObject ScoreboardStats { get; set; }
 
 		[NetFieldExport("Stats", RepLayoutCmdType.DynamicArray)]
@@ -122,7 +122,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("ResetTime", RepLayoutCmdType.PropertyFloat)]
 		public float? ResetTime { get; set; }
 
-		[NetFieldExport("Volume", RepLayoutCmdType.Property)]
+		[NetFieldExport("Volume", RepLayoutCmdType.Ignore)]
 		public DebuggingObject Volume { get; set; }
 
 		[NetFieldExport("bTeamsAreStable", RepLayoutCmdType.PropertyBool)]
@@ -155,7 +155,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bVolumeNavigationHasBuilt", RepLayoutCmdType.PropertyBool)]
 		public bool? bVolumeNavigationHasBuilt { get; set; }
 
-		[NetFieldExport("RoundWinHistory", RepLayoutCmdType.Property)]
+		[NetFieldExport("RoundWinHistory", RepLayoutCmdType.Ignore)]
 		public DebuggingObject RoundWinHistory { get; set; }
 
 		[NetFieldExport("PlayerBuckets", RepLayoutCmdType.DynamicArray)]

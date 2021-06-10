@@ -87,7 +87,7 @@ namespace Unreal.Core
             /*
             ++Count;
 
-            if(Count % 100000 == 0)
+            if(Count % 100 == 0)
             {
                 Console.WriteLine(Count);
             }

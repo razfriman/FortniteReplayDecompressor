@@ -31,7 +31,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         [NetFieldExport("bIsChargingWeapon", RepLayoutCmdType.PropertyBool)]
         public bool? bIsChargingWeapon { get; set; }
 
-        [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Property)]
+        [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Ignore)]
         public DebuggingObject ChargeStatusPack { get; set; }
 
 		public override bool ManualRead(string property, object value)
