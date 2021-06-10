@@ -13,25 +13,22 @@ namespace OozSharp
 {
     public unsafe class Kracken
     {
-        public byte[] Decompress(byte[] compressedInput, int uncompressedSize)
+        public void Decompress(byte* compressedInputPtr, int compressedLength, byte* decompressedBuffer, int uncompressedSize)
         {
             using KrakenDecoder decoder = new KrakenDecoder();
 
-            byte[] decompressedBuffer = new byte[uncompressedSize];
             int remainingBytes = uncompressedSize;
-            int sourceLength = compressedInput.Length;
+            int sourceLength = compressedLength;
             int destinationOffset = 0;
 
-            fixed (byte* decompressedBufferPtr = decompressedBuffer)
-            fixed (byte* compressedInputPtr = compressedInput)
             fixed (byte* scratchPtr = decoder.Scratch)
             {
                 byte* sourceStart = compressedInputPtr;
-                byte* decompressBufferStart = decompressedBufferPtr;
+                byte* decompressBufferStart = decompressedBuffer;
 
                 while (remainingBytes != 0)
                 {
-                    if (!DecodeStep(decoder, decompressedBufferPtr, destinationOffset, remainingBytes, sourceStart, sourceLength, scratchPtr))
+                    if (!DecodeStep(decoder, decompressedBuffer, destinationOffset, remainingBytes, sourceStart, sourceLength, scratchPtr))
                     {
                         throw new DecoderException($"Failed DecodeStep method");
                     }
@@ -43,8 +40,6 @@ namespace OozSharp
                     remainingBytes -= decoder.DestinationUsed;
                 }
             }
-
-            return decompressedBuffer;
         }
 
         private bool DecodeStep(KrakenDecoder decoder, byte* destination, int destinationOffset, int remainingDestinationBytes, byte* source, int sourceBytesleft, byte* scratch)

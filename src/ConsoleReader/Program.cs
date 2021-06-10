@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using FortniteReplayReader;
 using FortniteReplayReader.Extensions;
@@ -8,6 +10,7 @@ using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,6 +26,7 @@ using Unreal.Encryption;
 
 namespace ConsoleReader
 {
+    
     [MemoryDiagnoser]
     [SimpleJob]
     public class Benchmark
@@ -45,8 +49,9 @@ namespace ConsoleReader
             {
 
             }
-        }*/
-
+        }
+        */
+        
         [Benchmark]
         public FortniteReplay ReadLongReplay()
         {
@@ -80,7 +85,7 @@ namespace ConsoleReader
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
-
+            
             Benchmark a = new Benchmark();
             
 
@@ -89,7 +94,7 @@ namespace ConsoleReader
 
             Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
             Console.WriteLine($"Pins: {FBitArray.Pins}");
-
+            
             return;
 #endif
             var serviceCollection = new ServiceCollection()
@@ -112,7 +117,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/replay_Bow.replay"; //Used for testing
+            var replayFile = "Replays/newSeason.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -164,7 +169,7 @@ namespace ConsoleReader
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
 
-                    Console.WriteLine($"Pins: {FBitArray.Pins}");
+                    Console.WriteLine($"Pins: {FBitArray.Count}");
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 
@@ -185,5 +190,54 @@ namespace ConsoleReader
             //Console.WriteLine($"Total Errors: {reader?.TotalErrors}");
             Console.ReadLine();
         }
+    }
+}
+
+[MemoryDiagnoser]
+[Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
+public class Pooling
+{
+    [Params((int)1E+2, // 100 bytes
+        (int)1E+3, // 1 000 bytes = 1 KB
+        (int)1E+4, // 10 000 bytes = 10 KB
+        (int)1E+5) // 100 000 bytes = 100 KB
+        ]
+    public int SizeInBytes { get; set; }
+
+    private ArrayPool<byte> sizeAwarePool;
+
+    [GlobalSetup]
+    public void GlobalSetup()
+        => sizeAwarePool = ArrayPool<byte>.Create(SizeInBytes + 1, 10); // let's create the pool that knows the real max size
+
+    [Benchmark]
+    public void Allocate()
+    {
+        Memory<byte> memory = new Memory<byte>(new byte[SizeInBytes]);
+
+        using (memory.Pin())
+        {
+
+        }
+    }
+
+    [Benchmark]
+    public void RentAndReturn_Memory()
+    {
+        var pool = MemoryPool<byte>.Shared;
+        using var array = pool.Rent(SizeInBytes);
+        using var pin = array.Memory.Pin();
+    }
+}
+
+public class DontForceGcCollectionsConfig : ManualConfig
+{
+    public DontForceGcCollectionsConfig()
+    {
+        Add(Job.Default
+            .With(new GcMode()
+            {
+                Force = false // tell BenchmarkDotNet not to force GC collections after every iteration
+            }));
     }
 }

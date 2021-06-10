@@ -371,7 +371,7 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override BinaryReader Decrypt(FArchive archive, int size)
+        protected override BinaryReader Decrypt(BinaryReader archive, int size)
         {
             throw new NotImplementedException();
         }

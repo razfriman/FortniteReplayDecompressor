@@ -253,7 +253,7 @@ namespace FortniteReplayReader
 
             _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
 
-            using var decryptedReader = Decrypt(archive, info.SizeInBytes);
+            using var decryptedReader = Decrypt((Unreal.Core.BinaryReader)archive, info.SizeInBytes);
 
             // Every event seems to start with some unknown int
             if (info.Group == ReplayEventTypes.PLAYER_ELIMINATION)
@@ -457,7 +457,7 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override Unreal.Core.BinaryReader Decrypt(FArchive archive, int size)
+        protected override Unreal.Core.BinaryReader Decrypt(Unreal.Core.BinaryReader archive, int size)
         {
             if(!this.Replay.Info.Encrypted)
             {
@@ -472,9 +472,34 @@ namespace FortniteReplayReader
                 return decryptedReader;
             }
 
-            var encryptedBytes = archive.ReadBytes(size);
             var key = this.Replay.Info.EncryptionKey;
 
+            using (AesCryptoServiceProvider aesAlg = new AesCryptoServiceProvider())
+            {
+                aesAlg.KeySize = key.Length * 8;
+                aesAlg.Key = key;
+                aesAlg.Mode = CipherMode.ECB;
+                aesAlg.Padding = PaddingMode.PKCS7;
+
+
+                using ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, null);
+                using var msDecrypt = archive.GetMemoryBuffer(size);
+                using CryptoStream csDecrypt = new CryptoStream(msDecrypt.Stream, decryptor, CryptoStreamMode.Read);
+
+                var decrypted = new Unreal.Core.BinaryReader(size)
+                {
+                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                    NetworkVersion = Replay.Header.NetworkVersion,
+                    ReplayHeaderFlags = Replay.Header.Flags,
+                    ReplayVersion = Replay.Info.FileVersion
+                };
+
+                csDecrypt.CopyTo(decrypted.BaseStream);
+                decrypted.BaseStream.Seek(0, SeekOrigin.Begin);
+                return decrypted;
+            }
+
+            /*
             using RijndaelManaged rDel = new RijndaelManaged
             {
                 KeySize = (key.Length * 8),
@@ -494,7 +519,7 @@ namespace FortniteReplayReader
                 ReplayVersion = Replay.Info.FileVersion
             };
 
-            return decrypted;
+            return decrypted;*/
         }
 
         public void SetParseType(ParsingGroup group, ParseType type)

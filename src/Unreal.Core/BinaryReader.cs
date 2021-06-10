@@ -1,18 +1,26 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Text;
+using System.Threading;
+using Unreal.Core.Models;
 
 namespace Unreal.Core
 {
     /// <summary>
     /// Custom Binary Reader with methods for Unreal Engine replay files
     /// </summary>
-    public class BinaryReader : FArchive
+    public unsafe class BinaryReader : FArchive
     {
         private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
         public override int Position { get => (int)BaseStream.Position; protected set => Seek(value); }
+        public byte* BasePointer => (byte*)_pin.Pointer;
 
+        private IMemoryOwner<byte> _owner;
+        private MemoryHandle _pin;
+
+        public static int TotalPins = 0;
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
         /// </summary>
@@ -21,6 +29,12 @@ namespace Unreal.Core
         public BinaryReader(Stream input)
         {
             Reader = new System.IO.BinaryReader(input);
+        }
+
+        public BinaryReader(int size)
+        {
+            CreateMemory(size);
+            Reader = new System.IO.BinaryReader(new UnmanagedMemoryStream((byte*)_pin.Pointer, size, size, FileAccess.ReadWrite));
         }
 
         public override bool AtEnd()
@@ -43,8 +57,37 @@ namespace Unreal.Core
         {
             if (disposing)
             {
+                _owner?.Dispose();
+                _pin.Dispose();
                 Reader.Dispose();
+
+                if(_owner != null)
+                {
+                    //Interlocked.Decrement(ref TotalPins);
+                }
             }
+        }
+
+        public unsafe MemoryBuffer GetMemoryBuffer(int count)
+        {
+            MemoryBuffer stream = new MemoryBuffer(count);
+
+            Reader.Read(stream.Memory.Span.Slice(0, count));
+
+            return stream;
+        }
+
+        private void CreateMemory(int count)
+        {
+            if(_owner != null)
+            {
+                throw new InvalidOperationException("Memory object already created");
+            }
+
+            _owner = MemoryPool<byte>.Shared.Rent(count);
+            _pin = _owner.Memory.Pin();
+
+            //Interlocked.Increment(ref TotalPins);
         }
 
         /// <summary>
@@ -415,5 +458,6 @@ namespace Unreal.Core
         {
             Reader.BaseStream.Seek(byteCount, SeekOrigin.Current);
         }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +19,7 @@ using Unreal.Encryption;
 
 namespace Unreal.Core
 {
-    public abstract class ReplayReader<T> where T : Replay, new ()
+    public unsafe abstract class ReplayReader<T> where T : Replay, new ()
     {
         private const int DefaultMaxChannelSize = 32767;
 
@@ -228,7 +229,7 @@ namespace Unreal.Core
                 return;
             }
 
-            using var decrypted = Decrypt(archive, info.SizeInBytes);
+            using var decrypted = Decrypt((BinaryReader)archive, info.SizeInBytes);
             using var binaryArchive = Decompress(decrypted, (int)decrypted.BaseStream.Length);
 
             // SerializeDeletedStartupActors
@@ -410,7 +411,7 @@ namespace Unreal.Core
                 memorySizeInBytes = archive.ReadInt32();
             }
 
-            using var decryptedReader = Decrypt(archive, (int)info.Length);
+            using var decryptedReader = Decrypt((Unreal.Core.BinaryReader)archive, (int)info.Length);
             using var binaryArchive = Decompress(decryptedReader, memorySizeInBytes);
 
 
@@ -2342,7 +2343,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private Core.BinaryReader Decompress(FArchive archive, int size)
+        private Core.BinaryReader Decompress(BinaryReader archive, int size)
         {
             if (!Replay.Info.IsCompressed)
             {
@@ -2357,20 +2358,19 @@ namespace Unreal.Core
                 return uncompressed;
             }
 
-            //File.WriteAllBytes("test.dat", archive.ReadBytes(size));
-
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
-            var compressedBuffer = archive.ReadBytes(compressedSize);
+            using var compressedMemoryBuffer = archive.GetMemoryBuffer(compressedSize);
 
-            var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
-            var decompressed = new BinaryReader(new MemoryStream(output))
+            var decompressed = new BinaryReader(decompressedSize)
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                 NetworkVersion = Replay.Header.NetworkVersion,
                 ReplayHeaderFlags = Replay.Header.Flags,
                 ReplayVersion = Replay.Info.FileVersion
             };
+
+            Oodle.DecompressReplayData(compressedMemoryBuffer.PositionPointer, compressedSize, decompressed.BasePointer, decompressedSize);
 
             //_logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return decompressed;
@@ -2431,6 +2431,6 @@ namespace Unreal.Core
         protected abstract bool ContinueParsingChannel(INetFieldExportGroup exportGroup);
         protected abstract void OnChannelActorRead(uint channel, Actor actor);
         protected abstract void OnChannelClosed(uint channel); //Allows reuse of channel
-        protected abstract BinaryReader Decrypt(FArchive archive, int size);
+        protected abstract BinaryReader Decrypt(BinaryReader archive, int size);
     }
 }

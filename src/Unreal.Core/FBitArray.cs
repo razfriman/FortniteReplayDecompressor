@@ -42,6 +42,18 @@ namespace Unreal.Core
             ByteArrayUsed = bytes;
             int totalBits = bytes.Length * 8;
 
+            //Slightly faster, but more allocations
+            /*if (totalBits <= 256)
+            {
+                ReadOnlyMemory<bool> memory = new Memory<bool>(new bool[totalBits]);
+                Items = memory;
+            }
+            else
+            {
+                _owner = MemoryPool<bool>.Shared.Rent(totalBits);
+                Items = _owner.Memory;
+            }*/
+
             _owner = MemoryPool<bool>.Shared.Rent(totalBits);
             Items = _owner.Memory;
             Length = totalBits;
@@ -123,14 +135,12 @@ namespace Unreal.Core
 
         private void Unpin()
         {
-            if (_owner != null)
-            {
-                _owner.Dispose();
-                _owner = null;
-                _pin.Dispose();
-                _pin = new MemoryHandle();
-                _pointer = null;
-            }
+            _owner?.Dispose();
+            _owner = null;
+
+            _pin.Dispose();
+            _pin = new MemoryHandle();
+            _pointer = null;
         }
     }
 }
