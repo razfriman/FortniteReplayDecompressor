@@ -29,10 +29,23 @@ namespace ConsoleReader
     {
         public ReplayReader _reader = new ReplayReader(null, null);
 
+        private byte[] test = new byte[100000];
+
         public Benchmark()
         {
-
+            Random rand = new Random();
+            rand.NextBytes(test);
         }
+
+        /*
+        [Benchmark]
+        public void BitArrayTest()
+        {
+            using(FBitArray arr = new FBitArray(test))
+            {
+
+            }
+        }*/
 
         [Benchmark]
         public FortniteReplay ReadLongReplay()
@@ -63,7 +76,7 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-#if !DEBUG
+#if DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -99,7 +112,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/newSeason.replay"; //Used for testing
+            var replayFile = "Replays/replay_Bow.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing

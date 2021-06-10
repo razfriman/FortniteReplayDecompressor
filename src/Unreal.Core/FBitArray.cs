@@ -53,15 +53,16 @@ namespace Unreal.Core
                 for (int i = 0; i < bytes.Length; i++)
                 {
                     int offset = i * 8;
+                    byte deref = *(bytePtr + i);
 
-                    *(_pointer + offset) = ((*(bytePtr + i)) & 0x01) == 0x01;
-                    *(_pointer + offset + 1) = ((*(bytePtr + i) >> 1) & 0x01) == 0x01;
-                    *(_pointer + offset + 2) = ((*(bytePtr + i) >> 2) & 0x01) == 0x01;
-                    *(_pointer + offset + 3) = ((*(bytePtr + i) >> 3) & 0x01) == 0x01;
-                    *(_pointer + offset + 4) = ((*(bytePtr + i) >> 4) & 0x01) == 0x01;
-                    *(_pointer + offset + 5) = ((*(bytePtr + i) >> 5) & 0x01) == 0x01;
-                    *(_pointer + offset + 6) = ((*(bytePtr + i) >> 6) & 0x01) == 0x01;
-                    *(_pointer + offset + 7) = ((*(bytePtr + i) >> 7) & 0x01) == 0x01;
+                    *(_pointer + offset) = (deref & 0x01) == 0x01;
+                    *(_pointer + offset + 1) = (deref & 0x02) == 0x02;
+                    *(_pointer + offset + 2) = (deref & 0x04) == 0x04;
+                    *(_pointer + offset + 3) = (deref & 0x08) == 0x08;
+                    *(_pointer + offset + 4) = (deref & 0x10) == 0x10;
+                    *(_pointer + offset + 5) = (deref & 0x20) == 0x20;
+                    *(_pointer + offset + 6) = (deref & 0x40) == 0x40;
+                    *(_pointer + offset + 7) = (deref & 0x80) == 0x80;
                 }
             }
 
