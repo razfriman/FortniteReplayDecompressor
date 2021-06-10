@@ -235,6 +235,36 @@ namespace Unreal.Core
             return (T)Enum.ToObject(typeof(T), ReadByte());
         }
 
+        public void ReadBytes(Span<byte> data)
+        {
+            int count = data.Length * 8;
+
+            if(!CanRead(count))
+            {
+                IsError = true;
+                return;
+            }
+
+            for (int i = 0; i < count; i += 8)
+            {
+                byte b = new byte();
+
+                for (int x = 0; x < 8; x++)
+                {
+                    bool bit = Bits[i + _position + x];
+
+                    if (bit)
+                    {
+                        b |= (byte)(1 << x);
+                    }
+                }
+
+                data[i / 8] = b;
+            }
+
+            _position += count;
+        }
+
         public override byte[] ReadBytes(int byteCount)
         {
             if (byteCount < 0)
@@ -327,7 +357,10 @@ namespace Unreal.Core
                     return "";
                 }
 
-                value = Encoding.Unicode.GetString(ReadBytes(length));
+                Span<byte> bytes = stackalloc byte[length];
+                ReadBytes(bytes);
+
+                value = Encoding.Unicode.GetString(bytes);
             }
             else
             {
@@ -339,7 +372,10 @@ namespace Unreal.Core
                     return "";
                 }
 
-                value = Encoding.Default.GetString(ReadBytes(length));
+                Span<byte> bytes = stackalloc byte[length];
+                ReadBytes(bytes);
+
+                value = Encoding.Default.GetString(bytes);
             }
 
             return value.Trim(new[] { ' ', '\0' });
@@ -399,7 +435,10 @@ namespace Unreal.Core
 
         public override short ReadInt16()
         {
-            var value = ReadBytes(2);
+            Span<byte> value = stackalloc byte[2];
+
+            ReadBytes(value);
+
 #if NETSTANDARD2_0
             return IsError ? (short)0 : BitConverter.ToInt16(value, 0);
 #else
@@ -409,7 +448,9 @@ namespace Unreal.Core
 
         public override int ReadInt32()
         {
-            var value = ReadBytes(4);
+            Span<byte> value = stackalloc byte[4];
+
+            ReadBytes(value);
 
 #if NETSTANDARD2_0
             return IsError ? 0 : BitConverter.ToInt32(value, 0);
@@ -427,7 +468,9 @@ namespace Unreal.Core
 
         public override long ReadInt64()
         {
-            var value = ReadBytes(8);
+            Span<byte> value = stackalloc byte[8];
+
+            ReadBytes(value);
 
 #if NETSTANDARD2_0
             return IsError ? 0 : BitConverter.ToInt64(value, 0);
@@ -602,7 +645,9 @@ namespace Unreal.Core
 
         public override float ReadSingle()
         {
-            byte[] arr = ReadBytes(4);
+            Span<byte> value = stackalloc byte[4];
+
+            ReadBytes(value);
 
             if (IsError)
             {
@@ -612,7 +657,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return BitConverter.ToSingle(arr, 0);
 #else
-            return BitConverter.ToSingle(arr);
+            return BitConverter.ToSingle(value);
 #endif
         }
 
@@ -623,7 +668,9 @@ namespace Unreal.Core
 
         public override ushort ReadUInt16()
         {
-            byte[] arr = ReadBytes(2);
+            Span<byte> value = stackalloc byte[2];
+
+            ReadBytes(value);
 
             if (IsError)
             {
@@ -633,13 +680,15 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return BitConverter.ToUInt16(arr, 0);
 #else
-            return BitConverter.ToUInt16(arr);
+            return BitConverter.ToUInt16(value);
 #endif
         }
 
         public override uint ReadUInt32()
         {
-            byte[] arr = ReadBytes(4);
+            Span<byte> value = stackalloc byte[4];
+
+            ReadBytes(value);
 
             if (IsError)
             {
@@ -649,7 +698,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return BitConverter.ToUInt32(arr, 0);
 #else
-            return BitConverter.ToUInt32(arr);
+            return BitConverter.ToUInt32(value);
 #endif
         }
 
@@ -665,7 +714,9 @@ namespace Unreal.Core
 
         public override ulong ReadUInt64()
         {
-            byte[] arr = ReadBytes(8);
+            Span<byte> value = stackalloc byte[8];
+
+            ReadBytes(value);
 
             if (IsError)
             {
@@ -676,7 +727,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return BitConverter.ToUInt32(arr, 0);
 #else
-            return BitConverter.ToUInt64(arr);
+            return BitConverter.ToUInt64(value);
 #endif
         }
 
