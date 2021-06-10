@@ -20,7 +20,6 @@ namespace Unreal.Core
         private IMemoryOwner<byte> _owner;
         private MemoryHandle _pin;
 
-        public static int TotalPins = 0;
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
         /// </summary>

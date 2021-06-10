@@ -100,7 +100,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Information));
+                    .SetMinimumLevel(LogLevel.Error));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -147,7 +147,7 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(null, new FortniteReplaySettings
+            var reader = new ReplayReader(logger, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.None,
             });
@@ -163,13 +163,13 @@ namespace ConsoleReader
                     ++count;
 
                     sw.Restart();
+
                     var replay = reader.ReadReplay(replayFile, ParseType.Full);
 
                     sw.Stop();
 
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}");
-
-                    Console.WriteLine($"Pins: {FBitArray.Count}");
+                    Console.Write($"Pins: {FBitArray.Pins}");
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 
@@ -197,36 +197,22 @@ namespace ConsoleReader
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
 public class Pooling
 {
-    [Params((int)1E+2, // 100 bytes
-        (int)1E+3, // 1 000 bytes = 1 KB
-        (int)1E+4, // 10 000 bytes = 10 KB
-        (int)1E+5) // 100 000 bytes = 100 KB
+    [Params(//(int)1E+2, // 100 bytes
+            //(int)1E+3, // 1 000 bytes = 1 KB
+            //(int)1E+4, // 10 000 bytes = 10 KB
+        (int)1E+6) // 100 000 bytes = 100 KB
         ]
     public int SizeInBytes { get; set; }
 
-    private ArrayPool<byte> sizeAwarePool;
+    private FBitArray fBitArrray;
 
     [GlobalSetup]
-    public void GlobalSetup()
-        => sizeAwarePool = ArrayPool<byte>.Create(SizeInBytes + 1, 10); // let's create the pool that knows the real max size
+    public void GlobalSetup() => fBitArrray = new FBitArray(new byte[1000000]);
 
     [Benchmark]
     public void Allocate()
     {
-        Memory<byte> memory = new Memory<byte>(new byte[SizeInBytes]);
-
-        using (memory.Pin())
-        {
-
-        }
-    }
-
-    [Benchmark]
-    public void RentAndReturn_Memory()
-    {
-        var pool = MemoryPool<byte>.Shared;
-        using var array = pool.Rent(SizeInBytes);
-        using var pin = array.Memory.Pin();
+        //DeadCodeEliminationHelper.KeepAliveWithoutBoxing(test);
     }
 }
 

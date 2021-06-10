@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Unreal.Core.Extensions;
@@ -27,6 +28,9 @@ namespace Unreal.Core
         /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
         /// </summary>
         public int LastBit { get; private set; }
+
+        private int[] _tempLastBit = new int[10];
+        private int[] _tempPosition = new int[10];
 
         /// <summary>
         /// For pushing and popping FBitReaderMark positions.
@@ -239,7 +243,7 @@ namespace Unreal.Core
         {
             int count = data.Length * 8;
 
-            if(!CanRead(count))
+            if(!CanRead(data.Length * 8))
             {
                 IsError = true;
                 return;
@@ -817,6 +821,26 @@ namespace Unreal.Core
         public override void Dispose()
         {
             Bits.Dispose();
+        }
+
+        public void SetTempEnd(int totalBits, int index = 0)
+        {
+            _tempLastBit[index] = LastBit;
+            _tempPosition[index] = _position + totalBits;
+            LastBit = _position + totalBits;
+        }
+
+        public void RestoreTemp(int index = 0)
+        {
+            LastBit = _tempLastBit[index];
+            _position = _tempPosition[index];
+
+            /*
+            _tempLastBit = 0;
+            _tempPosition = 0;
+            */
+
+            IsError = false;
         }
     }
 }

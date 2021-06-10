@@ -811,18 +811,23 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    using NetBitReader cmdReader = netBitReader.GetNetBitReader((int)numBits);
-                    cmdReader.EngineNetworkVersion = netBitReader.EngineNetworkVersion;
-                    cmdReader.NetworkVersion = netBitReader.NetworkVersion;
+                    try
+                    {
+                        netBitReader.SetTempEnd((int)numBits, 4);
 
-                    //Uses the same type for the array
-                    if (groupInfo != null)
-                    {
-                        ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, cmdReader);
+                        //Uses the same type for the array
+                        if (groupInfo != null)
+                        {
+                            ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, netBitReader);
+                        }
+                        else //Probably primitive values
+                        {
+                            data = ReadDataType(replayout, netBitReader, elementType);
+                        }
                     }
-                    else //Probably primitive values
+                    finally
                     {
-                        data = ReadDataType(replayout, cmdReader, elementType);
+                        netBitReader.RestoreTemp(4);
                     }
                 }
 

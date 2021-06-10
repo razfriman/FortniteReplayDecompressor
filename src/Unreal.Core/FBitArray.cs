@@ -80,8 +80,19 @@ namespace Unreal.Core
 
         }
 
+        public static int Count;
+
         public FBitArray Slice(int start, int count)
         {
+            /*
+            ++Count;
+
+            if(Count % 100000 == 0)
+            {
+                Console.WriteLine(Count);
+            }
+            */
+
             FBitArray fBitArray = new FBitArray();
             fBitArray.Items = Items.Slice(start, count);
             fBitArray._pointer = _pointer + start;
@@ -131,12 +142,20 @@ namespace Unreal.Core
         {
             _pin = Items.Pin();
             _pointer = (bool*)_pin.Pointer;
+            //Interlocked.Increment(ref Pins);
         }
 
         private void Unpin()
         {
             _owner?.Dispose();
             _owner = null;
+
+            /*
+            if(_pin.Pointer != new MemoryHandle().Pointer)
+            {
+                Interlocked.Decrement(ref Pins);
+            }
+            */
 
             _pin.Dispose();
             _pin = new MemoryHandle();
