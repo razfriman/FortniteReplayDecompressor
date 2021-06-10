@@ -1036,9 +1036,9 @@ namespace FortniteReplayReader.Models
 
             float? GetValue(uint handle)
             {
-                if (health.UnknownHandles.Remove(handle, out DebuggingObject val))
+                if (health.UnknownHandles.Remove(handle, out object val))
                 {
-                    return val.FloatValue;
+                    return (float)val;
                 }
 
                 return null;

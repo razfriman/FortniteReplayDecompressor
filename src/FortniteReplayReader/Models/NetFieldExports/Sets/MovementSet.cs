@@ -12,6 +12,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
     [RedirectPath("MovementSet")]
     public class MovementSet : IHandleNetFieldExportGroup
     {
+        public override RepLayoutCmdType Type { get; protected set; } = RepLayoutCmdType.PropertyFloat;
+
         /*
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]
         public float? HealthBaseValue { get; set; }

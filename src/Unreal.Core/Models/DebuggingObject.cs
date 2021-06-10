@@ -54,6 +54,8 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
+            //Possibly change to returning a string containing all parsed values
+
             /*
             _reader = reader.GetNetBitReader(reader.GetBitsLeft());
             _reader.EngineNetworkVersion = reader.EngineNetworkVersion;

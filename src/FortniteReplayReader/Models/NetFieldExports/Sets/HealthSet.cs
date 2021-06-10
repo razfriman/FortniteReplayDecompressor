@@ -12,6 +12,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Sets
     [RedirectPath("HealthSet")]
     public class HealthSet : IHandleNetFieldExportGroup
     {
+        public override RepLayoutCmdType Type { get; protected set; } = RepLayoutCmdType.PropertyFloat;
+
         public float? HealthBaseValue => HealthFortSet?.BaseValue;
         public float? HealthCurrentValue => HealthFortSet?.CurrentValue;
         public float? HealthMaxValue => HealthFortSet?.Maximum;

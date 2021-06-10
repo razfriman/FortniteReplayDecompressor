@@ -591,7 +591,7 @@ namespace Unreal.Core
                 //Clean this up
                 if (obj is IHandleNetFieldExportGroup handleGroup)
                 {
-                    DebuggingObject data = (DebuggingObject)ReadDataType(RepLayoutCmdType.Property, netBitReader, typeof(DebuggingObject));
+                    object data = ReadDataType(handleGroup.Type, netBitReader);
                     handleGroup.UnknownHandles.Add(handle, data);
                 }
 

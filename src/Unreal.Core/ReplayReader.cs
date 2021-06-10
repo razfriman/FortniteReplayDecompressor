@@ -73,7 +73,7 @@ namespace Unreal.Core
         public int PropertyError { get; private set; }
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
-        private bool[] _tempBuffer = new bool[0x10000];
+        public int SuccessProperties { get; private set; }
 
         protected ReplayReader(ILogger logger)
         {
@@ -97,9 +97,10 @@ namespace Unreal.Core
             TotalFailedReplicatorReceives = 0;
             PropertyError = 0;
             TotalMappedGUIDs = 0;
-            FailedToRead = 0;
+            FailedToRead = 0; 
+            SuccessProperties = 0;
 
-            Replay = new T();
+             Replay = new T();
 
             ParseType = parseType;
             isReading = true;
@@ -140,10 +141,10 @@ namespace Unreal.Core
 
 #endif
 
-            InReliable = new int?[DefaultMaxChannelSize];
-            Channels = new UChannel[DefaultMaxChannelSize];
-            //ChannelActors = new bool?[DefaultMaxChannelSize];
-            IgnoringChannels = new uint?[DefaultMaxChannelSize];
+            Array.Clear(InReliable, 0, InReliable.Length);
+            Array.Clear(Channels, 0, Channels.Length);
+            Array.Clear(IgnoringChannels, 0, IgnoringChannels.Length);
+
             PathNameTable.Clear();
 
             replayDataIndex = 0;
@@ -1918,50 +1919,48 @@ namespace Unreal.Core
 
                 try
                 {
-                    try
+                    archive.SetTempEnd((int)numBits, 1);
+
+                    var cmdReader = archive;
+
+                    cmdReader.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
+                    cmdReader.NetworkVersion = Replay.Header.NetworkVersion;
+
+                    _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+
+                    if (cmdReader.IsError)
                     {
-                        archive.SetTempEnd((int)numBits, 1);
+                        ++PropertyError;
 
-                        var cmdReader = archive;
-
-                        cmdReader.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
-                        cmdReader.NetworkVersion = Replay.Header.NetworkVersion;
-
-                        _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
-
-                        if (cmdReader.IsError)
-                        {
-                            ++PropertyError;
-
-                            _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
 
 #if DEBUG
-                            cmdReader.Reset();
+                        cmdReader.Reset();
 
-                            _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+                        _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
 #endif
-                            continue;
-                        }
-
-                        if (!cmdReader.AtEnd())
-                        {
-                            ++FailedToRead;
-
-                            _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
-
-                            continue;
-                        }
+                        continue;
                     }
-                    finally
+
+                    if (!cmdReader.AtEnd())
                     {
-                        archive.RestoreTemp(1);
+                        ++FailedToRead;
+
+                        _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+
+                        continue;
                     }
+
+                    //++SuccessProperties;
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
                 }
-
+                finally
+                {
+                    archive.RestoreTemp(1);
+                }
             }
 
             //Delta structures are handled differently

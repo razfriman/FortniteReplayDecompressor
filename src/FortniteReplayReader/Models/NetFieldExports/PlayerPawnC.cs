@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    /*
+	/*
     [NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
     public class FortPlayerPawnFastSharedReplication : INetFieldExportGroup
     {
@@ -16,7 +16,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FRepMovement SharedRepMovement { get; set; }
     }*/
 
-    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Full)]
+	[NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Full)]
 	public class PlayerPawnC : INetFieldExportGroup
 	{
 		[NetFieldExport("Owner", RepLayoutCmdType.Property)]
@@ -73,7 +73,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("Controller", RepLayoutCmdType.Property)]
 		public ActorGUID Controller { get; set; } //Type: AController* Bits: 8
 
-		[NetFieldExport("MovementBase", RepLayoutCmdType.Property)]
+		[NetFieldExport("MovementBase", RepLayoutCmdType.Ignore)]
 		public UObjectGUID MovementBase { get; set; } //Type: UPrimitiveComponent* Bits: 16
 
 		[NetFieldExport("BoneName", RepLayoutCmdType.Property)]
@@ -259,7 +259,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("bStartedInteractSearch", RepLayoutCmdType.PropertyBool)]
 		public bool? bStartedInteractSearch { get; set; } //Type:  Bits: 1
 
-		[NetFieldExport("AccelerationPack", RepLayoutCmdType.PropertyUInt16)]
+		[NetFieldExport("AccelerationPack", RepLayoutCmdType.Ignore)]
 		public ushort? AccelerationPack { get; set; } //Type: uint16 Bits: 16
 
 		[NetFieldExport("AccelerationZPack", RepLayoutCmdType.PropertyByte)]
@@ -322,7 +322,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("SocketOffset", RepLayoutCmdType.Ignore)]
 		public DebuggingObject SocketOffset { get; set; } //Type:  Bits: 96
 
-		[NetFieldExport("RemoteViewData32", RepLayoutCmdType.PropertyUInt32)]
+		[NetFieldExport("RemoteViewData32", RepLayoutCmdType.Ignore)]
 		public uint? RemoteViewData32 { get; set; } //Type: uint32 Bits: 32
 
 		[NetFieldExport("bNetMovementPrioritized", RepLayoutCmdType.PropertyBool)]
@@ -469,25 +469,25 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("PlayRespawnFXOnSpawn", RepLayoutCmdType.PropertyBool)]
 		public bool? PlayRespawnFXOnSpawn { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("AuthoritativeRootMotion", RepLayoutCmdType.Ignore)]
-        public FRootMotionSourceGroup AuthoritativeRootMotion { get; set; }
+		[NetFieldExport("AuthoritativeRootMotion", RepLayoutCmdType.Ignore)]
+		public FRootMotionSourceGroup AuthoritativeRootMotion { get; set; }
 
-        [NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Ignore)]
-        public DebuggingObject AnimRootMotionTranslationScale { get; set; }
+		[NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Ignore)]
+		public DebuggingObject AnimRootMotionTranslationScale { get; set; }
 
-        [NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
-        public bool? bReplicatedIsInVortex { get; set; }
+		[NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
+		public bool? bReplicatedIsInVortex { get; set; }
 
-        [NetFieldExport("PitchAlpha", RepLayoutCmdType.PropertyFloat)]
-        public float? PitchAlpha { get; set; }
+		[NetFieldExport("PitchAlpha", RepLayoutCmdType.PropertyFloat)]
+		public float? PitchAlpha { get; set; }
 
-        [NetFieldExport("StreamerCharacter", RepLayoutCmdType.Property)]
-        public NetworkGUID StreamerCharacter { get; set; }
+		[NetFieldExport("StreamerCharacter", RepLayoutCmdType.Property)]
+		public NetworkGUID StreamerCharacter { get; set; }
 
 		[NetFieldExport("ReplayRepAnimMontageInfo", RepLayoutCmdType.Property)]
 		public FGameplayAbilityRepAnimMontage ReplayRepAnimMontageInfo { get; set; }
 
-		[NetFieldExport("RepAnimMontageInfo", RepLayoutCmdType.Property)]
+		[NetFieldExport("RepAnimMontageInfo", RepLayoutCmdType.Ignore)]
 		public FGameplayAbilityRepAnimMontage RepAnimMontageInfo { get; set; }
 
 		[NetFieldExport("bIsSkydivingFromLaunchPad", RepLayoutCmdType.PropertyBool)]
@@ -501,7 +501,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 		public override bool ManualRead(string property, object value)
 		{
-			switch(property)
+			switch (property)
 			{
 				case "Owner":
 					Owner = (NetworkGUID)value;
