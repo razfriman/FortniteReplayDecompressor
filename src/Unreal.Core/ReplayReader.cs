@@ -1438,15 +1438,16 @@ namespace Unreal.Core
             {
                 var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var payload);
 
+                NetBitReader reader = null;
+
                 if (payload > 0)
                 {
                     bunch.Archive.SetTempEnd((int)payload, 3);
+                    reader = bunch.Archive;
                 }
 
                 try
                 {
-                    var reader = bunch.Archive;
-
                     if (bObjectDeleted)
                     {
                         continue;
@@ -1923,9 +1924,6 @@ namespace Unreal.Core
 
                     var cmdReader = archive;
 
-                    cmdReader.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
-                    cmdReader.NetworkVersion = Replay.Header.NetworkVersion;
-
                     _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
 
                     if (cmdReader.IsError)
@@ -1934,11 +1932,6 @@ namespace Unreal.Core
 
                         _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
 
-#if DEBUG
-                        cmdReader.Reset();
-
-                        _netFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
-#endif
                         continue;
                     }
 

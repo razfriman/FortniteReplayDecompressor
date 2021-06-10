@@ -314,6 +314,7 @@ namespace Unreal.Core
                 nextByte >>= 1;                             // Shift to get actual 7 bit value
                 value += (uint)nextByte << (7 * count++);   // Add to total value
             }
+
             return value;
         }
 

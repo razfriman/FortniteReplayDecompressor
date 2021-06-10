@@ -100,7 +100,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Error));
+                    .SetMinimumLevel(LogLevel.Information));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -147,7 +147,7 @@ namespace ConsoleReader
 
             List<double> times = new List<double>();
 
-            var reader = new ReplayReader(logger, new FortniteReplaySettings
+            var reader = new ReplayReader(null, new FortniteReplaySettings
             {
                 PlayerLocationType = LocationTypes.None,
             });

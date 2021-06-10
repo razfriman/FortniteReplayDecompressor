@@ -490,50 +490,17 @@ namespace Unreal.Core
         /// <returns>uint</returns>
         public override uint ReadIntPacked()
         {
-            int BitsUsed = (int)_position % 8;
-            int BitsLeft = 8 - BitsUsed;
-            int SourceMask0 = (1 << BitsLeft) - 1;
-            int SourceMask1 = (1 << BitsUsed) - 1;
-
             uint value = 0;
+            byte count = 0;
+            var remaining = true;
 
-            int OldPos = _position;
-
-            int shift = 0;
-            for (var it = 0; it < 5; it++)
+            while (remaining)
             {
-                if (IsError)
-                {
-                    return 0;
-                }
-
-                int currentBytePos = (int)_position / 8;
-                int byteAlignedPositon = currentBytePos * 8;
-
-                _position = byteAlignedPositon;
-
-                byte currentByte = ReadByte();
-                byte nextByte = currentByte;
-
-                if (BitsUsed != 0)
-                {
-                    nextByte = (_position + 8 <= LastBit) ? PeekByte() : new byte();
-                }
-
-                OldPos += 8;
-
-                int readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
-
-                value = (uint)((readByte >> 1) << shift) | value;
-
-                if ((readByte & 1) == 0)
-                {
-                    break;
-                }
-                shift += 7;
+                var nextByte = ReadByte();
+                remaining = (nextByte & 1) == 1;            // Check 1 bit to see if theres more after this
+                nextByte >>= 1;                             // Shift to get actual 7 bit value
+                value += (uint)nextByte << (7 * count++);   // Add to total value
             }
-
-            _position = OldPos;
 
             return value;
         }
