@@ -15,7 +15,7 @@ namespace OozSharp
     {
         public byte[] Decompress(byte[] compressedInput, int uncompressedSize)
         {
-            KrakenDecoder decoder = new KrakenDecoder();
+            using KrakenDecoder decoder = new KrakenDecoder();
 
             byte[] decompressedBuffer = new byte[uncompressedSize];
             int remainingBytes = uncompressedSize;

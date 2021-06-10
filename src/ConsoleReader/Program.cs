@@ -76,7 +76,7 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-#if DEBUG
+#if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);

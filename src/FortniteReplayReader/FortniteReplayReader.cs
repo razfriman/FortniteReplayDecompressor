@@ -85,10 +85,8 @@ namespace FortniteReplayReader
 
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
-            return;
-
             ++TotalPropertiesRead;
-
+            return;
 #if DEBUG
             if(Replay.GameInformation.Channels == null)
             {
