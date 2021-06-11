@@ -731,7 +731,9 @@ namespace Unreal.Core
             uint arrayIndexes = netBitReader.ReadIntPacked();
             
             if(arrayIndexes == 0)
-            { 
+            {
+                netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
+
                 return null;
             }
 

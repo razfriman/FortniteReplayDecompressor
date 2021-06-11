@@ -91,14 +91,14 @@ namespace ConsoleReader
         static void Main(string[] args)
         {
 #if !DEBUG
-            var summary = BenchmarkRunner.Run<Pooling>();
+            var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
             
             Benchmark a = new Benchmark();
             
 
-            var b = a.ReadShortReplay();
+            var b = a.ReadLongReplay();
             ReplayReader reader2 = a._reader;
 
             Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
@@ -177,11 +177,13 @@ namespace ConsoleReader
 
                     sw.Stop();
                      
-                    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Success Properties: {reader?.SuccessProperties}");
+                    Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
                     //Console.Write($"Pins: {MemoryBuffer.Pins}");
 
+#if  DEBUG
                     var asdfa = String.Join("\n", ReplayReader._failedTypes.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
 
+#endif
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 

@@ -484,7 +484,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("StreamerCharacter", RepLayoutCmdType.Property)]
 		public NetworkGUID StreamerCharacter { get; set; }
 
-		[NetFieldExport("ReplayRepAnimMontageInfo", RepLayoutCmdType.Property)]
+		[NetFieldExport("ReplayRepAnimMontageInfo", RepLayoutCmdType.Ignore)]
 		public FGameplayAbilityRepAnimMontage ReplayRepAnimMontageInfo { get; set; }
 
 		[NetFieldExport("RepAnimMontageInfo", RepLayoutCmdType.Ignore)]

@@ -74,6 +74,7 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
         public int SuccessProperties { get; private set; }
+        public int MissingProperty { get; private set; }
 
         protected ReplayReader(ILogger logger)
         {
@@ -99,6 +100,7 @@ namespace Unreal.Core
             TotalMappedGUIDs = 0;
             FailedToRead = 0; 
             SuccessProperties = 0;
+            MissingProperty = 0;
 
              Replay = new T();
 
@@ -1937,23 +1939,36 @@ namespace Unreal.Core
 
                     if (!cmdReader.AtEnd())
                     {
-                        ++FailedToRead;
+                        if (cmdReader.GetBitsLeft() == numBits)
+                        {
+                            ++MissingProperty;
 
-                        if (!_failedTypes.TryGetValue(export.Name, out var a))
+                            _logger?.LogInformation($"Missing property {export.Name} ({export.Handle}) in {group.PathName}. Bits: {cmdReader.GetBitsLeft()}");
+                        }
+                        else
+                        {
+                            ++FailedToRead;
+
+                            _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                        }
+#if DEBUG
+                        string name = $"{exportGroup.GetType().Name} - {export.Name}";
+
+                        if (!_failedTypes.TryGetValue(name, out var a))
                         {
 
                         }
 
                         a++;
 
-                        _failedTypes[export.Name] = a;
+                        _failedTypes[name] = a;
 
-                        _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+#endif
 
                         continue;
                     }
 
-                    //++SuccessProperties;
+                    ++SuccessProperties;
                 }
                 catch (Exception ex)
                 {
@@ -1979,8 +1994,9 @@ namespace Unreal.Core
             return true;
         }
 
-
+#if DEBUG
         public static Dictionary<string, int> _failedTypes = new Dictionary<string, int>();
+#endif
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
