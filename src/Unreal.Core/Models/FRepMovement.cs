@@ -12,17 +12,17 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Velocity of component in world space
         /// </summary>
-        public FVector LinearVelocity { get; set; }
+        public FVector? LinearVelocity { get; set; }
 
         /// <summary>
         /// Velocity of rotation for component
         /// </summary>
-        public FVector AngularVelocity { get; set; }
+        public FVector? AngularVelocity { get; set; }
 
         /// <summary>
         /// Location in world space 
         /// </summary>
-        public FVector Location { get; set; }
+        public FVector? Location { get; set; }
 
         /// <summary>
         /// Current rotation

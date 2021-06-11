@@ -17,7 +17,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     public class SniperProjectile : BaseProjectile
     {
         [NetFieldExport("FireStartLoc", RepLayoutCmdType.PropertyVector10)]
-        public FVector FireStartLoc { get; set; }
+        public FVector? FireStartLoc { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{

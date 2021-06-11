@@ -19,7 +19,7 @@ namespace FortniteReplayReader.Models
         internal UniqueItemId UniqueWeaponId { get; set; }
 
         //These can be updated later with the FortPickup groups
-        public FVector InitialPosition { get; internal set; }
+        public FVector? InitialPosition { get; internal set; }
         public InventoryItem CombineTarget { get; internal set; }
         public Player LastDroppedBy { get; internal set; }
 

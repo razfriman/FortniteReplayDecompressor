@@ -44,10 +44,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public ActorGUID AttachParent { get; set; } //Type: AActor* Bits: 16
 
 		[NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
-		public FVector LocationOffset { get; set; } //Type: FVector_NetQuantize100 Bits: 20
+		public FVector? LocationOffset { get; set; } //Type: FVector_NetQuantize100 Bits: 20
 
 		[NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100)]
-		public FVector RelativeScale3D { get; set; } //Type: FVector_NetQuantize100 Bits: 29
+		public FVector? RelativeScale3D { get; set; } //Type: FVector_NetQuantize100 Bits: 29
 
 		[NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator)]
 		public FRotator RotationOffset { get; set; } //Type: FRotator Bits: 3
@@ -80,7 +80,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public FName BoneName { get; set; } //Type: FName Bits: 113
 
 		[NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
-		public FVector Location { get; set; } //Type: FVector Bits: 47
+		public FVector? Location { get; set; } //Type: FVector Bits: 47
 
 		[NetFieldExport("Rotation", RepLayoutCmdType.PropertyRotator)]
 		public FRotator Rotation { get; set; } //Type: FRotator Bits: 19
@@ -113,10 +113,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public float? Position { get; set; } //Type: float Bits: 32
 
 		[NetFieldExport("Acceleration", RepLayoutCmdType.PropertyVector10)]
-		public FVector Acceleration { get; set; } //Type:  Bits: 46
+		public FVector? Acceleration { get; set; } //Type:  Bits: 46
 
 		[NetFieldExport("LinearVelocity", RepLayoutCmdType.PropertyVector10)]
-		public FVector LinearVelocity { get; set; } //Type: FVector_NetQuantize10 Bits: 26
+		public FVector? LinearVelocity { get; set; } //Type: FVector_NetQuantize10 Bits: 26
 
 		[NetFieldExport("CurrentMovementStyle", RepLayoutCmdType.Enum)]
 		public EFortMovementStyle CurrentMovementStyle { get; set; } = EFortMovementStyle.EFortMovementStyle_MAX; //Type: TEnumAsByte<EFortMovementStyle::Type> Bits: 3
@@ -200,7 +200,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public float? GravityScale { get; set; } //Type: float Bits: 32
 
 		[NetFieldExport("WorldLookDir", RepLayoutCmdType.PropertyVectorQ)]
-		public FVector WorldLookDir { get; set; } //Type: FVector_NetQuantize Bits: 11
+		public FVector? WorldLookDir { get; set; } //Type: FVector_NetQuantize Bits: 11
 
 		[NetFieldExport("bIgnoreForwardInAir", RepLayoutCmdType.PropertyBool)]
 		public bool? bIgnoreForwardInAir { get; set; } //Type: uint8 Bits: 1

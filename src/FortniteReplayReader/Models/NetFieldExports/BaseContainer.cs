@@ -47,7 +47,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int? ResourceType { get; set; }
 
         [NetFieldExport("BounceNormal", RepLayoutCmdType.PropertyVector)]
-        public FVector BounceNormal { get; set; }
+        public FVector? BounceNormal { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{

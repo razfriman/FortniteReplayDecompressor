@@ -25,13 +25,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public float? NextNextRadius { get; set; } //Type: float Bits: 32
 
 		[NetFieldExport("LastCenter", RepLayoutCmdType.PropertyVector100)]
-		public FVector LastCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
+		public FVector? LastCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
 
 		[NetFieldExport("NextCenter", RepLayoutCmdType.PropertyVector100)]
-		public FVector NextCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
+		public FVector? NextCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
 
 		[NetFieldExport("NextNextCenter", RepLayoutCmdType.PropertyVector100)]
-		public FVector NextNextCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
+		public FVector? NextNextCenter { get; set; } //Type: FVector_NetQuantize100 Bits: 74
 
 		[NetFieldExport("SafeZoneStartShrinkTime", RepLayoutCmdType.PropertyFloat)]
 		public float? SafeZoneStartShrinkTime { get; set; } //Type: float Bits: 32

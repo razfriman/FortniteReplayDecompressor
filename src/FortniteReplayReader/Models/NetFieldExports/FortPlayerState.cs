@@ -212,7 +212,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public float? ResurrectionExpirationLength { get; set; } //Type:  Bits: 32
 
 		[NetFieldExport("WorldLocation", RepLayoutCmdType.PropertyVector)]
-		public FVector WorldLocation { get; set; } //Type:  Bits: 96
+		public FVector? WorldLocation { get; set; } //Type:  Bits: 96
 
 		[NetFieldExport("bResurrectingNow", RepLayoutCmdType.PropertyBool)]
 		public bool? bResurrectingNow { get; set; } //Type:  Bits: 1
@@ -236,10 +236,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public EFortKickReason KickedFromSessionReason { get; set; } = EFortKickReason.EFortKickReason_MAX;
 
 		[NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
-		public FVector DeathLocation { get; set; }
+		public FVector? DeathLocation { get; set; }
 
 		[NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
-		public FVector Location { get; set; }
+		public FVector? Location { get; set; }
 
 		[NetFieldExport("CategoryBudgets", RepLayoutCmdType.DynamicArray)]
 		public int[] CategoryBudgets { get; set; }

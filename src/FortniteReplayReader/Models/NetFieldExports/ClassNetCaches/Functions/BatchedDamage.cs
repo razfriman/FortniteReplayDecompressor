@@ -12,10 +12,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     public class BatchedDamage : INetFieldExportGroup
     {
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector10)]
-        public FVector Location { get; set; } //Type:  Bits: 1
+        public FVector? Location { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("Normal", RepLayoutCmdType.PropertyVectorNormal)]
-        public FVector Normal { get; set; } //Type:  Bits: 1
+        public FVector? Normal { get; set; } //Type:  Bits: 1
 
         [NetFieldExport("Magnitude", RepLayoutCmdType.PropertyFloat)]
         public float Magnitude { get; set; } //Type:  Bits: 1

@@ -48,12 +48,12 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Location cue took place at
         /// </summary>
-        public FVector Location { get; private set; }
+        public FVector? Location { get; private set; }
 
         /// <summary>
         /// Normal of impact that caused cue
         /// </summary>
-        public FVector Normal { get; private set; }
+        public FVector? Normal { get; private set; }
 
         /// <summary>
         /// Instigator actor, the actor that owns the ability system component

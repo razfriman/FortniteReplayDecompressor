@@ -25,7 +25,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public object LocationOffset { get; set; } //Type:  Bits: 41
 
 		[NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100)]
-		public FVector RelativeScale3D { get; set; } //Type: FVector_NetQuantize100 Bits: 29
+		public FVector? RelativeScale3D { get; set; } //Type: FVector_NetQuantize100 Bits: 29
 
 		[NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject)]
 		public uint? AttachComponent { get; set; } //Type: USceneComponent* Bits: 16

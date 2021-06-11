@@ -23,10 +23,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ActorGUID AttachParent { get; set; } //Type:  Bits: 16
 
         [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100)]
-        public FVector LocationOffset { get; set; } //Type:  Bits: 35
+        public FVector? LocationOffset { get; set; } //Type:  Bits: 35
 
         [NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100)]
-        public FVector RelativeScale3D { get; set; } //Type:  Bits: 23
+        public FVector? RelativeScale3D { get; set; } //Type:  Bits: 23
 
         [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator)]
         public FRotator RotationOffset { get; set; } //Type:  Bits: 51
@@ -101,19 +101,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? ItemOwner { get; set; } //Type: AFortPawn* Bits: 8
 
         [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10)]
-        public FVector LootInitialPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
+        public FVector? LootInitialPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
         [NetFieldExport("LootFinalPosition", RepLayoutCmdType.PropertyVector10)]
-        public FVector LootFinalPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
+        public FVector? LootFinalPosition { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
         [NetFieldExport("FlyTime", RepLayoutCmdType.PropertyFloat)]
         public float? FlyTime { get; set; } //Type: float Bits: 32
 
         [NetFieldExport("StartDirection", RepLayoutCmdType.PropertyVectorNormal)]
-        public FVector StartDirection { get; set; } //Type: FVector_NetQuantizeNormal Bits: 48
+        public FVector? StartDirection { get; set; } //Type: FVector_NetQuantizeNormal Bits: 48
 
         [NetFieldExport("FinalTossRestLocation", RepLayoutCmdType.PropertyVector10)]
-        public FVector FinalTossRestLocation { get; set; } //Type: FVector_NetQuantize10 Bits: 71
+        public FVector? FinalTossRestLocation { get; set; } //Type: FVector_NetQuantize10 Bits: 71
 
 		[NetFieldExport("TossState", RepLayoutCmdType.Enum)]
 		public EFortPickupTossState TossState { get; set; } = EFortPickupTossState.EFortPickupTossState_MAX; //Type: EFortPickupTossState Bits: 2

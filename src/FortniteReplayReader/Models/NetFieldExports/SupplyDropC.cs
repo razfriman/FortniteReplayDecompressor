@@ -39,8 +39,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		[NetFieldExport("FallSpeed", RepLayoutCmdType.PropertyFloat)]
 		public float? FallSpeed { get; set; } //Type: float Bits: 32
 
-		[NetFieldExport("LandingLocation", RepLayoutCmdType.Property)]
-		public FVector LandingLocation { get; set; } //Type: FVector Bits: 96
+		[NetFieldExport("LandingLocation", RepLayoutCmdType.PropertyVector)]
+		public FVector? LandingLocation { get; set; } //Type: FVector Bits: 96
 
 		[NetFieldExport("FallHeight", RepLayoutCmdType.PropertyFloat)]
 		public float? FallHeight { get; set; } //Type: float Bits: 32

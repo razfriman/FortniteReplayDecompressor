@@ -1939,6 +1939,15 @@ namespace Unreal.Core
                     {
                         ++FailedToRead;
 
+                        if (!_failedTypes.TryGetValue(export.Name, out var a))
+                        {
+
+                        }
+
+                        a++;
+
+                        _failedTypes[export.Name] = a;
+
                         _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
 
                         continue;
@@ -1969,6 +1978,9 @@ namespace Unreal.Core
 
             return true;
         }
+
+
+        public static Dictionary<string, int> _failedTypes = new Dictionary<string, int>();
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579

@@ -37,7 +37,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 		public bool? Looted { get; set; } //Type: bool Bits: 1
 
 		[NetFieldExport("FinalDestination", RepLayoutCmdType.PropertyVector)]
-		public FVector FinalDestination { get; set; } //Type: FVector Bits: 96
+		public FVector? FinalDestination { get; set; } //Type: FVector Bits: 96
 
 
 		public override bool ManualRead(string property, object value)

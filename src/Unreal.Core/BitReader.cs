@@ -535,8 +535,6 @@ namespace Unreal.Core
             var z = (float)(dz - bias) / scaleFactor;
 
             FVector vector = new FVector(x, y, z);
-            vector.ScaleFactor = scaleFactor;
-            vector.Bits = (int)bits;
 
             return vector;
         }

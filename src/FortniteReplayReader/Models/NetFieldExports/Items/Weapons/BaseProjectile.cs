@@ -116,10 +116,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         public bool bIsBeingKilled { get; set; }
 
         [NetFieldExport("StopLocation", RepLayoutCmdType.PropertyVector)]
-        public FVector StopLocation { get; set; }
+        public FVector? StopLocation { get; set; }
 
         [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector)]
-        public FVector DecalLocation { get; set; }
+        public FVector? DecalLocation { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{

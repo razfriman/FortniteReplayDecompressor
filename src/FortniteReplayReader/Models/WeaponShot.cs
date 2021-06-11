@@ -13,8 +13,8 @@ namespace FortniteReplayReader.Models
         public PlayerPawn HitPlayerPawn { get; internal set; }
         public Weapon Weapon { get; internal set; }
         public float DeltaGameTimeSeconds { get; internal set; }
-        public FVector Location { get; internal set; }
-        public FVector Normal { get; internal set; }
+        public FVector? Location { get; internal set; }
+        public FVector? Normal { get; internal set; }
         public float Damage { get; internal set; }
         public bool WeaponActivate { get; internal set; }
         public bool IsFatal { get; internal set; }

@@ -22,7 +22,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public NetworkGUID PlayerState { get; set; }
 
         [NetFieldExport("SpawnLocation", RepLayoutCmdType.PropertyVector)]
-        public FVector SpawnLocation { get; set; }
+        public FVector? SpawnLocation { get; set; }
 
 		public override bool ManualRead(string property, object value)
 		{

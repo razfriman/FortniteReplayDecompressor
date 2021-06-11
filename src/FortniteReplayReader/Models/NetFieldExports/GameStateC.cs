@@ -222,7 +222,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int[] WinningPlayerList { get; set; } //Type:  Bits: 160
 
         [NetFieldExport("FlightStartLocation", RepLayoutCmdType.PropertyVector100)]
-        public FVector FlightStartLocation { get; set; } //Type: FVector_NetQuantize100 Bits: 80
+        public FVector? FlightStartLocation { get; set; } //Type: FVector_NetQuantize100 Bits: 80
 
         [NetFieldExport("FlightStartRotation", RepLayoutCmdType.PropertyRotator)]
         public FRotator FlightStartRotation { get; set; } //Type: FRotator Bits: 19

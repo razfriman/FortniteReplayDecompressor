@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
-    public class FVector : IProperty
+    public struct FVector
     {
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Vector.h#L29
@@ -19,16 +19,9 @@ namespace Unreal.Core.Models
             this.Z = Z;
         }
 
-        public FVector()
-        {
-
-        }
-
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
-        public int ScaleFactor { get; set; }
-        public int Bits { get; set; }
 
         public override string ToString()
         {
@@ -54,12 +47,12 @@ namespace Unreal.Core.Models
 
         public static bool operator ==(FVector v1, FVector v2)
         {
-            return v1?.X == v2?.X && v1?.Y == v2?.Y && v1?.Z == v2?.Z;
+            return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
         }
 
         public static bool operator !=(FVector v1, FVector v2)
         {
-            return v1?.X != v2?.X || v1?.Y != v2?.Y || v1?.Z != v2?.Z;
+            return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
         }
 
         public static FVector operator *(FVector v1, double val)

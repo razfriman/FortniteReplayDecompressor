@@ -67,7 +67,7 @@ namespace FortniteReplayReader.Models
 
     public class PlayerLocation
     {
-        public virtual FVector Location { get; internal set; }
+        public virtual FVector? Location { get; internal set; }
         public virtual float Yaw { get; internal set; }
 
         public float WorldTime { get; internal set; }
@@ -77,7 +77,7 @@ namespace FortniteReplayReader.Models
 
     public class PlayerLocationRepMovement : PlayerLocation
     {
-        public override FVector Location => RepLocation?.Location;
+        public override FVector? Location => RepLocation?.Location;
         public override float Yaw => RepLocation.Rotation.Yaw;
 
         public bool InVehicle { get; internal set; }

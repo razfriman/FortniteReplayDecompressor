@@ -57,7 +57,7 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Normal of the hit in world space, for the object that was hit by the sweep, if any.
         /// </summary>
-        public FVector ImpactNormal { get; private set; } //FVector_NetQuantizeNormal
+        public FVector? ImpactNormal { get; private set; } //FVector_NetQuantizeNormal
 
         /// <summary>
         /// Start location of the trace.

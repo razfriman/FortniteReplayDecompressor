@@ -726,15 +726,13 @@ namespace Unreal.Core
             return data;
         }
 
-        public static int i;
-
         private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
             
             if(arrayIndexes == 0)
             { 
-                return Array.Empty<object>();
+                return null;
             }
 
             Type elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();

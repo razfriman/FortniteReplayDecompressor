@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models
 {
     public class PlayerStructure
     {
-        public FVector Location { get; internal set; }
+        public FVector? Location { get; internal set; }
         public FRotator Rotation { get; internal set; }
         public Team Team { get; internal set; }
         public MaterialType MaterialType { get; internal set; }

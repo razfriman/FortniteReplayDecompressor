@@ -43,7 +43,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Containers
         public bool? bMirrored { get; set; }
 
         [NetFieldExport("ReplicatedDrawScale3D", RepLayoutCmdType.PropertyVector100)]
-        public FVector ReplicatedDrawScale3D { get; set; }
+        public FVector? ReplicatedDrawScale3D { get; set; }
 
         [NetFieldExport("bIsInitiallyBuilding", RepLayoutCmdType.PropertyBool)]
         public bool? bIsInitiallyBuilding { get; set; }

@@ -31,7 +31,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ActorGUID PlayerState { get; set; }
 
         [NetFieldExport("LastRepLocation", RepLayoutCmdType.PropertyVector100)]
-        public FVector LastRepLocation { get; set; }
+        public FVector? LastRepLocation { get; set; }
 
         [NetFieldExport("LastRepYaw", RepLayoutCmdType.PropertyFloat)]
         public float? LastRepYaw { get; set; }

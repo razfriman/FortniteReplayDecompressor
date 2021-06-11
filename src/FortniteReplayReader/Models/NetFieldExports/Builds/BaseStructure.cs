@@ -84,7 +84,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
         public DebuggingObject InitialOverlappingVehicles { get; set; }
 
         [NetFieldExport("ReplicatedDrawScale3D", RepLayoutCmdType.PropertyVector100)]
-        public FVector ReplicatedDrawScale3D { get; set; }
+        public FVector? ReplicatedDrawScale3D { get; set; }
 
         [NetFieldExport("bUnderRepair", RepLayoutCmdType.PropertyBool)]
         public bool? bUnderRepair { get; set; }

@@ -14,8 +14,8 @@ namespace FortniteReplayReader.Models
 
         public float NextRadius { get; internal set; }
         public float NextNextRadius { get; internal set; }
-        public FVector LastCenter { get; internal set; }
-        public FVector NextCenter { get; internal set; }
-        public FVector NextNextCenter { get; internal set; }
+        public FVector? LastCenter { get; internal set; }
+        public FVector? NextCenter { get; internal set; }
+        public FVector? NextNextCenter { get; internal set; }
     }
 }

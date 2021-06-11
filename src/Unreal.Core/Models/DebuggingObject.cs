@@ -28,11 +28,11 @@ namespace Unreal.Core.Models
         public List<IProperty> PotentialProperties => AsPotentialPropeties();
         public List<DebuggingHandle> PossibleExport => AsExportHandle();
 
-        public FVector QuantizeVector => AsVector(VectorType.Quantize);
-        public FVector VectorNormal => AsVector(VectorType.Normal);
-        public FVector VectorSingle => AsVector(VectorType.Single);
-        public FVector Vector10 => AsVector(VectorType.Vector10);
-        public FVector Vector100 => AsVector(VectorType.Vector100);
+        public FVector? QuantizeVector => AsVector(VectorType.Quantize);
+        public FVector? VectorNormal => AsVector(VectorType.Normal);
+        public FVector? VectorSingle => AsVector(VectorType.Single);
+        public FVector? Vector10 => AsVector(VectorType.Vector10);
+        public FVector? Vector100 => AsVector(VectorType.Vector100);
         public FRotator RotatorByte => AsRotator(RotatorType.Byte);
         public FRotator RotatorShort => AsRotator(RotatorType.Short);
         public FRepMovement FRepMovementWholeNumber => AsFRepMovement(VectorQuantization.RoundWholeNumber);
@@ -117,11 +117,11 @@ namespace Unreal.Core.Models
             return rotator;
         }
 
-        private FVector AsVector(VectorType type)
+        private FVector? AsVector(VectorType type)
         {
             _reader.Reset();
 
-            FVector tVector = null;
+            FVector? tVector = null;
 
             switch (type)
             {
