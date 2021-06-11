@@ -99,11 +99,12 @@ namespace ConsoleReader
             
 
             var b = a.ReadLongReplay();
+            /*
             ReplayReader reader2 = a._reader;
 
             Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
             Console.WriteLine($"Pins: {FBitArray.Pins}");
-            
+            */
             return;
 #endif
             var serviceCollection = new ServiceCollection()

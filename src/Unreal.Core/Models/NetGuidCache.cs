@@ -9,18 +9,18 @@ namespace Unreal.Core.Models
 {
     public class NetGuidCache
     {
+        public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
+
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
 
-        public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
-
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
-        private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
+
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
+        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
 
         private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new Dictionary<string, NetFieldExportGroup>();
@@ -43,7 +43,6 @@ namespace Unreal.Core.Models
             _archTypeToExportGroup.Clear();
             _cleanedClassNetCache.Clear();
             _partialPathNames.Clear();
-            _cleanedPaths.Clear();
             _failedPaths.Clear();
             _pathToExportGroup.Clear();
         }

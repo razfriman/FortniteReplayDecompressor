@@ -51,7 +51,8 @@ namespace Unreal.Core
 
         private int InPacketId;
         private DataBunch PartialBunch;
-        private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        //private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        private int InReliable = 0;
 
         //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
@@ -143,7 +144,8 @@ namespace Unreal.Core
 
 #endif
 
-            Array.Clear(InReliable, 0, InReliable.Length);
+            InReliable = 0;
+            //Array.Clear(InReliable, 0, InReliable.Length);
             Array.Clear(Channels, 0, Channels.Length);
             Array.Clear(IgnoringChannels, 0, IgnoringChannels.Length);
 
@@ -1109,7 +1111,7 @@ namespace Unreal.Core
             {
                 // Reliables should be ordered properly at this point
                 //check(Bunch.ChSequence == Connection->InReliable[Bunch.ChIndex] + 1);
-                InReliable[bunch.ChIndex] = bunch.ChSequence;
+                InReliable = bunch.ChSequence;
             }
 
             // merge
@@ -2247,14 +2249,8 @@ namespace Unreal.Core
                 if (bunch.bReliable)
                 {
                     // We can derive the sequence for 100% reliable connections
-                    //Bunch.ChSequence = InReliable[Bunch.ChIndex] + 1;
 
-                    if (InReliable[bunch.ChIndex] == null)
-                    {
-                        InReliable[bunch.ChIndex] = 0;
-                    }
-
-                    bunch.ChSequence = (InReliable[bunch.ChIndex] + 1).Value;
+                    bunch.ChSequence = InReliable + 1;
                 }
                 else if (bunch.bPartial)
                 {
@@ -2349,7 +2345,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                if (bunch.bReliable && bunch.ChSequence <= InReliable)
                 {
                     continue;
                 }

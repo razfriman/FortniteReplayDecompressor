@@ -141,7 +141,7 @@ namespace Unreal.Core
                 return ReadOnlyMemory<bool>.Empty;
             }
 
-            
+
             var result = Bits.Items.Slice(_position, bitCount);
 
             _position += bitCount;
@@ -197,19 +197,8 @@ namespace Unreal.Core
             return result;
         }
 
-        /// <summary>
-        /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
-        /// </summary>
-        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
-        public override byte ReadByte()
+        private byte ReadByteNoCheck()
         {
-            if (!CanRead(8))
-            {
-                IsError = true;
-
-                return 0;
-            }
-
             var result = new byte();
 
             var pos = _position;
@@ -234,6 +223,22 @@ namespace Unreal.Core
             return result;
         }
 
+        /// <summary>
+        /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
+        /// </summary>
+        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
+        public override byte ReadByte()
+        {
+            if (!CanRead(8))
+            {
+                IsError = true;
+
+                return 0;
+            }
+
+            return ReadByteNoCheck();
+        }
+
         public override T ReadByteAsEnum<T>()
         {
             return (T)Enum.ToObject(typeof(T), ReadByte());
@@ -243,7 +248,7 @@ namespace Unreal.Core
         {
             int count = data.Length * 8;
 
-            if(!CanRead(data.Length * 8))
+            if (!CanRead(data.Length * 8))
             {
                 IsError = true;
                 return;
@@ -364,7 +369,7 @@ namespace Unreal.Core
                 Span<byte> bytes = stackalloc byte[length];
                 ReadBytes(bytes);
 
-                value = Encoding.Unicode.GetString(bytes);
+                value = Encoding.Unicode.GetString(bytes.Slice(0, bytes.Length - 2));
             }
             else
             {
@@ -379,10 +384,10 @@ namespace Unreal.Core
                 Span<byte> bytes = stackalloc byte[length];
                 ReadBytes(bytes);
 
-                value = Encoding.Default.GetString(bytes);
+                value = Encoding.Default.GetString(bytes.Slice(0, bytes.Length - 1));
             }
 
-            return value.Trim(new[] { ' ', '\0' });
+            return value;
         }
 
         public override string ReadGUID()
@@ -403,13 +408,24 @@ namespace Unreal.Core
         /// <exception cref="OverflowException"></exception>
         public override uint ReadSerializedInt(int maxValue)
         {
+            if (IsError)
+            {
+                return 0;
+            }
+
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
             //  const int32 LengthBits = FMath::CeilLogTwo(ValueMax); ???
 
             uint value = 0;
             for (uint mask = 1; (value + mask) < maxValue; mask *= 2)
             {
-                if (ReadBit())
+                if (_position >= LastBit)
+                {
+                    IsError = true;
+                    return 0;
+                }
+
+                if (Bits[_position++])
                 {
                     value |= mask;
                 }
@@ -494,9 +510,20 @@ namespace Unreal.Core
             byte count = 0;
             var remaining = true;
 
+            if(IsError)
+            {
+                return 0;
+            }
+
             while (remaining)
             {
-                var nextByte = ReadByte();
+                if(_position + 8 > LastBit)
+                {
+                    IsError = true;
+                    return 0;
+                }
+
+                var nextByte = ReadByteNoCheck();
                 remaining = (nextByte & 1) == 1;            // Check 1 bit to see if theres more after this
                 nextByte >>= 1;                             // Shift to get actual 7 bit value
                 value += (uint)nextByte << (7 * count++);   // Add to total value
@@ -550,17 +577,17 @@ namespace Unreal.Core
             float yaw = 0;
             float roll = 0;
 
-            if (ReadBit()) // Pitch
+            if (Bits[_position++]) // Pitch
             {
                 pitch = ReadByte() * 360f / 256f;
             }
 
-            if (ReadBit())
+            if (Bits[_position++])
             {
                 yaw = ReadByte() * 360f / 256f;
             }
 
-            if (ReadBit())
+            if (Bits[_position++])
             {
                 roll = ReadByte() * 360f / 256f;
             }
@@ -584,17 +611,17 @@ namespace Unreal.Core
             float yaw = 0;
             float roll = 0;
 
-            if (ReadBit()) // Pitch
+            if (Bits[_position++]) // Pitch
             {
                 pitch = ReadUInt16() * 360 / 65536f;
             }
 
-            if (ReadBit())
+            if (Bits[_position++])
             {
                 yaw = ReadUInt16() * 360 / 65536f;
             }
 
-            if (ReadBit())
+            if (Bits[_position++])
             {
                 roll = ReadUInt16() * 360 / 65536f;
             }
