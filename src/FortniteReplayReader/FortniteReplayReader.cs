@@ -78,6 +78,7 @@ namespace FortniteReplayReader
 
         protected override void OnNetDeltaRead(NetDeltaUpdate deltaUpdate)
         {
+            return;
             Replay.GameInformation.HandleDeltaNetRead(deltaUpdate);
         }
 
@@ -85,6 +86,7 @@ namespace FortniteReplayReader
         {
             ++TotalPropertiesRead;
 
+            return;
 #if DEBUG
             if (Replay.GameInformation.Channels == null)
             {

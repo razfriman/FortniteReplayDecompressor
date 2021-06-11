@@ -35,6 +35,9 @@ namespace ConsoleReader
 
         private byte[] test = new byte[100000];
 
+        [Params(/*ParseType.Minimal, ParseType.Normal, */ParseType.Full)]
+        public ParseType Type;
+
         public Benchmark()
         {
             Random rand = new Random();
@@ -51,29 +54,35 @@ namespace ConsoleReader
             }
         }
         */
-        
-        [Benchmark]
-        public FortniteReplay ReadLongReplay()
+
+        //[Benchmark]
+        public FortniteReplay ReadMassiveReplay()
         {
-            return _reader.ReadReplay("Replays/newSeason.replay", ParseType.Full);
-        }
-        
-        [Benchmark]
-        public FortniteReplay ReadShortReplay()
-        {
-            return _reader.ReadReplay("Replays/replay_Bow.replay", ParseType.Full);
-        }
-        
-        [Benchmark]
-        public FortniteReplay ReadOldReplay()
-        {
-            return _reader.ReadReplay("Replays/season11.11.replay", ParseType.Full);
+            return _reader.ReadReplay("Replays/massive.replay", Type);
         }
 
         [Benchmark]
+        public FortniteReplay ReadLongReplay()
+        {
+            return _reader.ReadReplay("Replays/newSeason.replay", Type);
+        }
+        
+        //[Benchmark]
+        public FortniteReplay ReadShortReplay()
+        {
+            return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
+        }
+        
+        //[Benchmark]
+        public FortniteReplay ReadOldReplay()
+        {
+            return _reader.ReadReplay("Replays/season11.11.replay", Type);
+        }
+
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
-            return _reader.ReadReplay("Replays/rounds.replay", ParseType.Full);
+            return _reader.ReadReplay("Replays/rounds.replay", Type);
         }
     }
 
@@ -169,7 +178,10 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Success Properties: {reader?.SuccessProperties}");
-                    Console.Write($"Pins: {FBitArray.Pins}");
+                    //Console.Write($"Pins: {MemoryBuffer.Pins}");
+
+                    //var asdfa = String.Join("\n", NetFieldParser.types.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
+
                     totalTime += sw.Elapsed.TotalMilliseconds;
                     times.Add(sw.Elapsed.TotalMilliseconds);
 
@@ -205,14 +217,21 @@ public class Pooling
     public int SizeInBytes { get; set; }
 
     private FBitArray fBitArrray;
+    private Type objectType = typeof(object);
 
     [GlobalSetup]
     public void GlobalSetup() => fBitArrray = new FBitArray(new byte[1000000]);
 
     [Benchmark]
-    public void Allocate()
+    public void ArrayEmpty()
     {
-        //DeadCodeEliminationHelper.KeepAliveWithoutBoxing(test);
+        DeadCodeEliminationHelper.KeepAliveWithoutBoxing(Array.Empty<object>());
+    }
+
+    [Benchmark]
+    public void ArrayCreate()
+    {
+        DeadCodeEliminationHelper.KeepAliveWithoutBoxing(Array.CreateInstance(objectType, 0));
     }
 }
 

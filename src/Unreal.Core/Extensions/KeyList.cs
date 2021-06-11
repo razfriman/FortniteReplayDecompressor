@@ -52,6 +52,20 @@ namespace Unreal.Core.Extensions
             return false;
         }
 
+        public Dictionary<TKey, TElement> ToDictionary<TKey, TElement>(Func<K, TKey> key, Func<V, TElement> val)
+        {
+            Dictionary<TKey, TElement> vals = new Dictionary<TKey, TElement>();
+
+            foreach(var kvp in _keys)
+            {
+                V itemVal = _vals[kvp.Value];
+
+                vals.Add(key(kvp.Key), val(itemVal));
+            }
+
+            return vals;
+        }
+
         public V this[int index]
         {
             get

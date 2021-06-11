@@ -18,17 +18,16 @@ namespace Unreal.Core
 {
     public class NetFieldParser
     {
-        private static Dictionary<Assembly, NetFieldParserInfo> _parserInfoDict = new Dictionary<Assembly, NetFieldParserInfo>();
+        private static Dictionary<string, NetFieldParserInfo> _parserInfoDict = new Dictionary<string, NetFieldParserInfo>();
 
         private NetFieldParserInfo _parserInfo;
 
         internal NetFieldParser(Assembly callingAssembly)
         {
-            if (_parserInfoDict.ContainsKey(callingAssembly))
+            if (_parserInfoDict.ContainsKey(callingAssembly.FullName))
             {
                 //Already intialized data
-                _parserInfo = _parserInfoDict[callingAssembly];
-
+                _parserInfo = _parserInfoDict[callingAssembly.FullName];
                 return;
             }
 
@@ -52,7 +51,7 @@ namespace Unreal.Core
             propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
 
             _parserInfo = new NetFieldParserInfo();
-            _parserInfoDict.Add(callingAssembly, _parserInfo);
+            _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
 
             LoadNetFields(netFields);
             LoadClassNetCaches(classNetCaches);
@@ -74,9 +73,7 @@ namespace Unreal.Core
         //TODO: FIX
         internal Dictionary<string, ParseType> GetNetFieldExportTypes()
         {
-            return new Dictionary<string, ParseType>();
-
-            //return _parserInfo.NetFieldGroupsList.ToDictionary(x => x., x => x.Value.Attribute.MinimumParseType);
+            return _parserInfo.NetFieldGroups.ToDictionary(x => x, x => x.Attribute.MinimumParseType);
         }
 
 
@@ -729,9 +726,16 @@ namespace Unreal.Core
             return data;
         }
 
+        public static int i;
+
         private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetFieldGroupInfo groupInfo, NetBitReader netBitReader)
         {
             uint arrayIndexes = netBitReader.ReadIntPacked();
+            
+            if(arrayIndexes == 0)
+            { 
+                return Array.Empty<object>();
+            }
 
             Type elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
             RepLayoutCmdType replayout = RepLayoutCmdType.Ignore;

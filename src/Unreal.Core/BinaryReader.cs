@@ -78,7 +78,7 @@ namespace Unreal.Core
 
         private void CreateMemory(int count)
         {
-            if(_owner != null)
+            if (_owner != null)
             {
                 throw new InvalidOperationException("Memory object already created");
             }
