@@ -116,7 +116,7 @@ namespace FortniteReplayReader
                     break;
                 case SearchableContainer searchableContainer:
                     Replay.GameInformation.UpdateSearchableContainer(channel, searchableContainer);
-                    break;
+                    break; 
                 case GameplayCueExecuted cueExecuted:
                     //Fall damage should be in here
                     break;
@@ -171,8 +171,7 @@ namespace FortniteReplayReader
                     break;
                 case GameplayCue gameplayCue:
                     gameplayCue.GameplayCueTag.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
-
-                    Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
+                    Replay.GameInformation.HandleGameplayCue(gameplayCue);
                     break;
                 case BaseWeapon weapon:
                     Replay.GameInformation.HandleWeapon(channel, weapon);

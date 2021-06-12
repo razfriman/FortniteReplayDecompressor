@@ -27,6 +27,8 @@ namespace FortniteReplayReader.Models
         public ICollection<Llama> LabradorLlamas => _labradorLlamas.Values;
         public ICollection<CosmicChest> CosmicChests => _cosmicChests.Values;
         public ICollection<SafeZone> SafeZones => _safeZones;
+        public ICollection<GameplayCueEvent> GameplayCues => _gameplayCues;
+
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
         public ICollection<SupplyDrop> SupplyDrops => _supplyDrops.Values;
@@ -70,6 +72,7 @@ namespace FortniteReplayReader.Models
 
         private Dictionary<int, Team> _teams = new Dictionary<int, Team>();
         private List<SafeZone> _safeZones = new List<SafeZone>();
+        private readonly List<GameplayCueEvent> _gameplayCues = new();
         private List<PlayerReboot> _resurrections = new List<PlayerReboot>();
         private List<KillFeedEntry> _killFeed = new List<KillFeedEntry>();
 
@@ -332,28 +335,15 @@ namespace FortniteReplayReader.Models
             _killFeed.Add(entry);
         }
 
-        internal void HandleGameplayCue(uint channelId, GameplayCue cue)
+        internal void HandleGameplayCue(GameplayCue gameplayCue)
         {
-            /*
-	            GameplayCue.Abilities.Activation.DBNOResurrect.Athena -  - 7862
-	            GameplayCue.Abilities.Activation.Traps.ActivateTrap -  - 7911
-	            GameplayCue.Abilities.Activation.Traps.DelayBegin -  - 7912
-	            GameplayCue.Abilities.Activation.Traps.Placed -  - 7917
-	            GameplayCue.Abilities.Activation.Traps.ReloadBegin -  - 7918
-	            GameplayCue.Athena.DBNOBleed -  - 8224
-	            GameplayCue.Athena.EnvCampfire.Doused -  - 8235
-	            GameplayCue.Athena.EnvCampfire.Fire -  - 8236
-	            GameplayCue.Athena.EnvItem.Slurp -  - 8240
-	            GameplayCue.Athena.Equipping -  - 8241
-	            GameplayCue.Athena.Item.FloppingRabbit.Cast -  - 8353
-	            GameplayCue.Athena.OutsideSafeZoneDamage -  - 8448
-	            GameplayCue.Athena.Player.BeingRevivedFromDBNO -  - 8454
-	            GameplayCue.Athena.Player.BigBushMovement -  - 8455
-	            GameplayCue.Athena.Player.CornFieldMovement -  - 8458
-	            GameplayCue.Damage.Physical -  - 8610
-	            GameplayCue.Shield.PotionConsumed -  - 9012
-	            GameplayCue.Weapons.Activation -  - 9080
-            */
+            _gameplayCues.Add(new GameplayCueEvent
+            {
+                Location = gameplayCue.ChannelActor.Location,
+                TagName = gameplayCue.GameplayCueTag.TagName,
+                TagId = gameplayCue.GameplayCueTag.TagIndex,
+                DeltaGameTimeSeconds = GameState.DeltaGameTime
+            });
         }
 
         internal void UpdatePlayerState(uint channelId, FortPlayerState playerState, NetFieldExportGroup networkGameplayTagNode)

@@ -127,8 +127,7 @@ namespace FortniteReplayReader
                     break;
                 case GameplayCue gameplayCue:
                     gameplayCue.GameplayCueTag?.UpdateTagName(GuidCache.NetworkGameplayTagNodeIndex);
-
-                    Replay.GameInformation.HandleGameplayCue(channel, gameplayCue);
+                    Replay.GameInformation.HandleGameplayCue(gameplayCue);
                     break;
                 case BaseWeapon weapon:
                     Replay.GameInformation.HandleWeapon(channel, weapon);
