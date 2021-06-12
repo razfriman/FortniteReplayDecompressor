@@ -24,38 +24,41 @@ namespace Unreal.Core
 
         internal NetFieldParser(Assembly callingAssembly)
         {
-            if (_parserInfoDict.ContainsKey(callingAssembly.FullName))
+            lock (_parserInfoDict)
             {
-                //Already intialized data
-                _parserInfo = _parserInfoDict[callingAssembly.FullName];
-                return;
+                if (_parserInfoDict.TryGetValue(callingAssembly.FullName, out NetFieldParserInfo info))
+                {
+                    //Already intialized data
+                    _parserInfo = info;
+                    return;
+                }
+
+                Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+
+                HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+
+                referencedAssemblies.Add(callingAssembly);
+
+                IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
+
+                //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
+
+                List<Type> netFields = new List<Type>();
+                List<Type> classNetCaches = new List<Type>();
+                List<Type> propertyTypes = new List<Type>();
+
+                //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
+                netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
+                classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
+                propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+                _parserInfo = new NetFieldParserInfo();
+                _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
+
+                LoadNetFields(netFields);
+                LoadClassNetCaches(classNetCaches);
+                LoadPropertyTypes(propertyTypes);
             }
-
-            Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
-
-            HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
-
-            referencedAssemblies.Add(callingAssembly);
-
-            IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
-
-            //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
-
-            List<Type> netFields = new List<Type>();
-            List<Type> classNetCaches = new List<Type>();
-            List<Type> propertyTypes = new List<Type>();
-
-            //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
-            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
-            propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
-
-            _parserInfo = new NetFieldParserInfo();
-            _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
-
-            LoadNetFields(netFields);
-            LoadClassNetCaches(classNetCaches);
-            LoadPropertyTypes(propertyTypes);
         }
 
         internal bool SetMinimalParseType(string path, ParseType type)

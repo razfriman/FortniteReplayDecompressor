@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Text;
 using System.Threading;
+using Unreal.Core.MemoryPool;
 using Unreal.Core.Models;
 
 namespace Unreal.Core
@@ -83,7 +84,7 @@ namespace Unreal.Core
                 throw new InvalidOperationException("Memory object already created");
             }
 
-            _owner = MemoryPool<byte>.Shared.Rent(count);
+            _owner = PinnedMemoryPool<byte>.Shared.Rent(count);
             _pin = _owner.Memory.Pin();
 
             //Interlocked.Increment(ref TotalPins);
