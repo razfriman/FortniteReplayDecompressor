@@ -5,24 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Unreal.Core.MemoryPool
+namespace OozSharp.MemoryPool
 {
     public abstract class PinnedMemoryPool<T> : IDisposable
     {
         // Store the shared ArrayMemoryPool in a field of its derived sealed type so the Jit can "see" the exact type
         // when the Shared property is inlined which will allow it to devirtualize calls made on it.
-        private static readonly DynamicArrayMemoryPool<T> s_shared = new DynamicArrayMemoryPool<T>();
+        private static readonly PinnedArrayMemoryPool<T> s_shared = new PinnedArrayMemoryPool<T>();
 
         /// <summary>
         /// Returns a singleton instance of a MemoryPool based on arrays.
         /// </summary>
         public static PinnedMemoryPool<T> Shared => s_shared;
-
-        /// <summary>
-        /// Returns a memory block capable of holding at least <paramref name="minBufferSize" /> elements of T.
-        /// </summary>
-        /// <param name="minBufferSize">If -1 is passed, this is set to a default value for the pool.</param>
-        public abstract IMemoryOwner<T> Rent(int minBufferSize = -1);
+        public abstract IPinnedMemoryOwner<T> Rent(int minBufferSize = -1);
 
         /// <summary>
         /// Returns the maximum buffer size supported by this pool.

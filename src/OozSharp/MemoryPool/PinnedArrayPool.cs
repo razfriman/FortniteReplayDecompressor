@@ -8,26 +8,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Unreal.Core.MemoryPool
-{/// <summary>
- /// Provides an ArrayPool implementation meant to be used as the singleton returned from ArrayPool.Shared.
- /// </summary>
- /// <remarks>
- /// The implementation uses a tiered caching scheme, with a small per-thread cache for each array size, followed
- /// by a cache per array size shared by all threads, split into per-core stacks meant to be used by threads
- /// running on that core.  Locks are used to protect each per-core stack, because a thread can migrate after
- /// checking its processor number, because multiple threads could interleave on the same core, and because
- /// a thread is allowed to check other core's buckets if its core's bucket is empty/full.
- /// </remarks>
-    internal sealed partial class TlsOverPerCoreLockedStacksArrayPool<T> : ArrayPool<T>
+namespace OozSharp.MemoryPool
+{
+    //https://github.com/dotnet/runtime/blob/01b7e73cd378145264a7cb7a09365b41ed42b240/src/libraries/System.Private.CoreLib/src/System/Buffers/TlsOverPerCoreLockedStacksArrayPool.cs
+    //
+    internal sealed partial class PinnedArrayPool<T>
     {
-        // TODO https://github.com/dotnet/coreclr/pull/7747: "Investigate optimizing ArrayPool heuristics"
-        // - Explore caching in TLS more than one array per size per thread, and moving stale buffers to the global queue.
-        // - Explore changing the size of each per-core bucket, potentially dynamically or based on other factors like array size.
-        // - Explore changing number of buckets and what sizes of arrays are cached.
-        // - Investigate whether false sharing is causing any issues, in particular on LockedStack's count and the contents of its array.
-        // ...
-
         /// <summary>The number of buckets (array sizes) in the pool, one for each array length, starting from length 16.</summary>
         private const int NumBuckets = 18; // Utilities.SelectBucketIndex(2*1024*1024)
         /// <summary>Maximum number of per-core stacks to use per array size.</summary>
@@ -41,10 +27,10 @@ namespace Unreal.Core.MemoryPool
         /// An array of per-core array stacks. The slots are lazily initialized to avoid creating
         /// lots of overhead for unused array sizes.
         /// </summary>
-        private readonly PerCoreLockedStacks?[] _buckets = new PerCoreLockedStacks[NumBuckets];
+        private readonly PerCoreLockedStacks[] _buckets = new PerCoreLockedStacks[NumBuckets];
         /// <summary>A per-thread array of arrays, to cache one array per array size per thread.</summary>
         [ThreadStatic]
-        private static T[]?[]? t_tlsBuckets;
+        private static PinnedMemory<T>[] t_tlsBuckets;
 
         private int _callbackCreated;
 
@@ -53,11 +39,11 @@ namespace Unreal.Core.MemoryPool
         /// <summary>
         /// Used to keep track of all thread local buckets for trimming if needed
         /// </summary>
-        private static readonly ConditionalWeakTable<T[]?[], object?>? s_allTlsBuckets =
-            s_trimBuffers ? new ConditionalWeakTable<T[]?[], object?>() : null;
+        private static readonly ConditionalWeakTable<PinnedMemory<T>[], object> s_allTlsBuckets =
+            s_trimBuffers ? new ConditionalWeakTable<PinnedMemory<T>[], object>() : null;
 
         /// <summary>Initialize the pool.</summary>
-        public TlsOverPerCoreLockedStacksArrayPool()
+        public PinnedArrayPool()
         {
             var sizes = new int[NumBuckets];
             for (int i = 0; i < sizes.Length; i++)
@@ -77,7 +63,9 @@ namespace Unreal.Core.MemoryPool
         /// <summary>Gets an ID for the pool to use with events.</summary>
         private int Id => GetHashCode();
 
-        public override T[] Rent(int minimumLength)
+        private int _rents;
+
+        public PinnedMemory<T> Rent(int minimumLength)
         {
             // Arrays can't be smaller than zero.  We allow requesting zero-length arrays (even though
             // pooling such an array isn't valuable) as it's a valid length array, and we want the pool
@@ -90,10 +78,10 @@ namespace Unreal.Core.MemoryPool
             {
                 // No need to log the empty array.  Our pool is effectively infinite
                 // and we'll never allocate for rents and never store for returns.
-                return Array.Empty<T>();
+                return PinnedMemory<T>.Empty();
             }
 
-            T[]? buffer;
+            PinnedMemory<T> buffer;
 
             // Get the bucket number for the array length
             int bucketIndex = Utilities.SelectBucketIndex(minimumLength);
@@ -102,7 +90,7 @@ namespace Unreal.Core.MemoryPool
             if (bucketIndex < _buckets.Length)
             {
                 // First try to get it from TLS if possible.
-                T[]?[]? tlsBuckets = t_tlsBuckets;
+                PinnedMemory<T>[] tlsBuckets = t_tlsBuckets;
                 if (tlsBuckets != null)
                 {
                     buffer = tlsBuckets[bucketIndex];
@@ -115,7 +103,7 @@ namespace Unreal.Core.MemoryPool
                 }
 
                 // We couldn't get a buffer from TLS, so try the global stack.
-                PerCoreLockedStacks? b = _buckets[bucketIndex];
+                PerCoreLockedStacks b = _buckets[bucketIndex];
                 if (b != null)
                 {
                     buffer = b.TryPop();
@@ -126,19 +114,23 @@ namespace Unreal.Core.MemoryPool
                 }
 
                 // No buffer available.  Allocate a new buffer with a size corresponding to the appropriate bucket.
-                buffer = GC.AllocateUninitializedArray<T>(_bucketArraySizes[bucketIndex]);
+                T[] arrBuffer = GC.AllocateUninitializedArray<T>(_bucketArraySizes[bucketIndex]);
+
+                buffer = new PinnedMemory<T>(arrBuffer);
             }
             else
             {
                 // The request was for a size too large for the pool.  Allocate an array of exactly the requested length.
                 // When it's returned to the pool, we'll simply throw it away.
-                buffer = GC.AllocateUninitializedArray<T>(minimumLength);
+                T[] arrBuffer = GC.AllocateUninitializedArray<T>(minimumLength);
+
+                buffer = new PinnedMemory<T>(arrBuffer);
             }
 
             return buffer;
         }
 
-        public override void Return(T[] array, bool clearArray = false)
+        public void Return(PinnedMemory<T> array, bool clearArray = false)
         {
             if (array == null)
             {
@@ -153,12 +145,6 @@ namespace Unreal.Core.MemoryPool
             bool haveBucket = bucketIndex < _buckets.Length;
             if (haveBucket)
             {
-                // Clear the array if the user requests.
-                if (clearArray)
-                {
-                    Array.Clear(array, 0, array.Length);
-                }
-
                 // Check to see if the buffer is the correct size for this bucket
                 if (array.Length != _bucketArraySizes[bucketIndex])
                 {
@@ -170,10 +156,10 @@ namespace Unreal.Core.MemoryPool
                 // if there was a previous one there, push that to the global stack.  This
                 // helps to keep LIFO access such that the most recently pushed stack will
                 // be in TLS and the first to be popped next.
-                T[]?[]? tlsBuckets = t_tlsBuckets;
+                PinnedMemory<T>[] tlsBuckets = t_tlsBuckets;
                 if (tlsBuckets == null)
                 {
-                    t_tlsBuckets = tlsBuckets = new T[NumBuckets][];
+                    t_tlsBuckets = tlsBuckets = new PinnedMemory<T>[NumBuckets];
                     tlsBuckets[bucketIndex] = array;
                     if (s_trimBuffers)
                     {
@@ -181,13 +167,13 @@ namespace Unreal.Core.MemoryPool
 
                         if (Interlocked.Exchange(ref _callbackCreated, 1) != 1)
                         {
-                            //Gen2GcCallback.Register(Gen2GcCallbackFunc, this);
+                            Gen2GcCallback.Register(Gen2GcCallbackFunc, this);
                         }
                     }
                 }
                 else
                 {
-                    T[]? prev = tlsBuckets[bucketIndex];
+                    PinnedMemory<T> prev = tlsBuckets[bucketIndex];
                     tlsBuckets[bucketIndex] = array;
 
                     if (prev != null)
@@ -199,7 +185,7 @@ namespace Unreal.Core.MemoryPool
             }
             else
             {
-
+                array.Dispose();
             }
         }
 
@@ -208,7 +194,7 @@ namespace Unreal.Core.MemoryPool
             int milliseconds = Environment.TickCount;
             MemoryPressure pressure = GetMemoryPressure();
 
-            PerCoreLockedStacks?[] perCoreBuckets = _buckets;
+            PerCoreLockedStacks[] perCoreBuckets = _buckets;
             for (int i = 0; i < perCoreBuckets.Length; i++)
             {
                 perCoreBuckets[i]?.Trim((uint)milliseconds, Id, pressure, _bucketArraySizes[i]);
@@ -216,10 +202,15 @@ namespace Unreal.Core.MemoryPool
 
             if (pressure == MemoryPressure.High)
             {
-                foreach (KeyValuePair<T[]?[], object?> tlsBuckets in s_allTlsBuckets)
+                foreach (KeyValuePair<PinnedMemory<T>[], object> tlsBuckets in s_allTlsBuckets)
                 {
-                    T[]?[] buckets = tlsBuckets.Key;
-                    Array.Clear(buckets, 0, buckets.Length);
+                    PinnedMemory<T>[] buckets = tlsBuckets.Key;
+
+                    for(int i = 0; i < buckets.Length; i++)
+                    {
+                        buckets[i].Dispose();
+                        buckets[i] = null;
+                    }
                 }
             }
 
@@ -237,7 +228,7 @@ namespace Unreal.Core.MemoryPool
         /// </remarks>
         private static bool Gen2GcCallbackFunc(object target)
         {
-            return ((TlsOverPerCoreLockedStacksArrayPool<T>)(target)).Trim();
+            return ((PinnedArrayPool<T>)(target)).Trim();
         }
 
         private enum MemoryPressure
@@ -298,7 +289,7 @@ namespace Unreal.Core.MemoryPool
 
             /// <summary>Try to push the array into the stacks. If each is full when it's tested, the array will be dropped.</summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryPush(T[] array)
+            public bool TryPush(PinnedMemory<T> array)
             {
                 // Try to push on to the associated stack first.  If that fails,
                 // round-robin through the other stacks.
@@ -315,11 +306,11 @@ namespace Unreal.Core.MemoryPool
 
             /// <summary>Try to get an array from the stacks.  If each is empty when it's tested, null will be returned.</summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public T[]? TryPop()
+            public PinnedMemory<T> TryPop()
             {
                 // Try to pop from the associated stack first.  If that fails,
                 // round-robin through the other stacks.
-                T[]? arr;
+                PinnedMemory<T> arr;
                 LockedStack[] stacks = _perCoreStacks;
                 int index = Thread.GetCurrentProcessorId() % stacks.Length;
                 for (int i = 0; i < stacks.Length; i++)
@@ -343,12 +334,12 @@ namespace Unreal.Core.MemoryPool
         /// <summary>Provides a simple stack of arrays, protected by a lock.</summary>
         private sealed class LockedStack
         {
-            private readonly T[]?[] _arrays = new T[MaxBuffersPerArraySizePerCore][];
+            private readonly PinnedMemory<T>[] _arrays = new PinnedMemory<T>[MaxBuffersPerArraySizePerCore];
             private int _count;
             private uint _firstStackItemMS;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool TryPush(T[] array)
+            public bool TryPush(PinnedMemory<T> array)
             {
                 bool enqueued = false;
                 Monitor.Enter(this);
@@ -368,9 +359,9 @@ namespace Unreal.Core.MemoryPool
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public T[]? TryPop()
+            public PinnedMemory<T> TryPop()
             {
-                T[]? arr = null;
+                PinnedMemory<T> arr = null;
                 Monitor.Enter(this);
                 if (_count > 0)
                 {
@@ -401,6 +392,8 @@ namespace Unreal.Core.MemoryPool
                 {
                     if (_count > 0 && _firstStackItemMS > tickCount || (tickCount - _firstStackItemMS) > trimTicks)
                     {
+                        Console.WriteLine("Trim");
+
                         int trimCount = StackLowTrimCount;
                         switch (pressure)
                         {
@@ -428,7 +421,9 @@ namespace Unreal.Core.MemoryPool
 
                         while (_count > 0 && trimCount-- > 0)
                         {
-                            T[]? array = _arrays[--_count];
+                            PinnedMemory<T> array = _arrays[--_count];
+
+                            array.Dispose();
 
                             _arrays[_count] = null;
                         }

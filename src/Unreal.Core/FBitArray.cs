@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OozSharp.MemoryPool;
+using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,11 +15,10 @@ namespace Unreal.Core
     {
         public static int Pins;
 
-        private MemoryHandle _pin;
         private bool* _pointer;
 
         public ReadOnlyMemory<bool> Items { get; private set; }
-        private IMemoryOwner<bool> _owner;
+        private IPinnedMemoryOwner<bool> _owner;
 
         public int Length { get; private set; }
         public bool IsReadOnly => false;
@@ -42,20 +42,8 @@ namespace Unreal.Core
             ByteArrayUsed = bytes;
             int totalBits = bytes.Length * 8;
 
-            //Slightly faster, but more allocations
-            /*if (totalBits <= 256)
-            {
-                ReadOnlyMemory<bool> memory = new Memory<bool>(new bool[totalBits]);
-                Items = memory;
-            }
-            else
-            {
-                _owner = MemoryPool<bool>.Shared.Rent(totalBits);
-                Items = _owner.Memory;
-            }*/
-
-            _owner = MemoryPool<bool>.Shared.Rent(totalBits);
-            Items = _owner.Memory;
+            _owner = PinnedMemoryPool<bool>.Shared.Rent(totalBits);
+            Items = _owner.PinnedMemory.Memory;
             Length = totalBits;
             Pin();
 
@@ -111,7 +99,28 @@ namespace Unreal.Core
 
         public void Append(ReadOnlyMemory<bool> after)
         {
-            IMemoryOwner<bool> newOwner = MemoryPool<bool>.Shared.Rent(after.Length + Length);
+            IPinnedMemoryOwner<bool> newOwner = PinnedMemoryPool<bool>.Shared.Rent(after.Length + Length);
+            Memory<bool> newMemory = newOwner.PinnedMemory.Memory;
+            int oldLength = Length;
+            Length = after.Length + Length;
+
+            //Copy old array
+            Buffer.MemoryCopy(_pointer, newOwner.PinnedMemory.Pointer, newOwner.PinnedMemory.Length, Length);
+
+            Items = newMemory;
+
+            Unpin(); //Get rid of old
+
+            _owner = newOwner; 
+            _pointer = (bool*)_owner.PinnedMemory.Pointer;
+
+            MemoryHandle afterPin = after.Pin();
+
+            Buffer.MemoryCopy(afterPin.Pointer, _pointer + oldLength, after.Length, after.Length);
+
+            afterPin.Dispose();
+
+            /*
             Memory<bool> newMemory = newOwner.Memory;
 
             int oldLength = Length;
@@ -130,7 +139,7 @@ namespace Unreal.Core
 
             afterPin.Dispose();
 
-            _owner = newOwner;
+            _owner = newOwner;*/
         }
 
         public void Dispose()
@@ -140,8 +149,7 @@ namespace Unreal.Core
 
         private void Pin()
         {
-            _pin = Items.Pin();
-            _pointer = (bool*)_pin.Pointer;
+            _pointer = (bool*)_owner.PinnedMemory.Pointer;
             //Interlocked.Increment(ref Pins);
         }
 
@@ -157,8 +165,6 @@ namespace Unreal.Core
             }
             */
 
-            _pin.Dispose();
-            _pin = new MemoryHandle();
             _pointer = null;
         }
     }

@@ -67,19 +67,19 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);

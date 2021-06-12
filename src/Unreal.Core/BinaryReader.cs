@@ -1,9 +1,9 @@
-﻿using System;
+﻿using OozSharp.MemoryPool;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Text;
 using System.Threading;
-using Unreal.Core.MemoryPool;
 using Unreal.Core.Models;
 
 namespace Unreal.Core
@@ -16,10 +16,9 @@ namespace Unreal.Core
         private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
         public override int Position { get => (int)BaseStream.Position; protected set => Seek(value); }
-        public byte* BasePointer => (byte*)_pin.Pointer;
+        private IPinnedMemoryOwner<byte> _owner;
+        public byte* BasePointer => (byte*)_owner.PinnedMemory.Pointer;
 
-        private IMemoryOwner<byte> _owner;
-        private MemoryHandle _pin;
 
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
@@ -34,7 +33,7 @@ namespace Unreal.Core
         public BinaryReader(int size)
         {
             CreateMemory(size);
-            Reader = new System.IO.BinaryReader(new UnmanagedMemoryStream((byte*)_pin.Pointer, size, size, FileAccess.ReadWrite));
+            Reader = new System.IO.BinaryReader(new UnmanagedMemoryStream((byte*)_owner.PinnedMemory.Pointer, size, size, FileAccess.ReadWrite));
         }
 
         public override bool AtEnd()
@@ -58,10 +57,9 @@ namespace Unreal.Core
             if (disposing)
             {
                 _owner?.Dispose();
-                _pin.Dispose();
                 Reader.Dispose();
 
-                if(_owner != null)
+                if (_owner != null)
                 {
                     //Interlocked.Decrement(ref TotalPins);
                 }
@@ -85,7 +83,6 @@ namespace Unreal.Core
             }
 
             _owner = PinnedMemoryPool<byte>.Shared.Rent(count);
-            _pin = _owner.Memory.Pin();
 
             //Interlocked.Increment(ref TotalPins);
         }

@@ -73,6 +73,8 @@ namespace FortniteReplayReader
 
         protected override void OnChannelActorRead(uint channel, Actor actor)
         {
+            return;
+
             Replay.GameInformation.AddActor(channel, actor);
         }
 
