@@ -60,9 +60,18 @@ namespace Unreal.Core.Models
                 exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
             }
 
+            exportGroup.CleanedPath = RemoveAllPathPrefixes(group);
+
+            /*
+            if(NetFieldExportGroupMap.TryGetValue(group, out var temp))
+            {
+                Console.WriteLine($"Found Duplicate: {group}\n\t- {temp.PathName}\n\t- {exportGroup.PathName}");
+            }
+            */
 
             NetFieldExportGroupMap[group] = exportGroup;
 
+            //Console.WriteLine(++count);
             _parser.UpdateExportGroup(exportGroup);
 
             //Check if partial path
@@ -70,12 +79,19 @@ namespace Unreal.Core.Models
             {
                 if (group.StartsWith(partialRedirectKvp.Key))
                 {
-                    _partialPathNames.TryAdd(group, partialRedirectKvp.Value);
-                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), partialRedirectKvp.Value);
+                    _partialPathNames.TryAdd(group, RemoveAllPathPrefixes(partialRedirectKvp.Value));
+                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), RemoveAllPathPrefixes(partialRedirectKvp.Value));
 
                     break;
                 }
             }
+        }
+
+        public NetFieldExportGroup GetNetFieldExportGroupByPath(uint pathIndex)
+        {
+            NetFieldExportGroupIndexToGroup.TryGetValue(pathIndex, out NetFieldExportGroup group);
+
+            return group;
         }
 
         public NetFieldExportGroup GetNetFieldExportGroup(string pathName)
@@ -124,16 +140,17 @@ namespace Unreal.Core.Models
                     return exportGroup;
                 }
 
+                /*
+                if(NetFieldExportGroupMap.TryGetValue(RemoveAllPathPrefixes(path), out exportGroup))
+                {
+                    return exportGroup;
+                }*/
+
+                string cleaned = RemoveAllPathPrefixes(path);
+
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
-                    var groupPath = groupPathKvp.Key;
-
-                    if (groupPathKvp.Value.CleanedPath == null)
-                    {
-                        groupPathKvp.Value.CleanedPath = RemoveAllPathPrefixes(groupPath);
-                    }
-
-                    if (path.Contains(groupPathKvp.Value.CleanedPath))
+                    if (cleaned == groupPathKvp.Value.CleanedPath)
                     {
                         NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
                         _archTypeToExportGroup[guid] = groupPathKvp.Value;
@@ -144,13 +161,13 @@ namespace Unreal.Core.Models
                 }
 
                 //Try fixing ...
-
                 var cleanedPath = CleanPathSuffix(path);
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
                     if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath))
                     {
+
                         NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
                         _archTypeToExportGroup[guid] = groupPathKvp.Value;
                         _pathToExportGroup[path] = groupPathKvp.Value;
@@ -168,6 +185,8 @@ namespace Unreal.Core.Models
                 return _archTypeToExportGroup[guid];
             }
         }
+
+        static int count = 0;
 
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group, bool fullPath = false)
         {

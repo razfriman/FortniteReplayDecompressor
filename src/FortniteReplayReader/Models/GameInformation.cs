@@ -987,7 +987,7 @@ namespace FortniteReplayReader.Models
         {
             if (_players.TryGetValue(channelId, out Player player))
             {
-                if (_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("/Script/FortniteGame.FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
+                if (_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
                 {
                     List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
 

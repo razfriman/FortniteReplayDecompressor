@@ -814,7 +814,9 @@ namespace Unreal.Core
                     var pathName = archive.ReadFString();
                     var numExports = archive.ReadIntPacked();
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    group = GuidCache.GetNetFieldExportGroupByPath(pathNameIndex);
+
+                    if (group == null)
                     {
                         group = new NetFieldExportGroup
                         {
@@ -957,8 +959,9 @@ namespace Unreal.Core
                 {
                     var pathName = bitArchive.ReadFString();
                     var numExports = bitArchive.ReadUInt32();
+                    group = GuidCache.GetNetFieldExportGroupByPath(pathNameIndex);
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (group == null)
                     {
                         group = new NetFieldExportGroup
                         {
