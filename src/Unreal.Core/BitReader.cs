@@ -97,7 +97,7 @@ namespace Unreal.Core
         /// <seealso cref="PeekBit"/>
         public override bool ReadBit()
         {
-            if (_position >= LastBit || IsError)
+            if (_position >= LastBit)
             {
                 IsError = true;
                 return false;
@@ -348,7 +348,7 @@ namespace Unreal.Core
         {
             var length = ReadInt32();
 
-            if (length == 0 || IsError)
+            if (length == 0)
             {
                 return "";
             }
@@ -408,11 +408,6 @@ namespace Unreal.Core
         /// <exception cref="OverflowException"></exception>
         public override uint ReadSerializedInt(int maxValue)
         {
-            if (IsError)
-            {
-                return 0;
-            }
-
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
             //  const int32 LengthBits = FMath::CeilLogTwo(ValueMax); ???
 
@@ -462,7 +457,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return IsError ? (short)0 : BitConverter.ToInt16(value, 0);
 #else
-            return IsError ? (short)0 : BitConverter.ToInt16(value);
+            return BitConverter.ToInt16(value);
 #endif
         }
 
@@ -475,7 +470,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return IsError ? 0 : BitConverter.ToInt32(value, 0);
 #else
-            return IsError ? 0 : BitConverter.ToInt32(value);
+            return BitConverter.ToInt32(value);
 #endif
         }
 
@@ -495,7 +490,7 @@ namespace Unreal.Core
 #if NETSTANDARD2_0
             return IsError ? 0 : BitConverter.ToInt64(value, 0);
 #else
-            return IsError ? 0 : BitConverter.ToInt64(value);
+            return BitConverter.ToInt64(value);
 #endif
         }
 
@@ -510,14 +505,9 @@ namespace Unreal.Core
             byte count = 0;
             var remaining = true;
 
-            if(IsError)
-            {
-                return 0;
-            }
-
             while (remaining)
             {
-                if(_position + 8 > LastBit)
+                if (_position + 8 > LastBit)
                 {
                     IsError = true;
                     return 0;
@@ -539,11 +529,6 @@ namespace Unreal.Core
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
         {
             var bits = ReadSerializedInt(maxBits);
-
-            if (IsError)
-            {
-                return new FVector(0, 0, 0);
-            }
 
             var bias = 1 << ((int)bits + 1);
             var max = 1 << ((int)bits + 2);
@@ -645,10 +630,6 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-            if (IsError)
-            {
-                return 0;
-            }
 
 #if NETSTANDARD2_0
             return BitConverter.ToSingle(arr, 0);
@@ -668,11 +649,6 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-            if (IsError)
-            {
-                return 0;
-            }
-
 #if NETSTANDARD2_0
             return BitConverter.ToUInt16(arr, 0);
 #else
@@ -685,11 +661,6 @@ namespace Unreal.Core
             Span<byte> value = stackalloc byte[4];
 
             ReadBytes(value);
-
-            if (IsError)
-            {
-                return 0;
-            }
 
 #if NETSTANDARD2_0
             return BitConverter.ToUInt32(arr, 0);
@@ -713,12 +684,6 @@ namespace Unreal.Core
             Span<byte> value = stackalloc byte[8];
 
             ReadBytes(value);
-
-            if (IsError)
-            {
-                return 0;
-            }
-
 
 #if NETSTANDARD2_0
             return BitConverter.ToUInt32(arr, 0);
