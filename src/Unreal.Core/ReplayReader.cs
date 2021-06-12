@@ -1042,7 +1042,7 @@ namespace Unreal.Core
 
                 if (isExportingNetGUIDBunch)
                 {
-                    GuidCache.NetGuidToPathName[netGuid.Value] = GuidCache.RemoveAllPathPrefixes(pathName);
+                    GuidCache.NetGuidToPathName[netGuid.Value] = Utilities.RemoveAllPathPrefixes(pathName);
                 }
 
                 return netGuid;

@@ -16,14 +16,10 @@ namespace Unreal.Core.Models
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
 
-        public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
-
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
-
-        private Dictionary<string, NetFieldExportGroup> _pathToExportGroup = new Dictionary<string, NetFieldExportGroup>();
 
         private NetFieldParser _parser;
 
@@ -37,14 +33,12 @@ namespace Unreal.Core.Models
             NetFieldExportGroupMap.Clear();
             NetFieldExportGroupIndexToGroup.Clear();
             NetGuidToPathName.Clear();
-            NetFieldExportGroupMapPathFixed.Clear();
             NetworkGameplayTagNodeIndex = null;
 
             _archTypeToExportGroup.Clear();
             _cleanedClassNetCache.Clear();
             _partialPathNames.Clear();
             _failedPaths.Clear();
-            _pathToExportGroup.Clear();
         }
 
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
@@ -57,30 +51,22 @@ namespace Unreal.Core.Models
             //Easiest way to do this update
             if(group.EndsWith("ClassNetCache"))
             {
-                exportGroup.PathName = RemoveAllPathPrefixes(exportGroup.PathName);
+                exportGroup.PathName = Utilities.RemoveAllPathPrefixes(exportGroup.PathName);
             }
 
-            exportGroup.CleanedPath = RemoveAllPathPrefixes(group);
+            exportGroup.CleanedPath = Utilities.RemoveAllPathPrefixes(group);
 
-            /*
-            if(NetFieldExportGroupMap.TryGetValue(group, out var temp))
-            {
-                Console.WriteLine($"Found Duplicate: {group}\n\t- {temp.PathName}\n\t- {exportGroup.PathName}");
-            }
-            */
+            NetFieldExportGroupMap[exportGroup.CleanedPath] = exportGroup;
 
-            NetFieldExportGroupMap[group] = exportGroup;
-
-            //Console.WriteLine(++count);
             _parser.UpdateExportGroup(exportGroup);
 
             //Check if partial path
             foreach (KeyValuePair<string, string> partialRedirectKvp in CoreRedirects.PartialRedirects)
             {
-                if (group.StartsWith(partialRedirectKvp.Key))
+                if (group.StartsWith(partialRedirectKvp.Key, StringComparison.Ordinal))
                 {
-                    _partialPathNames.TryAdd(group, RemoveAllPathPrefixes(partialRedirectKvp.Value));
-                    _partialPathNames.TryAdd(RemoveAllPathPrefixes(group), RemoveAllPathPrefixes(partialRedirectKvp.Value));
+                    _partialPathNames.TryAdd(group, Utilities.RemoveAllPathPrefixes(partialRedirectKvp.Value));
+                    _partialPathNames.TryAdd(Utilities.RemoveAllPathPrefixes(group), Utilities.RemoveAllPathPrefixes(partialRedirectKvp.Value));
 
                     break;
                 }
@@ -120,12 +106,6 @@ namespace Unreal.Core.Models
 
                 var path = NetGuidToPathName[guid];
 
-                //Don't need to recheck. Some export groups are added later though
-                if (_failedPaths.Contains(path))
-                {
-                    return null;
-                }
-
                 path = CoreRedirects.GetRedirect(path);
 
                 if (_partialPathNames.TryGetValue(path, out string redirectPath))
@@ -133,50 +113,12 @@ namespace Unreal.Core.Models
                     path = redirectPath;
                 }
 
-                if (NetFieldExportGroupMapPathFixed.TryGetValue(guid, out var exportGroup) || _pathToExportGroup.TryGetValue(path, out exportGroup))
+                if (NetFieldExportGroupMap.TryGetValue(path, out var exportGroup))
                 {
                     _archTypeToExportGroup[guid] = exportGroup;
 
                     return exportGroup;
                 }
-
-                /*
-                if(NetFieldExportGroupMap.TryGetValue(RemoveAllPathPrefixes(path), out exportGroup))
-                {
-                    return exportGroup;
-                }*/
-
-                string cleaned = RemoveAllPathPrefixes(path);
-
-                foreach (var groupPathKvp in NetFieldExportGroupMap)
-                {
-                    if (cleaned == groupPathKvp.Value.CleanedPath)
-                    {
-                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
-                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
-                        _pathToExportGroup[path] = groupPathKvp.Value;
-
-                        return groupPathKvp.Value;
-                    }
-                }
-
-                //Try fixing ...
-                var cleanedPath = CleanPathSuffix(path);
-
-                foreach (var groupPathKvp in NetFieldExportGroupMap)
-                {
-                    if (groupPathKvp.Value.CleanedPath.Contains(cleanedPath))
-                    {
-
-                        NetFieldExportGroupMapPathFixed[guid] = groupPathKvp.Value;
-                        _archTypeToExportGroup[guid] = groupPathKvp.Value;
-                        _pathToExportGroup[path] = groupPathKvp.Value;
-
-                        return groupPathKvp.Value;
-                    }
-                }
-
-                _failedPaths.Add(path);
 
                 return null;
             }
@@ -186,19 +128,17 @@ namespace Unreal.Core.Models
             }
         }
 
-        static int count = 0;
-
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group, bool fullPath = false)
         {
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
             {
                 if (fullPath)
                 {
-                    classNetCachePath = $"{group}_ClassNetCache";
+                    classNetCachePath = $"{Utilities.RemoveAllPathPrefixes(group)}_ClassNetCache";
                 }
                 else
                 {
-                    classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                    classNetCachePath = $"{Utilities.RemoveAllPathPrefixes(group)}_ClassNetCache";
                 }
 
                 _cleanedClassNetCache[group] = classNetCachePath;
@@ -211,90 +151,5 @@ namespace Unreal.Core.Models
 
             return NetFieldExportGroupMap[classNetCachePath];
         }
-
-        public string RemoveAllPathPrefixes(string path)
-        {
-            path = RemovePathPrefix(path, "Default__");
-
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                switch (path[i])
-                {
-                    case '.':
-                        return path.Substring(i + 1);
-                    case '/':
-                        return path;
-                }
-            }
-
-            return path;
-        }
-
-        private string RemovePathPrefix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                if (path[i] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(toRemove.Length);
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (int i = 0; i < toRemove.Length; i++)
-            {
-                int pathIndex = path.Length - toRemove.Length + i;
-
-                if (path[pathIndex] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(0, path.Length - toRemove.Length);
-        }
-
-        //Removes all numbers and underscores from suffix
-        private string CleanPathSuffix(string path)
-        {
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                bool isDigit = (path[i] ^ '0') <= 9;
-                bool isUnderscore = path[i] == '_';
-
-                if (!isDigit && !isUnderscore)
-                {
-                    return path.Substring(0, i + 1);
-                }
-            }
-
-            return path;
-        }
-
-        /*
-        private string RemovePathSuffix(string path)
-        {
-            return Regex.Replace(path, @"(_?[0-9]+)+$", "");
-        }
-
-        private string RemovePathSuffix(string path, string toRemove)
-        {
-            return Regex.Replace(path, $@"{toRemove}$", "");
-        }
-        */
     }
 }

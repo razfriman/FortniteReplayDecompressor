@@ -34,7 +34,7 @@ namespace Unreal.Core
                 {
                     foreach (RedirectPathAttribute redirectAttribute in redirectAttributes)
                     {
-                        _redirects.TryAdd(redirectAttribute.Path, exportGroupAttribute.Path);
+                        _redirects.TryAdd(redirectAttribute.Path, Utilities.RemoveAllPathPrefixes(exportGroupAttribute.Path));
                     }
                 }
             }

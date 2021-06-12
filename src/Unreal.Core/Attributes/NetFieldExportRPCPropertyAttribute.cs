@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Attributes
 {
@@ -16,7 +17,7 @@ namespace Unreal.Core.Attributes
         public NetFieldExportRPCPropertyAttribute(string name, string typePathname, bool readChecksumBit = true, bool customStructure = false)
         {
             Name = name;
-            TypePathName = typePathname;
+            TypePathName = Utilities.RemoveAllPathPrefixes(typePathname);
             ReadChecksumBit = readChecksumBit;
             CustomStructure = customStructure;
 
