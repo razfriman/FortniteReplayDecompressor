@@ -40,7 +40,7 @@ namespace FortniteReplayReader
 
         public FortniteReplay ReadReplay(string fileName, ParseType parseType = ParseType.Minimal)
         {
-            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite); 
+            using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             return ReadReplay(stream, parseType);
         }
 
@@ -55,6 +55,7 @@ namespace FortniteReplayReader
         private string _branch;
         public int Major { get; set; }
         public int Minor { get; set; }
+
         public string Branch
         {
             get { return _branch; }
@@ -67,6 +68,7 @@ namespace FortniteReplayReader
                     Major = int.Parse(result.Groups["major"]?.Value ?? "0");
                     Minor = int.Parse(result.Groups["minor"]?.Value ?? "0");
                 }
+
                 _branch = value;
             }
         }
@@ -124,6 +126,12 @@ namespace FortniteReplayReader
                 case SupplyDropLlamaC llama:
                     Replay.GameInformation.UpdateLlama(channel, llama);
                     break;
+                case LabradorLlamaC labradorLlama:
+                    Replay.GameInformation.UpdateLabradorLlama(labradorLlama);
+                    break;
+                case FreshCheeseMinigameC freshCheeseMinigame:
+                    Replay.GameInformation.UpdateFreshCheeseMinigame(channel, freshCheeseMinigame);
+                    break;
                 case SupplyDropC supplyDrop:
                     Replay.GameInformation.UpdateSupplyDrop(channel, supplyDrop);
                     break;
@@ -131,13 +139,15 @@ namespace FortniteReplayReader
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;
                 case FortPlayerState playerState:
-                    Replay.GameInformation.UpdatePlayerState(channel, playerState, GuidCache.NetworkGameplayTagNodeIndex);
+                    Replay.GameInformation.UpdatePlayerState(channel, playerState,
+                        GuidCache.NetworkGameplayTagNodeIndex);
                     break;
                 case PlayerPawnC playerPawn:
                     if (ParseType >= ParseType.Normal)
                     {
                         Replay.GameInformation.UpdatePlayerPawn(channel, playerPawn);
                     }
+
                     break;
                 case FortPickup fortPickup:
                     if (ParseType >= ParseType.Normal)
@@ -147,6 +157,7 @@ namespace FortniteReplayReader
                             Replay.GameInformation.UpdateFortPickup(channel, fortPickup);
                         }
                     }
+
                     break;
                 case SafeZoneIndicatorC safeZoneIndicator:
                     Replay.GameInformation.UpdateSafeZone(safeZoneIndicator);
@@ -174,6 +185,7 @@ namespace FortniteReplayReader
                     {
                         Replay.GameInformation.UpdateFortInventory(channel, inventory);
                     }
+
                     break;
                 case BaseProp prop:
 
@@ -181,12 +193,14 @@ namespace FortniteReplayReader
                     {
                         Replay.GameInformation.UpdateContainer(channel, prop);
                     }
+
                     break;
                 case HealthSet healthSet:
                     if (!_fortniteSettings.IgnoreHealth)
                     {
                         Replay.GameInformation.UpdateHealth(channel, healthSet, GuidCache);
                     }
+
                     break;
                 case BaseVehicle vehicle:
                     Replay.GameInformation.UpdateVehicle(channel, vehicle);
@@ -249,9 +263,10 @@ namespace FortniteReplayReader
                 SizeInBytes = archive.ReadInt32()
             };
 
-            _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
+            _logger?.LogDebug(
+                $"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
 
-            using var decryptedReader = Decrypt((Unreal.Core.BinaryReader)archive, info.SizeInBytes);
+            using var decryptedReader = Decrypt((Unreal.Core.BinaryReader) archive, info.SizeInBytes);
 
             // Every event seems to start with some unknown int
             if (info.Group == ReplayEventTypes.PLAYER_ELIMINATION)
@@ -375,7 +390,8 @@ namespace FortniteReplayReader
                     Info = info,
                 };
 
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
+                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT &&
+                    Major >= 9)
                 {
                     archive.SkipBytes(9);
 
@@ -433,7 +449,8 @@ namespace FortniteReplayReader
             catch (Exception ex)
             {
                 _logger?.LogError($"Error while parsing PlayerElimination at timestamp {info.StartTime}");
-                throw new PlayerEliminationException($"Error while parsing PlayerElimination at timestamp {info.StartTime}", ex);
+                throw new PlayerEliminationException(
+                    $"Error while parsing PlayerElimination at timestamp {info.StartTime}", ex);
             }
         }
 
@@ -457,7 +474,7 @@ namespace FortniteReplayReader
 
         protected override Unreal.Core.BinaryReader Decrypt(Unreal.Core.BinaryReader archive, int size)
         {
-            if(!this.Replay.Info.Encrypted)
+            if (!this.Replay.Info.Encrypted)
             {
                 var decryptedReader = new Unreal.Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
                 {
@@ -527,7 +544,8 @@ namespace FortniteReplayReader
                 case ParsingGroup.PlayerPawn:
                     SetParseType(typeof(PlayerPawnC), type); //Normal player locations
                     SetParseType(GetInheritedClasses(typeof(PlayerPawnC)), type); //Bot locations
-                    SetParseType(GetInheritedClasses(typeof(BaseVehicle)), type); //Vehicle locations (required for players in them)
+                    SetParseType(GetInheritedClasses(typeof(BaseVehicle)),
+                        type); //Vehicle locations (required for players in them)
                     break;
             }
 
@@ -537,11 +555,12 @@ namespace FortniteReplayReader
 
                 IEnumerable<Type> allTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes());
 
-                foreach(Type checkType in allTypes)
+                foreach (Type checkType in allTypes)
                 {
                     if (checkType.IsSubclassOf(type))
                     {
-                        NetFieldExportGroupAttribute netFieldExport = (NetFieldExportGroupAttribute)checkType.GetCustomAttributes(typeof(NetFieldExportGroupAttribute), true).FirstOrDefault();
+                        NetFieldExportGroupAttribute netFieldExport = (NetFieldExportGroupAttribute) checkType
+                            .GetCustomAttributes(typeof(NetFieldExportGroupAttribute), true).FirstOrDefault();
 
                         if (netFieldExport != null)
                         {

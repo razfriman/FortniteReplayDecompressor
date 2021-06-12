@@ -95,6 +95,12 @@ namespace FortniteReplayReader
                 case SupplyDropC supplyDrop:
                     Replay.GameInformation.UpdateSupplyDrop(channel, supplyDrop);
                     break;
+                case LabradorLlamaC labradorLlama:
+                    Replay.GameInformation.UpdateLabradorLlama(labradorLlama);
+                    break;
+                case FreshCheeseMinigameC freshCheeseMinigame:
+                    Replay.GameInformation.UpdateFreshCheeseMinigame(channel, freshCheeseMinigame);
+                    break;
                 case GameStateC gameState:
                     Replay.GameInformation.UpdateGameState(gameState);
                     break;

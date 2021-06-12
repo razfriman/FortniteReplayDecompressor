@@ -24,6 +24,8 @@ namespace FortniteReplayReader.Models
 #endif
 
         public ICollection<Llama> Llamas => _llamas.Values;
+        public ICollection<Llama> LabradorLlamas => _labradorLlamas.Values;
+        public ICollection<CosmicChest> CosmicChests => _cosmicChests.Values;
         public ICollection<SafeZone> SafeZones => _safeZones;
         public ICollection<Player> Players => _players.Values;
         public ICollection<Team> Teams => _teams.Values;
@@ -40,7 +42,10 @@ namespace FortniteReplayReader.Models
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
-        private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel supply drop
+        private readonly Dictionary<int, Llama> _labradorLlamas = new(); //UniquePawnID to llama
+        private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel to supply drop
+        private readonly Dictionary<uint, CosmicChest> _cosmicChests = new Dictionary<uint, CosmicChest>(); //Channel to cosmic chest
+
 
         /// <summary>
         /// Requires Full parse mode
@@ -103,6 +108,36 @@ namespace FortniteReplayReader.Models
             newLlama.Destroyed = supplyDropLlama.bDestroyed ?? newLlama.Destroyed;
             newLlama.SpawnedItems = supplyDropLlama.bHasSpawnedPickups ?? newLlama.SpawnedItems;
         }
+        
+        internal void UpdateLabradorLlama(LabradorLlamaC labradorLlama)
+        {
+            if (!labradorLlama.PawnUniqueId.HasValue)
+            {
+                return;
+            }
+
+            var pawnUniqueId = labradorLlama.PawnUniqueId.Value;
+            var newLlama = new Llama();
+            if (!_labradorLlamas.TryAdd(pawnUniqueId, newLlama))
+            {
+                _labradorLlamas.TryGetValue(pawnUniqueId, out newLlama);
+            }
+
+            newLlama.Location = labradorLlama.ChannelActor.Location ?? newLlama.Location;
+        }
+        
+        internal void UpdateFreshCheeseMinigame(uint channelId, FreshCheeseMinigameC freshCheeseMinigameC)
+        {
+            var newChest = new CosmicChest();
+
+            if (!_cosmicChests.TryAdd(channelId, newChest))
+            {
+                _cosmicChests.TryGetValue(channelId, out newChest);
+            }
+
+            newChest.Location = freshCheeseMinigameC.ChannelActor?.Location ?? newChest.Location;
+        }
+
 
         internal void UpdateSearchableContainer(uint channelId, SearchableContainer searchableContainer)
         {
