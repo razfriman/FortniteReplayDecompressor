@@ -77,6 +77,7 @@ namespace Unreal.Core
             return _position >= LastBit;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(int count)
         {
             return _position + count <= LastBit;
@@ -97,8 +98,6 @@ namespace Unreal.Core
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>
         /// <seealso cref="PeekBit"/>
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool ReadBit()
         {
             if (_position >= LastBit)
@@ -144,6 +143,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
+
         public override ReadOnlyMemory<bool> ReadBits(int bitCount)
         {
             if (!CanRead(bitCount) || bitCount < 0)
@@ -256,7 +256,6 @@ namespace Unreal.Core
             return (T)Enum.ToObject(typeof(T), ReadByte());
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadBytes(Span<byte> data)
         {
             int count = data.Length * 8;
@@ -399,8 +398,6 @@ namespace Unreal.Core
         /// <param name="maxValue"></param>
         /// <returns>uint</returns>
         /// <exception cref="OverflowException"></exception>
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadSerializedInt(int maxValue)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
@@ -481,7 +478,6 @@ namespace Unreal.Core
         /// </summary>
         /// <returns>uint</returns>
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadIntPacked()
         {
             uint value = 0;

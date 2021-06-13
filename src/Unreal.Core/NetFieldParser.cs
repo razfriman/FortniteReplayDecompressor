@@ -361,8 +361,13 @@ namespace Unreal.Core
 
         private void LoadNetFields(List<Type> netFields)
         {
+            Dictionary<Type, int> _typeIds = new Dictionary<Type, int>();
+            int typeId = 0;
+
             foreach (Type type in netFields)
             {
+                _typeIds.TryAdd(type, typeId++);
+
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
                 PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
 
@@ -385,6 +390,8 @@ namespace Unreal.Core
 
                 _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
+                info.TypeId = _parserInfo.LinqCache.AddExportType(info.Type);
+
                 foreach (PropertyInfo property in type.GetProperties())
                 {
                     NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
@@ -405,11 +412,27 @@ namespace Unreal.Core
                     }
                     else if (netFieldExportAttribute != null)
                     {
-                        info.Properties.Add(netFieldExportAttribute.Name,new NetFieldInfo
+                        NetFieldInfo fieldInfo = new NetFieldInfo
                         {
                             Attribute = netFieldExportAttribute,
                             PropertyInfo = property
-                        });
+                        };
+
+                        info.Properties.Add(netFieldExportAttribute.Name, fieldInfo);
+
+                        //No reason to add ignored types
+                        if (netFieldExportAttribute.Type != RepLayoutCmdType.Ignore)
+                        {
+                            if (property.PropertyType.IsArray)
+                            {
+                                Type elementType = property.PropertyType.GetElementType();
+
+                                if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
+                                {
+                                    fieldInfo.ElementTypeId = _parserInfo.LinqCache.AddExportType(elementType);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -633,22 +656,21 @@ namespace Unreal.Core
             {
                 if (!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
                 {
-                    TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
+                    TypeAccessor typeAccessor = TypeAccessor.Create(groupInfo.Type);
                     typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
                 }
-
             }
         }
 
-        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
+        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type type = null)
         {
             object data = null;
 
             switch (replayout)
             {
                 case RepLayoutCmdType.Property:
-                    data = _parserInfo.LinqCache.CreateObject(objectType);
-                    (data as IProperty).Serialize(netBitReader);
+                    data = _parserInfo.LinqCache.CreatePropertyObject(type);
+                    ((IProperty)data).Serialize(netBitReader);
                     break;
                 case RepLayoutCmdType.RepMovement:
                     data = netBitReader.SerializeRepMovement();
@@ -722,8 +744,11 @@ namespace Unreal.Core
                     netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
                 case RepLayoutCmdType.Debug:
+                    //Fix later
+                    /*
                     data = _parserInfo.LinqCache.CreateObject(typeof(DebuggingObject));
                     (data as IProperty).Serialize(netBitReader);
+                    */
                     break;
             }
 
@@ -791,7 +816,7 @@ namespace Unreal.Core
 
                 if (isGroupType)
                 {
-                    data = _parserInfo.LinqCache.CreateObject(elementType);
+                    data = _parserInfo.LinqCache.CreateObject(fieldInfo.ElementTypeId);
                 }
 
                 while (true)
@@ -866,7 +891,7 @@ namespace Unreal.Core
             }
 
 
-            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
+            return _parserInfo.LinqCache.CreateObject(exportGroup.TypeId);
         }
 
         /// <summary>
@@ -883,7 +908,7 @@ namespace Unreal.Core
             {
                 if (groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
                 {
-                    property = (IProperty)_parserInfo.LinqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
+                    property = _parserInfo.LinqCache.CreatePropertyObject(fieldInfo.PropertyInfo.PropertyType);
 
                     return true;
                 }
@@ -920,6 +945,7 @@ namespace Unreal.Core
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
+            public int TypeId { get; set; }
             public bool UsesHandles { get; set; }
             public bool SingleInstance { get; set; }
             public ISingleInstance Instance { get; set; }
@@ -932,6 +958,7 @@ namespace Unreal.Core
         {
             public RepLayoutAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
+            public int ElementTypeId { get; set; }
         }
 
         /// <summary>
