@@ -772,7 +772,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348
         /// </summary>
-        protected virtual void ReadExportData(FArchive archive)
+        protected virtual void ReadExportData(BinaryReader archive)
         {
             ReadNetFieldExports(archive);
             ReadNetExportGuids(archive);
@@ -781,7 +781,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
         /// </summary>
-        protected virtual void ReadNetExportGuids(FArchive archive)
+        protected virtual void ReadNetExportGuids(BinaryReader archive)
         {
             var numGuids = archive.ReadIntPacked();
             // TODO bIgnoreReceivedExportGUIDs ?
@@ -796,6 +796,7 @@ namespace Unreal.Core
                 InternalLoadObject(reader, true);
             }
         }
+
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
@@ -858,7 +859,7 @@ namespace Unreal.Core
         /// <returns></returns>
         private int count = 0;
 
-        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(BinaryReader archive)
         {
             var currentLevelIndex = 0;
 

@@ -360,45 +360,24 @@ namespace Unreal.Core
 
             if (length == 0)
             {
-                return "";
+                return String.Empty;
             }
 
-            string value;
-            if (length < 0)
+            var isUnicode = length < 0;
+            length = isUnicode ? -2 * length : length;
+
+            if(length > 256 || length < 0)
             {
-                length = -2 * length;
+                IsError = true;
 
-                int totalBits = length * 8;
-
-                if (totalBits <= 0 || !CanRead(totalBits))
-                {
-                    IsError = true;
-                    return "";
-                }
-
-                Span<byte> bytes = stackalloc byte[length];
-                ReadBytes(bytes);
-
-                value = Encoding.Unicode.GetString(bytes.Slice(0, bytes.Length - 2));
-            }
-            else
-            {
-                int totalBits = length * 8;
-
-                if (totalBits <= 0 || !CanRead(totalBits))
-                {
-                    IsError = true;
-                    return "";
-                }
-
-                Span<byte> bytes = stackalloc byte[length];
-                ReadBytes(bytes);
-
-                value = Encoding.Default.GetString(bytes.Slice(0, bytes.Length - 1));
-
+                return String.Empty;
             }
 
-            return value;
+            Span<byte> bytes = stackalloc byte[length];
+            ReadBytes(bytes);
+
+            
+            return isUnicode ? Encoding.Unicode.GetString(bytes.Slice(0, bytes.Length - 2)) : Encoding.Default.GetString(bytes.Slice(0, bytes.Length - 1));
         }
 
         public override string ReadGUID()

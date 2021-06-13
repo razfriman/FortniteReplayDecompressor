@@ -58,11 +58,6 @@ namespace Unreal.Core
             {
                 _owner?.Dispose();
                 Reader.Dispose();
-
-                if (_owner != null)
-                {
-                    //Interlocked.Decrement(ref TotalPins);
-                }
             }
         }
 
@@ -83,8 +78,6 @@ namespace Unreal.Core
             }
 
             _owner = PinnedMemoryPool<byte>.Shared.Rent(count);
-
-            //Interlocked.Increment(ref TotalPins);
         }
 
         /// <summary>
@@ -207,22 +200,40 @@ namespace Unreal.Core
             }
 
             var isUnicode = length < 0;
-            byte[] data;
+            length = isUnicode ? -2 * length : length;
+
+            if(length > 1024)
+            {
+                throw new Exception($"FString length over 1024 bytes. Invalid parsing?");
+            }
+
+            Span<byte> data = stackalloc byte[length];
+            Reader.Read(data);
+
             string value;
 
             if (isUnicode)
             {
-                length = -2 * length;
-                data = ReadBytes(length);
                 value = Encoding.Unicode.GetString(data);
+
+                return value.Trim(new[] { ' ', '\0' }); //Too lazy to change
             }
             else
             {
-                data = ReadBytes(length);
-                value = Encoding.Default.GetString(data);
-            }
+                int trim = data.Length - 1;
 
-            return value.Trim(new[] { ' ', '\0' });
+                while(trim >= 0)
+                {
+                    if(data[trim] != ' ')
+                    {
+                        break;
+                    }
+
+                    --trim;
+                }
+
+                return Encoding.Default.GetString(data.Slice(0, trim));
+            }
         }
 
         /// <summary>

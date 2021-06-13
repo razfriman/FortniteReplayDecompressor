@@ -99,7 +99,7 @@ namespace ConsoleReader
             Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
 #if !DEBUG
-            var summary = BenchmarkRunner.Run<Benchmark>();
+            var summary = BenchmarkRunner.Run<Pooling>();
 
             Console.WriteLine(summary);
             
@@ -224,11 +224,55 @@ namespace ConsoleReader
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
 public unsafe class Pooling
 {
+    private System.IO.BinaryReader _reader;
+
     [GlobalSetup]
     public void GlobalSetup()
     {
+        byte[] bytes = new byte[10000000];
+
+        MemoryStream ms = new MemoryStream(bytes);
+
+        _reader = new System.IO.BinaryReader(ms);
     }
 
+    [Benchmark]
+    public void ReadBytes()
+    {
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+        for(int i =0; i < 1000000;i++)
+        {
+            Encoding.Default.GetString(_reader.ReadBytes(10));
+        }
+
+    }
+
+    [Benchmark]
+    public void ReadBytesSpan()
+    {
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+        Span<byte> test = stackalloc byte[10];
+
+        for (int i = 0; i < 1000000; i++)
+        {
+            _reader.Read(test);
+            Encoding.Default.GetString(test);
+        }
+    }
+
+    [Benchmark]
+    public void ReadBytesArray()
+    {
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+        byte[] arr = new byte[10];
+
+        for (int i = 0; i < 1000000; i++)
+        {
+            _reader.Read(arr);
+            Encoding.Default.GetString(arr);
+        }
+    }
 }
 
 public class DontForceGcCollectionsConfig : ManualConfig

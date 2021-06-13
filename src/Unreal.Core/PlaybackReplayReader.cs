@@ -260,7 +260,7 @@ namespace Unreal.Core
             }
         }
 
-        protected override IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+        protected override IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(BinaryReader archive)
         {
             //Limits the buffer size by time
             IEnumerable<PlaybackPacket> packets = base.ReadDemoFrameIntoPlaybackPackets(archive);
