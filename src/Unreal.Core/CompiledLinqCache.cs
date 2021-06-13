@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Unreal.Core
 {
-    public class CompiledLinqCache
+    public sealed class CompiledLinqCache
     {
         private Dictionary<Type, Func<dynamic>> _compiledBuilders = new Dictionary<Type, Func<dynamic>>();
 

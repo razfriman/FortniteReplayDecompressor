@@ -7,7 +7,7 @@ using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
 {
-    public class NetGuidCache
+    public sealed class NetGuidCache
     {
         public NetFieldExportGroup NetworkGameplayTagNodeIndex { get; private set; }
 

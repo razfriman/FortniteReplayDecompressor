@@ -2,6 +2,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Unreal.Core.Models;
@@ -11,7 +12,7 @@ namespace Unreal.Core
     /// <summary>
     /// Custom Binary Reader with methods for Unreal Engine replay files
     /// </summary>
-    public unsafe class BinaryReader : FArchive
+    public unsafe sealed class BinaryReader : FArchive
     {
         private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
@@ -52,7 +53,7 @@ namespace Unreal.Core
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {
@@ -310,6 +311,7 @@ namespace Unreal.Core
         /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
         /// </summary>
         /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadIntPacked()
         {
             uint value = 0;

@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 namespace FortniteReplayReader.Models.NetFieldExports
 {
     [NetFieldExportGroup("/Game/Athena/Athena_GameState.Athena_GameState_C")]
-    public class GameStateC : INetFieldExportGroup
+    public sealed class GameStateC : INetFieldExportGroup
     {
         #region Ignored
 
@@ -89,7 +89,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Ignore)]
         public uint? DefaultBattleBus { get; set; } //Type: UAthenaBattleBusItemDefinition* Bits: 16
-
+		
         #endregion
 
         [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.Ignore)]

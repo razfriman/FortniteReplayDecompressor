@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 namespace FortniteReplayReader.Models.NetFieldExports
 {
 	[NetFieldExportGroup("/Script/FortniteGame.FortInventory", ParseType.Normal)]
-	public class FortInventory : INetFieldExportGroup
+	public sealed class FortInventory : INetFieldExportGroup
 	{
 		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
 		public object RemoteRole { get; set; } //Type:  Bits: 2

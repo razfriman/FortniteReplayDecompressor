@@ -99,7 +99,7 @@ namespace ConsoleReader
             Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
 #if !DEBUG
-            var summary = BenchmarkRunner.Run<Pooling>();
+            var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
             
@@ -187,7 +187,7 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    Console.Write($"Pins: {BitReader.count}");
+                    //Console.Write($"Pins: {BitReader.count}");
 
                     if(i == 4)
                     {

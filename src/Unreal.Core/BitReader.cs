@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
@@ -96,6 +97,8 @@ namespace Unreal.Core
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>
         /// <seealso cref="PeekBit"/>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool ReadBit()
         {
             if (_position >= LastBit)
@@ -205,6 +208,7 @@ namespace Unreal.Core
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private byte ReadByteNoCheck()
         {
             var result = new byte();
@@ -252,6 +256,7 @@ namespace Unreal.Core
             return (T)Enum.ToObject(typeof(T), ReadByte());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadBytes(Span<byte> data)
         {
             int count = data.Length * 8;
@@ -348,8 +353,6 @@ namespace Unreal.Core
             return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
         }
 
-        public static int count = 0;
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
         /// </summary>
@@ -396,6 +399,8 @@ namespace Unreal.Core
         /// <param name="maxValue"></param>
         /// <returns>uint</returns>
         /// <exception cref="OverflowException"></exception>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadSerializedInt(int maxValue)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
@@ -475,6 +480,8 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
         /// </summary>
         /// <returns>uint</returns>
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadIntPacked()
         {
             uint value = 0;

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Unreal.Core
 {
-    public unsafe class FBitArray : IDisposable
+    public unsafe sealed class FBitArray : IDisposable
     {
         public static int Pins;
 
@@ -47,7 +47,6 @@ namespace Unreal.Core
             Length = totalBits;
             Pin();
 
-
             fixed (byte* bytePtr = bytes)
             {
                 for (int i = 0; i < bytes.Length; i++)
@@ -65,7 +64,6 @@ namespace Unreal.Core
                     *(_pointer + offset + 7) = (deref & 0x80) == 0x80;
                 }
             }
-
         }
 
         public static int Count;

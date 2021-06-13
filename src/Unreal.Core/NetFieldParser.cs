@@ -16,7 +16,7 @@ using Unreal.Core.Extensions;
 
 namespace Unreal.Core
 {
-    public class NetFieldParser
+    public sealed class NetFieldParser
     {
         private static Dictionary<string, NetFieldParserInfo> _parserInfoDict = new Dictionary<string, NetFieldParserInfo>();
 

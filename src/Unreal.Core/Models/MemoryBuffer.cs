@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Unreal.Core.Models
 {
-    public unsafe class MemoryBuffer : IDisposable
+    public unsafe sealed class MemoryBuffer : IDisposable
     {
         public UnmanagedMemoryStream Stream { get; private set; }
         public int Size { get; private set; }
