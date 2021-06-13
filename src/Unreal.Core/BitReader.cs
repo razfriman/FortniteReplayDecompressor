@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -347,6 +348,8 @@ namespace Unreal.Core
             return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
         }
 
+        public static int count = 0;
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
         /// </summary>
@@ -392,6 +395,7 @@ namespace Unreal.Core
                 ReadBytes(bytes);
 
                 value = Encoding.Default.GetString(bytes.Slice(0, bytes.Length - 1));
+
             }
 
             return value;
@@ -461,11 +465,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return IsError ? (short)0 : BitConverter.ToInt16(value, 0);
-#else
-            return BitConverter.ToInt16(value);
-#endif
+            return BinaryPrimitives.ReadInt16LittleEndian(value);
         }
 
         public override int ReadInt32()
@@ -474,18 +474,12 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return IsError ? 0 : BitConverter.ToInt32(value, 0);
-#else
-            return BitConverter.ToInt32(value);
-#endif
+            return BinaryPrimitives.ReadInt32LittleEndian(value);
         }
 
         public override bool ReadInt32AsBoolean()
         {
-            var i = ReadInt32();
-
-            return i == 1;
+            return ReadInt32() == 1;
         }
 
         public override long ReadInt64()
@@ -494,11 +488,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return IsError ? 0 : BitConverter.ToInt64(value, 0);
-#else
-            return BitConverter.ToInt64(value);
-#endif
+            return BinaryPrimitives.ReadInt64LittleEndian(value);
         }
 
         /// <summary>
@@ -637,12 +627,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-
-#if NETSTANDARD2_0
-            return BitConverter.ToSingle(arr, 0);
-#else
-            return BitConverter.ToSingle(value);
-#endif
+            return BinaryPrimitives.ReadSingleLittleEndian(value);
         }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)
@@ -656,11 +641,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return BitConverter.ToUInt16(arr, 0);
-#else
-            return BitConverter.ToUInt16(value);
-#endif
+            return BinaryPrimitives.ReadUInt16LittleEndian(value);
         }
 
         public override uint ReadUInt32()
@@ -669,11 +650,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return BitConverter.ToUInt32(arr, 0);
-#else
-            return BitConverter.ToUInt32(value);
-#endif
+            return BinaryPrimitives.ReadUInt32LittleEndian(value);
         }
 
         public override bool ReadUInt32AsBoolean()
@@ -692,11 +669,7 @@ namespace Unreal.Core
 
             ReadBytes(value);
 
-#if NETSTANDARD2_0
-            return BitConverter.ToUInt32(arr, 0);
-#else
-            return BitConverter.ToUInt64(value);
-#endif
+            return BinaryPrimitives.ReadUInt64LittleEndian(value);
         }
 
         /// <summary>

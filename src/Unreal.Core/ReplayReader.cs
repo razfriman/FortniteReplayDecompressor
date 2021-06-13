@@ -245,7 +245,7 @@ namespace Unreal.Core
                 var checkPointSize = binaryArchive.ReadUInt32();
             }
 
-            if (binaryArchive.HasLevelStreamingFixes())
+            if ((binaryArchive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
                 var packetOffset = binaryArchive.ReadInt64();
             }
@@ -359,8 +359,8 @@ namespace Unreal.Core
 
             // SerializeDemoFrameFromQueuedDemoPackets
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-            var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-            foreach (var packet in playbackPackets)
+            //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+            foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive))
             {
                 if (packet.State == PacketState.Success)
                 {
@@ -424,11 +424,11 @@ namespace Unreal.Core
 
             while (!binaryArchive.AtEnd())
             {
-                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+                //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
 
-                foreach (var packet in playbackPackets.Where(x => x.State == PacketState.Success))
+                foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive).Where(x => x.State == PacketState.Success))
                 {
                     i++;
 
@@ -856,6 +856,8 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
         /// <returns></returns>
+        private int count = 0;
+
         protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
             var currentLevelIndex = 0;
@@ -873,7 +875,7 @@ namespace Unreal.Core
                 ReadExportData(archive);
             }
 
-            if (archive.HasLevelStreamingFixes())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
                 var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
@@ -896,14 +898,15 @@ namespace Unreal.Core
                 }
             }
 
-            if (archive.HasLevelStreamingFixes())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
-                var externalOffset = archive.ReadUInt64();
+                archive.SkipBytes(8);
+                //var externalOffset = archive.ReadUInt64();
             }
 
             ReadExternalData(archive);
 
-            if (archive.HasGameSpecificFrameData())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.GameSpecificFrameData) == ReplayHeaderFlags.GameSpecificFrameData)
             {
                 var skipExternalOffset = archive.ReadUInt64();
 
@@ -914,13 +917,14 @@ namespace Unreal.Core
                 }
             }
 
-            var playbackPackets = new List<PlaybackPacket>();
+            //var playbackPackets = new List<PlaybackPacket>();
+
             var toContinue = true;
             while (toContinue)
             {
                 uint seenLevelIndex = 0;
 
-                if (archive.HasLevelStreamingFixes())
+                if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
                 {
                     seenLevelIndex = archive.ReadIntPacked();
                 }
@@ -930,7 +934,7 @@ namespace Unreal.Core
                 packet.LevelIndex = currentLevelIndex;
                 packet.SeenLevelIndex = seenLevelIndex;
 
-                playbackPackets.Add(packet);
+                //playbackPackets.Add(packet);
 
                 toContinue = packet.State switch
                 {
@@ -939,9 +943,11 @@ namespace Unreal.Core
                     PacketState.Success => true,
                     _ => false
                 };
+
+                yield return packet;
             }
 
-            return playbackPackets;
+            //return playbackPackets;
         }
 
         /// <summary>

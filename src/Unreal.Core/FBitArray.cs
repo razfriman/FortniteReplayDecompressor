@@ -105,7 +105,8 @@ namespace Unreal.Core
             Length = after.Length + Length;
 
             //Copy old array
-            Buffer.MemoryCopy(_pointer, newOwner.PinnedMemory.Pointer, newOwner.PinnedMemory.Length, Length);
+            Items.CopyTo(newMemory);
+            //Buffer.MemoryCopy(_pointer, newOwner.PinnedMemory.Pointer, newOwner.PinnedMemory.Length, Length);
 
             Items = newMemory;
 

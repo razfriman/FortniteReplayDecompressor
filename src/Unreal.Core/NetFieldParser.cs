@@ -621,13 +621,14 @@ namespace Unreal.Core
                     break;
             }
 
+#if DEBUG
             if (obj is DebuggingExportGroup debugGroup)
             {
                 debugGroup.Handles.Add(handle, data as DebuggingObject);
 
                 return;
             }
-
+#endif
             if (data != null)
             {
                 if (!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
@@ -863,6 +864,7 @@ namespace Unreal.Core
 
                 return (INetFieldExportGroup)exportGroup.Instance;
             }
+
 
             return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
         }

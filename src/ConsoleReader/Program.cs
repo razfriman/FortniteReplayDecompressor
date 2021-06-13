@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -68,19 +69,19 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
@@ -91,7 +92,13 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-#if DEBUG
+
+            //Attempting to remove clock speed variation as performance suffers as day goes on.
+            //Overall performance is slightly slower than previous
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
+            Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
+
+#if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -180,10 +187,14 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    //Console.Write($"Pins: {MemoryBuffer.Pins}");
+                    Console.Write($"Pins: {BitReader.count}");
 
-#if  DEBUG
-                    var asdfa = String.Join("\n", ReplayReader._failedTypes.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
+                    if(i == 4)
+                    {
+                        return;
+                    }
+#if  !DEBUG
+                    //var asdfa = String.Join("\n", CompiledLinqCache.Counts.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
 
 #endif
                     totalTime += sw.Elapsed.TotalMilliseconds;
@@ -213,13 +224,6 @@ namespace ConsoleReader
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
 public unsafe class Pooling
 {
-    [Params(//(int)1E+2, // 100 bytes
-            //(int)1E+3, // 1 000 bytes = 1 KB
-            //(int)1E+4, // 10 000 bytes = 10 KB
-        (int)50000, (int)12352) // 100 000 bytes = 100 KB
-        ]
-    public int SizeInBytes { get; set; }
-
     [GlobalSetup]
     public void GlobalSetup()
     {

@@ -77,7 +77,7 @@ namespace Unreal.Core
         {
             if(GetBitsLeft() == 32)
             {
-                ReadBits(GetBitsLeft());
+                Seek(32, SeekOrigin.Current);
 
                 return String.Empty;
             }
