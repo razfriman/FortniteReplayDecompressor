@@ -113,6 +113,13 @@ namespace Unreal.Core
         /// <returns>int</returns>
         public int ReadBitsToInt(int bitCount)
         {
+            if (!CanRead(bitCount))
+            {
+                IsError = true;
+
+                return 0;
+            }
+
             var result = new byte();
 
             for (var i = 0; i < bitCount; i++)

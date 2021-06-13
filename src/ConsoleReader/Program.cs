@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,30 +68,30 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
         }
     }
 
-    class Program
+    unsafe class Program
     {
         static void Main(string[] args)
         {
-#if !DEBUG
+#if DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -210,89 +211,20 @@ namespace ConsoleReader
 
 [MemoryDiagnoser]
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
-public class Pooling
+public unsafe class Pooling
 {
     [Params(//(int)1E+2, // 100 bytes
             //(int)1E+3, // 1 000 bytes = 1 KB
             //(int)1E+4, // 10 000 bytes = 10 KB
-        (int)1E+6) // 100 000 bytes = 100 KB
+        (int)50000, (int)12352) // 100 000 bytes = 100 KB
         ]
     public int SizeInBytes { get; set; }
-
-    private FBitArray fBitArrray;
-    private Type UIntType = typeof(UInt32);
-    private Dictionary<Type, RepLayoutCmdType> typeDict = new Dictionary<Type, RepLayoutCmdType>();
-    private Dictionary<int, RepLayoutCmdType> intDict = new Dictionary<int, RepLayoutCmdType>();
-    private Dictionary<string, RepLayoutCmdType> stringDict = new Dictionary<string, RepLayoutCmdType>();
-
 
     [GlobalSetup]
     public void GlobalSetup()
     {
-        typeDict.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
-        typeDict.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
-        typeDict.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
-        typeDict.Add(typeof(int), RepLayoutCmdType.PropertyInt);
-        typeDict.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
-        typeDict.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
-        typeDict.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
-        typeDict.Add(typeof(string), RepLayoutCmdType.PropertyString);
-        typeDict.Add(typeof(object), RepLayoutCmdType.Ignore);
-
-        stringDict.Add(typeof(bool).FullName, RepLayoutCmdType.PropertyBool);
-        stringDict.Add(typeof(byte).FullName, RepLayoutCmdType.PropertyByte);
-        stringDict.Add(typeof(ushort).FullName, RepLayoutCmdType.PropertyUInt16);
-        stringDict.Add(typeof(int).FullName, RepLayoutCmdType.PropertyInt);
-        stringDict.Add(typeof(uint).FullName, RepLayoutCmdType.PropertyUInt32);
-        stringDict.Add(typeof(ulong).FullName, RepLayoutCmdType.PropertyUInt64);
-        stringDict.Add(typeof(float).FullName, RepLayoutCmdType.PropertyFloat);
-        stringDict.Add(typeof(string).FullName, RepLayoutCmdType.PropertyString);
-        stringDict.Add(typeof(object).FullName, RepLayoutCmdType.Ignore);
-
-        intDict.Add(typeof(bool).MetadataToken, RepLayoutCmdType.PropertyBool);
-        intDict.Add(typeof(byte).MetadataToken, RepLayoutCmdType.PropertyByte);
-        intDict.Add(typeof(ushort).MetadataToken, RepLayoutCmdType.PropertyUInt16);
-        intDict.Add(typeof(int).MetadataToken, RepLayoutCmdType.PropertyInt);
-        intDict.Add(typeof(uint).MetadataToken, RepLayoutCmdType.PropertyUInt32);
-        intDict.Add(typeof(ulong).MetadataToken, RepLayoutCmdType.PropertyUInt64);
-        intDict.Add(typeof(float).MetadataToken, RepLayoutCmdType.PropertyFloat);
-        intDict.Add(typeof(string).MetadataToken, RepLayoutCmdType.PropertyString);
-        intDict.Add(typeof(object).MetadataToken, RepLayoutCmdType.Ignore);
     }
 
-
-    [Benchmark]
-    public RepLayoutCmdType GetByType()
-    {
-        if(typeDict.TryGetValue(UIntType, out var val))
-        {
-
-        }
-
-        return val;
-    }
-
-    [Benchmark]
-    public RepLayoutCmdType GetByInt()
-    {
-        if (intDict.TryGetValue(UIntType.MetadataToken, out var val))
-        {
-
-        }
-
-        return val;
-    }
-
-    [Benchmark]
-    public RepLayoutCmdType GetByName()
-    {
-        if (stringDict.TryGetValue(UIntType.FullName, out var val))
-        {
-
-        }
-
-        return val;
-    }
 }
 
 public class DontForceGcCollectionsConfig : ManualConfig

@@ -13,13 +13,11 @@ namespace Unreal.Core.Models
 
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
-        //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
+        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
 
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private Dictionary<string, string> _partialPathNames = new Dictionary<string, string>();
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
-        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
 
         private NetFieldParser _parser;
 
@@ -38,7 +36,6 @@ namespace Unreal.Core.Models
             _archTypeToExportGroup.Clear();
             _cleanedClassNetCache.Clear();
             _partialPathNames.Clear();
-            _failedPaths.Clear();
         }
 
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
@@ -97,7 +94,7 @@ namespace Unreal.Core.Models
 
         public NetFieldExportGroup GetNetFieldExportGroup(uint guid)
         {
-            if (!_archTypeToExportGroup.ContainsKey(guid))
+            if (!_archTypeToExportGroup.TryGetValue(guid, out NetFieldExportGroup group))
             {
                 if (!NetGuidToPathName.ContainsKey(guid))
                 {
@@ -124,7 +121,7 @@ namespace Unreal.Core.Models
             }
             else
             {
-                return _archTypeToExportGroup[guid];
+                return group;
             }
         }
 
@@ -144,12 +141,12 @@ namespace Unreal.Core.Models
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 
-            if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
+            if (!NetFieldExportGroupMap.TryGetValue(classNetCachePath, out NetFieldExportGroup exportGroup))
             {
                 return default;
             }
 
-            return NetFieldExportGroupMap[classNetCachePath];
+            return exportGroup;
         }
     }
 }
