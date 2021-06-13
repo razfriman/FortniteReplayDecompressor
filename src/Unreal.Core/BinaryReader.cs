@@ -179,8 +179,11 @@ namespace Unreal.Core
         /// <exception cref="System.IO.IOException">Thrown when an I/O error occurs.</exception>
         public override string ReadBytesToString(int count)
         {
+            Span<byte> bytes = stackalloc byte[count];
+            Reader.Read(bytes);
+
             // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
+            return Convert.ToHexString(bytes);
         }
 
         /// <summary>

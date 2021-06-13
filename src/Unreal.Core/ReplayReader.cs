@@ -701,7 +701,7 @@ namespace Unreal.Core
             // InName.GetNumber();
 
             var inString = archive.ReadFString();
-            var inNumber = archive.ReadInt32();
+            archive.SkipBytes(4);
             return inString;
         }
 
@@ -857,7 +857,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
         /// <returns></returns>
-        private int count = 0;
 
         protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(BinaryReader archive)
         {
@@ -1044,7 +1043,8 @@ namespace Unreal.Core
 
                 if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                 {
-                    var networkChecksum = archive.ReadUInt32();
+                    archive.SkipBytes(4);
+                    //var networkChecksum = archive.ReadUInt32();
                 }
 
                 if (isExportingNetGUIDBunch)
@@ -1087,21 +1087,6 @@ namespace Unreal.Core
                 InternalLoadObject(bitArchive, true);
                 numGUIDsRead++;
             }
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
-        /// </summary>
-        /// <param name="bitReader"></param>
-        /// <param name="bunch"></param>
-        protected virtual void ReceivedRawBunch(DataBunch bunch)
-        {
-            // bDeleted =
-
-            ReceivedNextBunch(bunch);
-
-            // if (bDeleted) return;
-            // else { We shouldn't hit this path on 100% reliable connections }
         }
 
         /// <summary>
@@ -1433,7 +1418,9 @@ namespace Unreal.Core
                 {
                     if (_netFieldParser.IsPlayerController(pathName))
                     {
-                        byte netPlayerIndex = bunch.Archive.ReadByte();
+                        bunch.Archive.SkipBytes(1);
+
+                        //byte netPlayerIndex = bunch.Archive.ReadByte();
                     }
                 }
 
@@ -2384,7 +2371,7 @@ namespace Unreal.Core
 
                 try
                 {
-                    ReceivedRawBunch(bunch);
+                    ReceivedNextBunch(bunch);
                 }
                 catch (Exception ex)
                 {

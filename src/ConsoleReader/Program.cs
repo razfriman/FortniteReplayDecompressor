@@ -95,8 +95,8 @@ namespace ConsoleReader
 
             //Attempting to remove clock speed variation as performance suffers as day goes on.
             //Overall performance is slightly slower than previous
-            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
-            Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
+            //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
+            //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
 #if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
