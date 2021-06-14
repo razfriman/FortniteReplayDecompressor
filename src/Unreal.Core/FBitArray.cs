@@ -4,6 +4,7 @@ using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -14,7 +15,6 @@ namespace Unreal.Core
     public unsafe sealed class FBitArray : IDisposable
     {
         public static int Pins;
-
         private bool* _pointer;
 
         public ReadOnlyMemory<bool> Items { get; private set; }
@@ -93,6 +93,12 @@ namespace Unreal.Core
             {
                 return *(_pointer + index);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte GetAsByte(int index)
+        {
+            return (*(byte*)(_pointer + index));
         }
 
         public void Append(ReadOnlyMemory<bool> after)

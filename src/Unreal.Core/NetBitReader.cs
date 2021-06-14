@@ -402,8 +402,7 @@ namespace Unreal.Core
                 {
                     var encodedSize = ReadByte();
 
-                    // https://github.com/dotnet/corefx/issues/10013
-                    return BitConverter.ToString(ReadBytes(encodedSize)).Replace("-", "");
+                    return Convert.ToHexString(ReadBytes(encodedSize));
                 }
                 else
                 {

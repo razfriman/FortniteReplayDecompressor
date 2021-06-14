@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unreal.Core.Extensions;
@@ -123,14 +124,11 @@ namespace Unreal.Core
                 return 0;
             }
 
-            var result = new byte();
+            var result = 0;
 
             for (var i = 0; i < bitCount; i++)
             {
-                if (Bits[i + _position])
-                {
-                    result |= (byte)(1 << i);
-                }
+                result |= (byte)(Bits.GetAsByte(_position + i) << i);
             }
 
             _position += bitCount;
@@ -209,7 +207,7 @@ namespace Unreal.Core
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private byte ReadByteNoCheck()
+        private unsafe byte ReadByteNoCheck()
         {
             var result = new byte();
 
@@ -221,13 +219,14 @@ namespace Unreal.Core
             }
             else
             {
-                for (var i = 0; i < 8; i++)
-                {
-                    if (Bits[pos + i])
-                    {
-                        result |= (byte)(1 << i);
-                    }
-                }
+                result |= (Bits.GetAsByte(pos + 0));
+                result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
+                result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
+                result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
+                result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
+                result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
+                result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
+                result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
             }
 
             _position += 8;
@@ -258,32 +257,16 @@ namespace Unreal.Core
 
         public void ReadBytes(Span<byte> data)
         {
-            int count = data.Length * 8;
-
             if (!CanRead(data.Length * 8))
             {
                 IsError = true;
                 return;
             }
 
-            for (int i = 0; i < count; i += 8)
+            for (int i = 0; i < data.Length; i++)
             {
-                byte b = new byte();
-
-                for (int x = 0; x < 8; x++)
-                {
-                    bool bit = Bits[i + _position + x];
-
-                    if (bit)
-                    {
-                        b |= (byte)(1 << x);
-                    }
-                }
-
-                data[i / 8] = b;
+                data[i] = ReadByteNoCheck();
             }
-
-            _position += count;
         }
 
         public override byte[] ReadBytes(int byteCount)
@@ -297,7 +280,7 @@ namespace Unreal.Core
             if (!CanRead(byteCount))
             {
                 IsError = true;
-                return new byte[0];
+                return Array.Empty<byte>();
             }
 
             var result = new byte[byteCount];
@@ -311,26 +294,10 @@ namespace Unreal.Core
             }
             else
             {
-                int count = byteCount * 8;
-
-                for (int i = 0; i < count; i += 8)
+                for (int i = 0; i < result.Length; i++)
                 {
-                    byte b = new byte();
-
-                    for (int x = 0; x < 8; x++)
-                    {
-                        bool bit = Bits[i + _position + x];
-
-                        if (bit)
-                        {
-                            b |= (byte)(1 << x);
-                        }
-                    }
-
-                    result[i / 8] = b;
+                    result[i] = ReadByteNoCheck();
                 }
-
-                _position += count;
             }
 
             return result;
@@ -348,6 +315,8 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
+            //Never hits this for newer replay
+
             // https://github.com/dotnet/corefx/issues/10013
             return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
         }
@@ -368,7 +337,7 @@ namespace Unreal.Core
             var isUnicode = length < 0;
             length = isUnicode ? -2 * length : length;
 
-            if(length > 256 || length < 0)
+            if (length > 256 || length < 0)
             {
                 IsError = true;
 
@@ -378,7 +347,7 @@ namespace Unreal.Core
             Span<byte> bytes = stackalloc byte[length];
             ReadBytes(bytes);
 
-            
+
             return isUnicode ? Encoding.Unicode.GetString(bytes.Slice(0, bytes.Length - 2)) : Encoding.Default.GetString(bytes.Slice(0, bytes.Length - 1));
         }
 
@@ -398,12 +367,11 @@ namespace Unreal.Core
         /// <param name="maxValue"></param>
         /// <returns>uint</returns>
         /// <exception cref="OverflowException"></exception>
-        public override uint ReadSerializedInt(int maxValue)
+        public unsafe override uint ReadSerializedInt(int maxValue)
         {
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
-            //  const int32 LengthBits = FMath::CeilLogTwo(ValueMax); ???
+            int value = 0;
+            int count = 0;
 
-            uint value = 0;
             for (uint mask = 1; (value + mask) < maxValue; mask *= 2)
             {
                 if (_position >= LastBit)
@@ -412,13 +380,12 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                if (Bits[_position++])
-                {
-                    value |= mask;
-                }
-            }
+                bool isSet = Bits[_position++];
 
-            return value;
+                value |= *(byte*)&isSet << count++;
+            }
+            
+            return (uint)value;
         }
 
         public UInt32 ReadUInt32Max(Int32 maxValue)
@@ -477,7 +444,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
         /// </summary>
         /// <returns>uint</returns>
-
         public override uint ReadIntPacked()
         {
             uint value = 0;
