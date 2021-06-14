@@ -380,31 +380,10 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                bool isSet = Bits[_position++];
-
-                value |= *(byte*)&isSet << count++;
+                value |= Bits.GetAsByte(_position++) << count++;
             }
             
             return (uint)value;
-        }
-
-        public UInt32 ReadUInt32Max(Int32 maxValue)
-        {
-            var maxBits = Math.Floor(Math.Log10(maxValue) / Math.Log10(2)) + 1;
-
-            UInt32 value = 0;
-            for (int i = 0; i < maxBits && (value + (1 << i)) < maxValue; ++i)
-            {
-                value += (ReadBit() ? 1U : 0U) << i;
-            }
-
-            if (value > maxValue)
-            {
-                throw new Exception("ReadUInt32Max overflowed!");
-            }
-
-            return value;
-
         }
 
         public override short ReadInt16()
@@ -444,9 +423,10 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
         /// </summary>
         /// <returns>uint</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadIntPacked()
         {
-            uint value = 0;
+            int value = 0;
             byte count = 0;
             var remaining = true;
 
@@ -458,13 +438,21 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                var nextByte = ReadByteNoCheck();
-                remaining = (nextByte & 1) == 1;            // Check 1 bit to see if theres more after this
-                nextByte >>= 1;                             // Shift to get actual 7 bit value
-                value += (uint)nextByte << (7 * count++);   // Add to total value
+                remaining = Bits[_position];
+
+                value |= Bits.GetAsByte(_position + 1) << count;
+                value |= Bits.GetAsByte(_position + 2) << (count + 1);
+                value |= Bits.GetAsByte(_position + 3) << (count + 2);
+                value |= Bits.GetAsByte(_position + 4) << (count + 3);
+                value |= Bits.GetAsByte(_position + 5) << (count + 4);
+                value |= Bits.GetAsByte(_position + 6) << (count + 5);
+                value |= Bits.GetAsByte(_position + 7) << (count + 6);
+
+                _position += 8;
+                count += 7;
             }
 
-            return value;
+            return (uint)value;
         }
 
         /// <summary>
@@ -725,7 +713,7 @@ namespace Unreal.Core
             _tempPosition = 0;
             */
 
-            IsError = false;
+                IsError = false;
         }
     }
 }

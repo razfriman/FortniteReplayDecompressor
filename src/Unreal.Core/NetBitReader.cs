@@ -390,7 +390,7 @@ namespace Unreal.Core
             if (typeHash == typeHashOther)
             {
                 typeString = ReadFString();
-                if (typeString == UnrealNames.None.ToString())
+                if (typeString == UnrealNameConstants.Names[(int)UnrealNames.None])
                 {
                     bValidTypeHash = false;
                 }

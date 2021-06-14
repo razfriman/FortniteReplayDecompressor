@@ -663,6 +663,24 @@ namespace Unreal.Core
             }
         }
 
+        protected virtual UnrealNames ReadHardcodedName(BitReader archive)
+        {
+            archive.SkipBits(1);
+
+            uint nameIndex;
+
+            if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+            {
+                nameIndex = archive.ReadUInt32();
+            }
+            else
+            {
+                nameIndex = archive.ReadIntPacked();
+            }
+
+            return ((UnrealNames)nameIndex);
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
@@ -680,25 +698,9 @@ namespace Unreal.Core
                 {
                     nameIndex = archive.ReadIntPacked();
                 }
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
-                // hard coded names in "UnrealNames.inl"
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
 
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
-                // TODO: Combine with Fortnite SDK dump
-                return ((UnrealNames)nameIndex).ToString();
+                return UnrealNameConstants.Names[nameIndex];
             }
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
-            // MAX_NETWORKED_HARDCODED_NAME = 410
-
-            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
-            // NAME_SIZE = 1024
-
-            // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
-            // InName.GetPlainNameString();
-            // InName.GetNumber();
 
             var inString = archive.ReadFString();
             archive.SkipBytes(4);
@@ -1229,7 +1231,6 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        // Merge problem - delete InPartialBunch. This is mainly so that in the unlikely chance that ChSequence wraps around, we wont merge two completely separate partial bunches.
                         // We shouldn't hit this path on 100% reliable connections
                         _logger?.LogError("Merge problem:  We shouldn't hit this path on 100% reliable connections");
                         return;
@@ -1251,22 +1252,18 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         protected virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
-            // if ( !Closing ) {
-            switch (bunch.ChName)
+            switch (bunch.ChType)
             {
-                case "Control":
+                case ChannelType.Control:
                     ReceivedControlBunch(bunch);
                     break;
                 default:
                     ReceivedActorBunch(bunch);
                     break;
             };
-            // }
 
             if (bunch.bClose)
             {
-                // We have fully received the bunch, so process it.
-                //ChannelActors[bunch.ChIndex] = false;
                 Channels[bunch.ChIndex] = null;
                 OnChannelClosed(bunch.ChIndex);
 
@@ -2263,7 +2260,7 @@ namespace Unreal.Core
                 bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
 
                 var chType = ChannelType.None;
-                var chName = "";
+                var chName = String.Empty;
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
@@ -2286,26 +2283,44 @@ namespace Unreal.Core
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                        chName = StaticParseName(bitReader);
-
-                        if (bitReader.IsError)
+                        if (bitReader.PeekBit())
                         {
-                            _logger?.LogError("Channel name serialization failed.");
-
-                            return;
+                            switch (ReadHardcodedName(bitReader))
+                            {
+                                case UnrealNames.Control:
+                                    chType = ChannelType.Control;
+                                    break;
+                                case UnrealNames.Voice:
+                                    chType = ChannelType.Voice;
+                                    break;
+                                case UnrealNames.Actor:
+                                    chType = ChannelType.Actor;
+                                    break;
+                            }
                         }
+                        else //For backwards compatibility
+                        {
+                            chName = StaticParseName(bitReader);
 
-                        if (chName.Equals(ChannelName.Control.ToString()))
-                        {
-                            chType = ChannelType.Control;
-                        }
-                        else if (chName.Equals(ChannelName.Voice.ToString()))
-                        {
-                            chType = ChannelType.Voice;
-                        }
-                        else if (chName.Equals(ChannelName.Actor.ToString()))
-                        {
-                            chType = ChannelType.Actor;
+                            if (bitReader.IsError)
+                            {
+                                _logger?.LogError("Channel name serialization failed.");
+
+                                return;
+                            }
+
+                            if (chName.Equals(ChannelName.Control.ToString()))
+                            {
+                                chType = ChannelType.Control;
+                            }
+                            else if (chName.Equals(ChannelName.Voice.ToString()))
+                            {
+                                chType = ChannelType.Voice;
+                            }
+                            else if (chName.Equals(ChannelName.Actor.ToString()))
+                            {
+                                chType = ChannelType.Actor;
+                            }
                         }
                     }
                 }

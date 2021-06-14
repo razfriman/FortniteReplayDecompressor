@@ -49,7 +49,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("D", RepLayoutCmdType.PropertyUInt32)]
         public uint? D { get; set; } 
 
-        [NetFieldExport("inventoryoverflowdate", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("inventory_overflow_date", RepLayoutCmdType.PropertyBool)]
         public bool? InventoryOverflowDate { get; set; }
 
         [NetFieldExport("bIsReplicatedCopy", RepLayoutCmdType.PropertyBool)]

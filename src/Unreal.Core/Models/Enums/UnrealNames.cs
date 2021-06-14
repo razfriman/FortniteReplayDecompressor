@@ -1,6 +1,9 @@
-﻿namespace Unreal.Core.Models.Enums
+﻿using System;
+using System.Linq;
+
+namespace Unreal.Core.Models.Enums
 {
-    public enum UnrealNames
+    public enum UnrealNames : int
     {
         None = 0,
         ByteProperty = 1,
@@ -197,5 +200,21 @@
         EditorLayout = 600,
         EditorKeyBindings = 601,
         GameUserSettings = 602,
+    }
+
+    public class UnrealNameConstants
+    {
+        public static string[] Names;
+
+        static UnrealNameConstants()
+        {
+            Names = new string[(int)Enum.GetValues(typeof(UnrealNames)).Cast<UnrealNames>().Last() + 1];
+
+            foreach (UnrealNames name in Enum.GetValues(typeof(UnrealNames)))
+            {
+                Names[(int)name] = name.ToString();
+            }
+        }
+
     }
 }

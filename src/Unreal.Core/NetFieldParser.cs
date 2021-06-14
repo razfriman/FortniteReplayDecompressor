@@ -571,13 +571,15 @@ namespace Unreal.Core
 
             string group = exportGroup.PathName;
 
-            string fixedExportName = export.CleanedName;
+            string fixedExportName = export.Name;
 
+            /*
             if (fixedExportName == null)
             {
                 export.CleanedName = FixInvalidNames(export.Name);
                 fixedExportName = export.CleanedName;
-            }
+            }*/
+
 
             bool isDebug = obj is DebuggingExportGroup;
             int groupId = exportGroup.GroupId;
@@ -923,6 +925,8 @@ namespace Unreal.Core
             char* newChars = stackalloc char[len];
             char* currentChar = newChars;
 
+            bool found = false;
+
             for (int i = 0; i < len; ++i)
             {
                 char c = str[i];
@@ -936,8 +940,16 @@ namespace Unreal.Core
                 {
                     *currentChar++ = c;
                 }
+                else
+                {
+                    found = true;
+                }
             }
 
+            if (found)
+            {
+                Console.WriteLine(str);
+            }
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 

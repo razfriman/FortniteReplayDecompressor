@@ -189,7 +189,7 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
-                return ((UnrealNames)nameIndex).ToString();
+                return UnrealNameConstants.Names[nameIndex];
             }
 
             var inString = _reader.ReadFString();
