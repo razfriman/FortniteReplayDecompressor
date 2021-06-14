@@ -44,8 +44,8 @@ namespace Unreal.Core
 
             _owner = PinnedMemoryPool<bool>.Shared.Rent(totalBits);
             Items = _owner.PinnedMemory.Memory;
-            Length = totalBits;
-            Pin();
+            Length = totalBits; 
+            _pointer = (bool*)_owner.PinnedMemory.Pointer;
 
             fixed (byte* bytePtr = bytes)
             {
@@ -70,15 +70,6 @@ namespace Unreal.Core
 
         public FBitArray Slice(int start, int count)
         {
-            /*
-            ++Count;
-
-            if(Count % 100 == 0)
-            {
-                Console.WriteLine(Count);
-            }
-            */
-
             FBitArray fBitArray = new FBitArray();
             fBitArray.Items = Items.Slice(start, count);
             fBitArray._pointer = _pointer + start;
@@ -152,24 +143,10 @@ namespace Unreal.Core
             Unpin();
         }
 
-        private void Pin()
-        {
-            _pointer = (bool*)_owner.PinnedMemory.Pointer;
-            //Interlocked.Increment(ref Pins);
-        }
-
         private void Unpin()
         {
             _owner?.Dispose();
             _owner = null;
-
-            /*
-            if(_pin.Pointer != new MemoryHandle().Pointer)
-            {
-                Interlocked.Decrement(ref Pins);
-            }
-            */
-
             _pointer = null;
         }
     }
