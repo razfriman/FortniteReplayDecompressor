@@ -8,7 +8,7 @@ using Unreal.Core.Models.Enums;
 namespace FortniteReplayReader.Models.NetFieldExports
 {
 	[NetFieldExportGroup("/Script/FortniteGame.FortInventory", ParseType.Normal)]
-	public class FortInventory : INetFieldExportGroup
+	public sealed class FortInventory : INetFieldExportGroup
 	{
 		[NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
 		public object RemoteRole { get; set; } //Type:  Bits: 2
@@ -49,7 +49,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("D", RepLayoutCmdType.PropertyUInt32)]
         public uint? D { get; set; } 
 
-        [NetFieldExport("inventoryoverflowdate", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("inventory_overflow_date", RepLayoutCmdType.PropertyBool)]
         public bool? InventoryOverflowDate { get; set; }
 
         [NetFieldExport("bIsReplicatedCopy", RepLayoutCmdType.PropertyBool)]

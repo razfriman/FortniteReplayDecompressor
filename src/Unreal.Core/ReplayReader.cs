@@ -51,7 +51,8 @@ namespace Unreal.Core
 
         private int InPacketId;
         private DataBunch PartialBunch;
-        private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        //private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        private int InReliable = 0;
 
         //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
@@ -143,7 +144,8 @@ namespace Unreal.Core
 
 #endif
 
-            Array.Clear(InReliable, 0, InReliable.Length);
+            InReliable = 0;
+            //Array.Clear(InReliable, 0, InReliable.Length);
             Array.Clear(Channels, 0, Channels.Length);
             Array.Clear(IgnoringChannels, 0, IgnoringChannels.Length);
 
@@ -243,7 +245,7 @@ namespace Unreal.Core
                 var checkPointSize = binaryArchive.ReadUInt32();
             }
 
-            if (binaryArchive.HasLevelStreamingFixes())
+            if ((binaryArchive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
                 var packetOffset = binaryArchive.ReadInt64();
             }
@@ -357,8 +359,8 @@ namespace Unreal.Core
 
             // SerializeDemoFrameFromQueuedDemoPackets
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-            var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-            foreach (var packet in playbackPackets)
+            //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+            foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive))
             {
                 if (packet.State == PacketState.Success)
                 {
@@ -422,11 +424,11 @@ namespace Unreal.Core
 
             while (!binaryArchive.AtEnd())
             {
-                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+                //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
 
-                foreach (var packet in playbackPackets.Where(x => x.State == PacketState.Success))
+                foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive).Where(x => x.State == PacketState.Success))
                 {
                     i++;
 
@@ -661,6 +663,24 @@ namespace Unreal.Core
             }
         }
 
+        protected virtual UnrealNames ReadHardcodedName(BitReader archive)
+        {
+            archive.SkipBits(1);
+
+            uint nameIndex;
+
+            if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+            {
+                nameIndex = archive.ReadUInt32();
+            }
+            else
+            {
+                nameIndex = archive.ReadIntPacked();
+            }
+
+            return ((UnrealNames)nameIndex);
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
@@ -678,28 +698,12 @@ namespace Unreal.Core
                 {
                     nameIndex = archive.ReadIntPacked();
                 }
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
-                // hard coded names in "UnrealNames.inl"
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
 
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
-                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
-                // TODO: Combine with Fortnite SDK dump
-                return ((UnrealNames)nameIndex).ToString();
+                return UnrealNameConstants.Names[nameIndex];
             }
 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
-            // MAX_NETWORKED_HARDCODED_NAME = 410
-
-            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
-            // NAME_SIZE = 1024
-
-            // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
-            // InName.GetPlainNameString();
-            // InName.GetNumber();
-
             var inString = archive.ReadFString();
-            var inNumber = archive.ReadInt32();
+            archive.SkipBytes(4);
             return inString;
         }
 
@@ -770,7 +774,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348
         /// </summary>
-        protected virtual void ReadExportData(FArchive archive)
+        protected virtual void ReadExportData(BinaryReader archive)
         {
             ReadNetFieldExports(archive);
             ReadNetExportGuids(archive);
@@ -779,7 +783,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
         /// </summary>
-        protected virtual void ReadNetExportGuids(FArchive archive)
+        protected virtual void ReadNetExportGuids(BinaryReader archive)
         {
             var numGuids = archive.ReadIntPacked();
             // TODO bIgnoreReceivedExportGUIDs ?
@@ -794,6 +798,7 @@ namespace Unreal.Core
                 InternalLoadObject(reader, true);
             }
         }
+
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
@@ -812,7 +817,9 @@ namespace Unreal.Core
                     var pathName = archive.ReadFString();
                     var numExports = archive.ReadIntPacked();
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    group = GuidCache.GetNetFieldExportGroupByPath(pathNameIndex);
+
+                    if (group == null)
                     {
                         group = new NetFieldExportGroup
                         {
@@ -852,7 +859,8 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
         /// <returns></returns>
-        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+
+        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(BinaryReader archive)
         {
             var currentLevelIndex = 0;
 
@@ -869,7 +877,7 @@ namespace Unreal.Core
                 ReadExportData(archive);
             }
 
-            if (archive.HasLevelStreamingFixes())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
                 var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
@@ -892,14 +900,15 @@ namespace Unreal.Core
                 }
             }
 
-            if (archive.HasLevelStreamingFixes())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
             {
-                var externalOffset = archive.ReadUInt64();
+                archive.SkipBytes(8);
+                //var externalOffset = archive.ReadUInt64();
             }
 
             ReadExternalData(archive);
 
-            if (archive.HasGameSpecificFrameData())
+            if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.GameSpecificFrameData) == ReplayHeaderFlags.GameSpecificFrameData)
             {
                 var skipExternalOffset = archive.ReadUInt64();
 
@@ -910,13 +919,14 @@ namespace Unreal.Core
                 }
             }
 
-            var playbackPackets = new List<PlaybackPacket>();
+            //var playbackPackets = new List<PlaybackPacket>();
+
             var toContinue = true;
             while (toContinue)
             {
                 uint seenLevelIndex = 0;
 
-                if (archive.HasLevelStreamingFixes())
+                if ((archive.ReplayHeaderFlags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes)
                 {
                     seenLevelIndex = archive.ReadIntPacked();
                 }
@@ -926,7 +936,7 @@ namespace Unreal.Core
                 packet.LevelIndex = currentLevelIndex;
                 packet.SeenLevelIndex = seenLevelIndex;
 
-                playbackPackets.Add(packet);
+                //playbackPackets.Add(packet);
 
                 toContinue = packet.State switch
                 {
@@ -935,9 +945,11 @@ namespace Unreal.Core
                     PacketState.Success => true,
                     _ => false
                 };
+
+                yield return packet;
             }
 
-            return playbackPackets;
+            //return playbackPackets;
         }
 
         /// <summary>
@@ -955,8 +967,9 @@ namespace Unreal.Core
                 {
                     var pathName = bitArchive.ReadFString();
                     var numExports = bitArchive.ReadUInt32();
+                    group = GuidCache.GetNetFieldExportGroupByPath(pathNameIndex);
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (group == null)
                     {
                         group = new NetFieldExportGroup
                         {
@@ -1032,12 +1045,13 @@ namespace Unreal.Core
 
                 if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                 {
-                    var networkChecksum = archive.ReadUInt32();
+                    archive.SkipBytes(4);
+                    //var networkChecksum = archive.ReadUInt32();
                 }
 
                 if (isExportingNetGUIDBunch)
                 {
-                    GuidCache.NetGuidToPathName[netGuid.Value] = GuidCache.RemoveAllPathPrefixes(pathName);
+                    GuidCache.NetGuidToPathName[netGuid.Value] = Utilities.RemoveAllPathPrefixes(pathName);
                 }
 
                 return netGuid;
@@ -1078,21 +1092,6 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
-        /// </summary>
-        /// <param name="bitReader"></param>
-        /// <param name="bunch"></param>
-        protected virtual void ReceivedRawBunch(DataBunch bunch)
-        {
-            // bDeleted =
-
-            ReceivedNextBunch(bunch);
-
-            // if (bDeleted) return;
-            // else { We shouldn't hit this path on 100% reliable connections }
-        }
-
-        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L517
         /// </summary>
         /// <param name="bitReader"></param>
@@ -1109,7 +1108,7 @@ namespace Unreal.Core
             {
                 // Reliables should be ordered properly at this point
                 //check(Bunch.ChSequence == Connection->InReliable[Bunch.ChIndex] + 1);
-                InReliable[bunch.ChIndex] = bunch.ChSequence;
+                InReliable = bunch.ChSequence;
             }
 
             // merge
@@ -1232,7 +1231,6 @@ namespace Unreal.Core
                     }
                     else
                     {
-                        // Merge problem - delete InPartialBunch. This is mainly so that in the unlikely chance that ChSequence wraps around, we wont merge two completely separate partial bunches.
                         // We shouldn't hit this path on 100% reliable connections
                         _logger?.LogError("Merge problem:  We shouldn't hit this path on 100% reliable connections");
                         return;
@@ -1254,22 +1252,18 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         protected virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
-            // if ( !Closing ) {
-            switch (bunch.ChName)
+            switch (bunch.ChType)
             {
-                case "Control":
+                case ChannelType.Control:
                     ReceivedControlBunch(bunch);
                     break;
                 default:
                     ReceivedActorBunch(bunch);
                     break;
             };
-            // }
 
             if (bunch.bClose)
             {
-                // We have fully received the bunch, so process it.
-                //ChannelActors[bunch.ChIndex] = false;
                 Channels[bunch.ChIndex] = null;
                 OnChannelClosed(bunch.ChIndex);
 
@@ -1421,7 +1415,9 @@ namespace Unreal.Core
                 {
                     if (_netFieldParser.IsPlayerController(pathName))
                     {
-                        byte netPlayerIndex = bunch.Archive.ReadByte();
+                        bunch.Archive.SkipBytes(1);
+
+                        //byte netPlayerIndex = bunch.Archive.ReadByte();
                     }
                 }
 
@@ -2247,14 +2243,8 @@ namespace Unreal.Core
                 if (bunch.bReliable)
                 {
                     // We can derive the sequence for 100% reliable connections
-                    //Bunch.ChSequence = InReliable[Bunch.ChIndex] + 1;
 
-                    if (InReliable[bunch.ChIndex] == null)
-                    {
-                        InReliable[bunch.ChIndex] = 0;
-                    }
-
-                    bunch.ChSequence = (InReliable[bunch.ChIndex] + 1).Value;
+                    bunch.ChSequence = InReliable + 1;
                 }
                 else if (bunch.bPartial)
                 {
@@ -2270,7 +2260,7 @@ namespace Unreal.Core
                 bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
 
                 var chType = ChannelType.None;
-                var chName = "";
+                var chName = String.Empty;
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
@@ -2293,26 +2283,44 @@ namespace Unreal.Core
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                        chName = StaticParseName(bitReader);
-
-                        if (bitReader.IsError)
+                        if (bitReader.PeekBit())
                         {
-                            _logger?.LogError("Channel name serialization failed.");
-
-                            return;
+                            switch (ReadHardcodedName(bitReader))
+                            {
+                                case UnrealNames.Control:
+                                    chType = ChannelType.Control;
+                                    break;
+                                case UnrealNames.Voice:
+                                    chType = ChannelType.Voice;
+                                    break;
+                                case UnrealNames.Actor:
+                                    chType = ChannelType.Actor;
+                                    break;
+                            }
                         }
+                        else //For backwards compatibility
+                        {
+                            chName = StaticParseName(bitReader);
 
-                        if (chName.Equals(ChannelName.Control.ToString()))
-                        {
-                            chType = ChannelType.Control;
-                        }
-                        else if (chName.Equals(ChannelName.Voice.ToString()))
-                        {
-                            chType = ChannelType.Voice;
-                        }
-                        else if (chName.Equals(ChannelName.Actor.ToString()))
-                        {
-                            chType = ChannelType.Actor;
+                            if (bitReader.IsError)
+                            {
+                                _logger?.LogError("Channel name serialization failed.");
+
+                                return;
+                            }
+
+                            if (chName.Equals(ChannelName.Control.ToString()))
+                            {
+                                chType = ChannelType.Control;
+                            }
+                            else if (chName.Equals(ChannelName.Voice.ToString()))
+                            {
+                                chType = ChannelType.Voice;
+                            }
+                            else if (chName.Equals(ChannelName.Actor.ToString()))
+                            {
+                                chType = ChannelType.Actor;
+                            }
                         }
                     }
                 }
@@ -2349,7 +2357,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                if (bunch.bReliable && bunch.ChSequence <= InReliable)
                 {
                     continue;
                 }
@@ -2378,7 +2386,7 @@ namespace Unreal.Core
 
                 try
                 {
-                    ReceivedRawBunch(bunch);
+                    ReceivedNextBunch(bunch);
                 }
                 catch (Exception ex)
                 {

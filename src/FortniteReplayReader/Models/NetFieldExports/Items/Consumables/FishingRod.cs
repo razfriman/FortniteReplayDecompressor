@@ -57,7 +57,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
         [NetFieldExport("Projectile", RepLayoutCmdType.Property)]
         public NetworkGUID Projectile { get; set; }
 
-        [NetFieldExport("ProjectileActor", RepLayoutCmdType.Property)]
+        [NetFieldExport("Projectile Actor", RepLayoutCmdType.Property)]
         public NetworkGUID ProjectileActor { get; set; }
 
         [NetFieldExport("PlayerPawn", RepLayoutCmdType.Property)]

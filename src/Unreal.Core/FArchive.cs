@@ -34,6 +34,8 @@ namespace Unreal.Core
         /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L693
         /// </summary>
+        /// 
+
         public virtual bool HasLevelStreamingFixes()
         {
             return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.HasStreamingFixes);

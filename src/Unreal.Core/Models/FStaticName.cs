@@ -26,7 +26,7 @@ namespace Unreal.Core.Models
                     nameIndex = reader.ReadIntPacked();
                 }
 
-                Value = ((UnrealNames)nameIndex).ToString();
+                Value = UnrealNameConstants.Names[nameIndex];
 
                 return;
             }

@@ -1,6 +1,8 @@
-﻿using System;
+﻿using OozSharp.MemoryPool;
+using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Unreal.Core.Models;
@@ -10,15 +12,14 @@ namespace Unreal.Core
     /// <summary>
     /// Custom Binary Reader with methods for Unreal Engine replay files
     /// </summary>
-    public unsafe class BinaryReader : FArchive
+    public unsafe sealed class BinaryReader : FArchive
     {
         private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
         public override int Position { get => (int)BaseStream.Position; protected set => Seek(value); }
-        public byte* BasePointer => (byte*)_pin.Pointer;
+        private IPinnedMemoryOwner<byte> _owner;
+        public byte* BasePointer => (byte*)_owner.PinnedMemory.Pointer;
 
-        private IMemoryOwner<byte> _owner;
-        private MemoryHandle _pin;
 
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
@@ -33,7 +34,7 @@ namespace Unreal.Core
         public BinaryReader(int size)
         {
             CreateMemory(size);
-            Reader = new System.IO.BinaryReader(new UnmanagedMemoryStream((byte*)_pin.Pointer, size, size, FileAccess.ReadWrite));
+            Reader = new System.IO.BinaryReader(new UnmanagedMemoryStream((byte*)_owner.PinnedMemory.Pointer, size, size, FileAccess.ReadWrite));
         }
 
         public override bool AtEnd()
@@ -52,18 +53,12 @@ namespace Unreal.Core
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {
                 _owner?.Dispose();
-                _pin.Dispose();
                 Reader.Dispose();
-
-                if(_owner != null)
-                {
-                    //Interlocked.Decrement(ref TotalPins);
-                }
             }
         }
 
@@ -83,10 +78,7 @@ namespace Unreal.Core
                 throw new InvalidOperationException("Memory object already created");
             }
 
-            _owner = MemoryPool<byte>.Shared.Rent(count);
-            _pin = _owner.Memory.Pin();
-
-            //Interlocked.Increment(ref TotalPins);
+            _owner = PinnedMemoryPool<byte>.Shared.Rent(count);
         }
 
         /// <summary>
@@ -187,8 +179,11 @@ namespace Unreal.Core
         /// <exception cref="System.IO.IOException">Thrown when an I/O error occurs.</exception>
         public override string ReadBytesToString(int count)
         {
+            Span<byte> bytes = stackalloc byte[count];
+            Reader.Read(bytes);
+
             // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
+            return Convert.ToHexString(bytes);
         }
 
         /// <summary>
@@ -209,22 +204,40 @@ namespace Unreal.Core
             }
 
             var isUnicode = length < 0;
-            byte[] data;
+            length = isUnicode ? -2 * length : length;
+
+            if(length > 1024)
+            {
+                throw new Exception($"FString length over 1024 bytes. Invalid parsing?");
+            }
+
+            Span<byte> data = stackalloc byte[length];
+            Reader.Read(data);
+
             string value;
 
             if (isUnicode)
             {
-                length = -2 * length;
-                data = ReadBytes(length);
                 value = Encoding.Unicode.GetString(data);
+
+                return value.Trim(new[] { ' ', '\0' }); //Too lazy to change
             }
             else
             {
-                data = ReadBytes(length);
-                value = Encoding.Default.GetString(data);
-            }
+                int trim = data.Length - 1;
 
-            return value.Trim(new[] { ' ', '\0' });
+                while(trim >= 0)
+                {
+                    if(data[trim] != ' ')
+                    {
+                        break;
+                    }
+
+                    --trim;
+                }
+
+                return Encoding.Default.GetString(data.Slice(0, trim));
+            }
         }
 
         /// <summary>
@@ -301,6 +314,7 @@ namespace Unreal.Core
         /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
         /// </summary>
         /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override uint ReadIntPacked()
         {
             uint value = 0;

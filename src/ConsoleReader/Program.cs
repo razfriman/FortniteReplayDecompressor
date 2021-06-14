@@ -11,11 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,30 +69,36 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
         }
     }
 
-    class Program
+    unsafe class Program
     {
         static void Main(string[] args)
         {
-#if !DEBUG
+
+            //Attempting to remove clock speed variation as performance suffers as day goes on.
+            //Overall performance is slightly slower than previous
+            //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
+            //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
+
+#if DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -99,11 +107,12 @@ namespace ConsoleReader
             
 
             var b = a.ReadLongReplay();
+            /*
             ReplayReader reader2 = a._reader;
 
             Console.WriteLine($"Total Groups Read: {reader2?.TotalGroupsRead}. Failed Bunches: {reader2?.TotalFailedBunches}. Failed Replicator: {reader2?.TotalFailedReplicatorReceives} Null Exports: {reader2?.NullHandles} Property Errors: {reader2?.PropertyError} Failed Property Reads: {reader2?.FailedToRead}");
             Console.WriteLine($"Pins: {FBitArray.Pins}");
-            
+            */
             return;
 #endif
             var serviceCollection = new ServiceCollection()
@@ -178,10 +187,14 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    //Console.Write($"Pins: {MemoryBuffer.Pins}");
+                    //Console.Write($"Pins: {BitReader.count}");
 
-#if  DEBUG
-                    var asdfa = String.Join("\n", ReplayReader._failedTypes.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
+                    if(i == 4)
+                    {
+                        return;
+                    }
+#if  !DEBUG
+                    //var asdfa = String.Join("\n", CompiledLinqCache.Counts.OrderByDescending(x => x.Value).Select(x => $"{x.Key}: {x.Value}"));
 
 #endif
                     totalTime += sw.Elapsed.TotalMilliseconds;
@@ -209,88 +222,56 @@ namespace ConsoleReader
 
 [MemoryDiagnoser]
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
-public class Pooling
+public unsafe class Pooling
 {
-    [Params(//(int)1E+2, // 100 bytes
-            //(int)1E+3, // 1 000 bytes = 1 KB
-            //(int)1E+4, // 10 000 bytes = 10 KB
-        (int)1E+6) // 100 000 bytes = 100 KB
-        ]
-    public int SizeInBytes { get; set; }
-
-    private FBitArray fBitArrray;
-    private Type UIntType = typeof(UInt32);
-    private Dictionary<Type, RepLayoutCmdType> typeDict = new Dictionary<Type, RepLayoutCmdType>();
-    private Dictionary<int, RepLayoutCmdType> intDict = new Dictionary<int, RepLayoutCmdType>();
-    private Dictionary<string, RepLayoutCmdType> stringDict = new Dictionary<string, RepLayoutCmdType>();
-
+    private System.IO.BinaryReader _reader;
 
     [GlobalSetup]
     public void GlobalSetup()
     {
-        typeDict.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
-        typeDict.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
-        typeDict.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
-        typeDict.Add(typeof(int), RepLayoutCmdType.PropertyInt);
-        typeDict.Add(typeof(uint), RepLayoutCmdType.PropertyUInt32);
-        typeDict.Add(typeof(ulong), RepLayoutCmdType.PropertyUInt64);
-        typeDict.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
-        typeDict.Add(typeof(string), RepLayoutCmdType.PropertyString);
-        typeDict.Add(typeof(object), RepLayoutCmdType.Ignore);
+        byte[] bytes = new byte[10000000];
 
-        stringDict.Add(typeof(bool).FullName, RepLayoutCmdType.PropertyBool);
-        stringDict.Add(typeof(byte).FullName, RepLayoutCmdType.PropertyByte);
-        stringDict.Add(typeof(ushort).FullName, RepLayoutCmdType.PropertyUInt16);
-        stringDict.Add(typeof(int).FullName, RepLayoutCmdType.PropertyInt);
-        stringDict.Add(typeof(uint).FullName, RepLayoutCmdType.PropertyUInt32);
-        stringDict.Add(typeof(ulong).FullName, RepLayoutCmdType.PropertyUInt64);
-        stringDict.Add(typeof(float).FullName, RepLayoutCmdType.PropertyFloat);
-        stringDict.Add(typeof(string).FullName, RepLayoutCmdType.PropertyString);
-        stringDict.Add(typeof(object).FullName, RepLayoutCmdType.Ignore);
+        MemoryStream ms = new MemoryStream(bytes);
 
-        intDict.Add(typeof(bool).MetadataToken, RepLayoutCmdType.PropertyBool);
-        intDict.Add(typeof(byte).MetadataToken, RepLayoutCmdType.PropertyByte);
-        intDict.Add(typeof(ushort).MetadataToken, RepLayoutCmdType.PropertyUInt16);
-        intDict.Add(typeof(int).MetadataToken, RepLayoutCmdType.PropertyInt);
-        intDict.Add(typeof(uint).MetadataToken, RepLayoutCmdType.PropertyUInt32);
-        intDict.Add(typeof(ulong).MetadataToken, RepLayoutCmdType.PropertyUInt64);
-        intDict.Add(typeof(float).MetadataToken, RepLayoutCmdType.PropertyFloat);
-        intDict.Add(typeof(string).MetadataToken, RepLayoutCmdType.PropertyString);
-        intDict.Add(typeof(object).MetadataToken, RepLayoutCmdType.Ignore);
-    }
-
-
-    [Benchmark]
-    public RepLayoutCmdType GetByType()
-    {
-        if(typeDict.TryGetValue(UIntType, out var val))
-        {
-
-        }
-
-        return val;
+        _reader = new System.IO.BinaryReader(ms);
     }
 
     [Benchmark]
-    public RepLayoutCmdType GetByInt()
+    public void ReadBytes()
     {
-        if (intDict.TryGetValue(UIntType.MetadataToken, out var val))
-        {
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
 
+        for(int i =0; i < 1000000;i++)
+        {
+            Encoding.Default.GetString(_reader.ReadBytes(10));
         }
 
-        return val;
     }
 
     [Benchmark]
-    public RepLayoutCmdType GetByName()
+    public void ReadBytesSpan()
     {
-        if (stringDict.TryGetValue(UIntType.FullName, out var val))
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+        Span<byte> test = stackalloc byte[10];
+
+        for (int i = 0; i < 1000000; i++)
         {
-
+            _reader.Read(test);
+            Encoding.Default.GetString(test);
         }
+    }
 
-        return val;
+    [Benchmark]
+    public void ReadBytesArray()
+    {
+        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
+        byte[] arr = new byte[10];
+
+        for (int i = 0; i < 1000000; i++)
+        {
+            _reader.Read(arr);
+            Encoding.Default.GetString(arr);
+        }
     }
 }
 

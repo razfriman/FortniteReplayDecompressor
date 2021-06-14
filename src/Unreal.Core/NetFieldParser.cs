@@ -16,7 +16,7 @@ using Unreal.Core.Extensions;
 
 namespace Unreal.Core
 {
-    public class NetFieldParser
+    public sealed class NetFieldParser
     {
         private static Dictionary<string, NetFieldParserInfo> _parserInfoDict = new Dictionary<string, NetFieldParserInfo>();
 
@@ -24,38 +24,41 @@ namespace Unreal.Core
 
         internal NetFieldParser(Assembly callingAssembly)
         {
-            if (_parserInfoDict.ContainsKey(callingAssembly.FullName))
+            lock (_parserInfoDict)
             {
-                //Already intialized data
-                _parserInfo = _parserInfoDict[callingAssembly.FullName];
-                return;
+                if (_parserInfoDict.TryGetValue(callingAssembly.FullName, out NetFieldParserInfo info))
+                {
+                    //Already intialized data
+                    _parserInfo = info;
+                    return;
+                }
+
+                Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+
+                HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+
+                referencedAssemblies.Add(callingAssembly);
+
+                IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
+
+                //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
+
+                List<Type> netFields = new List<Type>();
+                List<Type> classNetCaches = new List<Type>();
+                List<Type> propertyTypes = new List<Type>();
+
+                //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
+                netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
+                classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
+                propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+                _parserInfo = new NetFieldParserInfo();
+                _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
+
+                LoadNetFields(netFields);
+                LoadClassNetCaches(classNetCaches);
+                LoadPropertyTypes(propertyTypes);
             }
-
-            Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
-
-            HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
-
-            referencedAssemblies.Add(callingAssembly);
-
-            IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
-
-            //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
-
-            List<Type> netFields = new List<Type>();
-            List<Type> classNetCaches = new List<Type>();
-            List<Type> propertyTypes = new List<Type>();
-
-            //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-            netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
-            classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
-            propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
-
-            _parserInfo = new NetFieldParserInfo();
-            _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
-
-            LoadNetFields(netFields);
-            LoadClassNetCaches(classNetCaches);
-            LoadPropertyTypes(propertyTypes);
         }
 
         internal bool SetMinimalParseType(string path, ParseType type)
@@ -358,8 +361,13 @@ namespace Unreal.Core
 
         private void LoadNetFields(List<Type> netFields)
         {
+            Dictionary<Type, int> _typeIds = new Dictionary<Type, int>();
+            int typeId = 0;
+
             foreach (Type type in netFields)
             {
+                _typeIds.TryAdd(type, typeId++);
+
                 NetFieldExportGroupAttribute attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
                 PlayerControllerAttribute playerController = type.GetCustomAttribute<PlayerControllerAttribute>();
 
@@ -382,6 +390,8 @@ namespace Unreal.Core
 
                 _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
+                info.TypeId = _parserInfo.LinqCache.AddExportType(info.Type);
+
                 foreach (PropertyInfo property in type.GetProperties())
                 {
                     NetFieldExportAttribute netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>(); //Uses name to determine property
@@ -402,11 +412,27 @@ namespace Unreal.Core
                     }
                     else if (netFieldExportAttribute != null)
                     {
-                        info.Properties.Add(netFieldExportAttribute.Name,new NetFieldInfo
+                        NetFieldInfo fieldInfo = new NetFieldInfo
                         {
                             Attribute = netFieldExportAttribute,
                             PropertyInfo = property
-                        });
+                        };
+
+                        info.Properties.Add(netFieldExportAttribute.Name, fieldInfo);
+
+                        //No reason to add ignored types
+                        if (netFieldExportAttribute.Type != RepLayoutCmdType.Ignore)
+                        {
+                            if (property.PropertyType.IsArray)
+                            {
+                                Type elementType = property.PropertyType.GetElementType();
+
+                                if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
+                                {
+                                    fieldInfo.ElementTypeId = _parserInfo.LinqCache.AddExportType(elementType);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -545,13 +571,15 @@ namespace Unreal.Core
 
             string group = exportGroup.PathName;
 
-            string fixedExportName = export.CleanedName;
+            string fixedExportName = export.Name;
 
+            /*
             if (fixedExportName == null)
             {
                 export.CleanedName = FixInvalidNames(export.Name);
                 fixedExportName = export.CleanedName;
-            }
+            }*/
+
 
             bool isDebug = obj is DebuggingExportGroup;
             int groupId = exportGroup.GroupId;
@@ -618,33 +646,33 @@ namespace Unreal.Core
                     break;
             }
 
+#if DEBUG
             if (obj is DebuggingExportGroup debugGroup)
             {
                 debugGroup.Handles.Add(handle, data as DebuggingObject);
 
                 return;
             }
-
+#endif
             if (data != null)
             {
                 if (!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
                 {
-                    TypeAccessor typeAccessor = TypeAccessor.Create(obj.GetType());
+                    TypeAccessor typeAccessor = TypeAccessor.Create(groupInfo.Type);
                     typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
                 }
-
             }
         }
 
-        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
+        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type type = null)
         {
             object data = null;
 
             switch (replayout)
             {
                 case RepLayoutCmdType.Property:
-                    data = _parserInfo.LinqCache.CreateObject(objectType);
-                    (data as IProperty).Serialize(netBitReader);
+                    data = _parserInfo.LinqCache.CreatePropertyObject(type);
+                    ((IProperty)data).Serialize(netBitReader);
                     break;
                 case RepLayoutCmdType.RepMovement:
                     data = netBitReader.SerializeRepMovement();
@@ -718,8 +746,11 @@ namespace Unreal.Core
                     netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
                 case RepLayoutCmdType.Debug:
+                    //Fix later
+                    /*
                     data = _parserInfo.LinqCache.CreateObject(typeof(DebuggingObject));
                     (data as IProperty).Serialize(netBitReader);
+                    */
                     break;
             }
 
@@ -787,7 +818,7 @@ namespace Unreal.Core
 
                 if (isGroupType)
                 {
-                    data = _parserInfo.LinqCache.CreateObject(elementType);
+                    data = _parserInfo.LinqCache.CreateObject(fieldInfo.ElementTypeId);
                 }
 
                 while (true)
@@ -861,7 +892,8 @@ namespace Unreal.Core
                 return (INetFieldExportGroup)exportGroup.Instance;
             }
 
-            return (INetFieldExportGroup)_parserInfo.LinqCache.CreateObject(exportGroup.Type);
+
+            return _parserInfo.LinqCache.CreateObject(exportGroup.TypeId);
         }
 
         /// <summary>
@@ -878,7 +910,7 @@ namespace Unreal.Core
             {
                 if (groupInfo.PathNames.TryGetValue(propertyName, out NetRPCFieldInfo fieldInfo))
                 {
-                    property = (IProperty)_parserInfo.LinqCache.CreateObject(fieldInfo.PropertyInfo.PropertyType);
+                    property = _parserInfo.LinqCache.CreatePropertyObject(fieldInfo.PropertyInfo.PropertyType);
 
                     return true;
                 }
@@ -893,6 +925,8 @@ namespace Unreal.Core
             char* newChars = stackalloc char[len];
             char* currentChar = newChars;
 
+            bool found = false;
+
             for (int i = 0; i < len; ++i)
             {
                 char c = str[i];
@@ -906,8 +940,16 @@ namespace Unreal.Core
                 {
                     *currentChar++ = c;
                 }
+                else
+                {
+                    found = true;
+                }
             }
 
+            if (found)
+            {
+                Console.WriteLine(str);
+            }
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
@@ -915,6 +957,7 @@ namespace Unreal.Core
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
+            public int TypeId { get; set; }
             public bool UsesHandles { get; set; }
             public bool SingleInstance { get; set; }
             public ISingleInstance Instance { get; set; }
@@ -927,6 +970,7 @@ namespace Unreal.Core
         {
             public RepLayoutAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
+            public int ElementTypeId { get; set; }
         }
 
         /// <summary>

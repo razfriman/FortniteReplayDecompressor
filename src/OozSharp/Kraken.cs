@@ -21,24 +21,21 @@ namespace OozSharp
             int sourceLength = compressedSize;
             int destinationOffset = 0;
 
-            fixed (byte* scratchPtr = decoder.Scratch)
+            byte* sourceStart = compressedInput;
+            byte* decompressBufferStart = uncompressed;
+
+            while (remainingBytes != 0)
             {
-                byte* sourceStart = compressedInput;
-                byte* decompressBufferStart = uncompressed;
-
-                while (remainingBytes != 0)
+                if (!DecodeStep(decoder, uncompressed, destinationOffset, remainingBytes, sourceStart, sourceLength, decoder.Scratch))
                 {
-                    if (!DecodeStep(decoder, uncompressed, destinationOffset, remainingBytes, sourceStart, sourceLength, scratchPtr))
-                    {
-                        throw new DecoderException($"Failed DecodeStep method");
-                    }
-
-                    sourceStart += decoder.SourceUsed;
-                    sourceLength -= decoder.SourceUsed;
-
-                    destinationOffset += decoder.DestinationUsed;
-                    remainingBytes -= decoder.DestinationUsed;
+                    throw new DecoderException($"Failed DecodeStep method");
                 }
+
+                sourceStart += decoder.SourceUsed;
+                sourceLength -= decoder.SourceUsed;
+
+                destinationOffset += decoder.DestinationUsed;
+                remainingBytes -= decoder.DestinationUsed;
             }
         }
 

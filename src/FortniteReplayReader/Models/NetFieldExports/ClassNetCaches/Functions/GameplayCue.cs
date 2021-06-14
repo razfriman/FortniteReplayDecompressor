@@ -79,9 +79,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
         [NetFieldExport("AbilityLevel", RepLayoutCmdType.PropertyFloat)]
         public float? AbilityLevel { get; set; }
 
+		/*
         [NetFieldExport("PredictionKey", RepLayoutCmdType.Property)]
         public FPredictionKey PredictionKey { get; set; }
-
+		*/
 		public override bool ManualRead(string property, object value)
 		{
 			switch(property)

@@ -38,7 +38,8 @@ namespace FortniteReplayReader.Models
         public FortniteReplaySettings Settings { get; internal set; }
         public MinigameInformation MinigameInformation { get; internal set; }
 
-        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
+        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>(); //Set an amount to use
+
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>(); //Channel to llama
         private Dictionary<uint, SupplyDrop> _supplyDrops = new Dictionary<uint, SupplyDrop>(); //Channel supply drop
 
@@ -394,7 +395,7 @@ namespace FortniteReplayReader.Models
                 _replayPlayer = newPlayer;
             }
 
-            if (playerState.DeathCause != null)
+            if (playerState.DeathCause != EDeathCause.EDeathCause_MAX)
             {
                 newPlayer.LastDeathOrKnockTime = GameState.CurrentWorldTime;
 
@@ -986,7 +987,7 @@ namespace FortniteReplayReader.Models
         {
             if (_players.TryGetValue(channelId, out Player player))
             {
-                if (_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("/Script/FortniteGame.FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
+                if (_healthSetStartingHandles.Count == 0 && cache.NetFieldExportGroupMap.TryGetValue("FortRegenHealthSet", out NetFieldExportGroup healthSetExport))
                 {
                     List<NetFieldExport> maxHandles = healthSetExport.NetFieldExports.Where(x => x?.Name == "Maximum").ToList();
 
