@@ -13,20 +13,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
     {
         [NetFieldExport("ModifierDef", RepLayoutCmdType.Ignore)]
         public DebuggingObject ModifierDef { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "ModifierDef":
-					ModifierDef = (DebuggingObject)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

@@ -23,28 +23,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 
 		[NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
 		public FRepMovement ReplicatedMovement{ get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch (property)
-			{
-				case "RemoteRole":
-					RemoteRole = (int)value;
-					break;
-				case "Role":
-					Role = (int)value;
-					break;
-				case "Instigator":
-					Instigator = (ActorGUID)value;
-					break;
-				case "ReplicatedMovement":
-					ReplicatedMovement = (FRepMovement)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
 	}
 }

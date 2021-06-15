@@ -19,27 +19,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
 
         [NetFieldExport("Parameters", RepLayoutCmdType.Ignore)]
         public FGameplayCueParameters Parameters { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "GameplayCueTag":
-					GameplayCueTag = (FGameplayTag)value;
-					break;
-				case "PredictionKey":
-					PredictionKey = (FPredictionKey)value;
-					break;
-				case "Parameters":
-					Parameters = (FGameplayCueParameters)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
 
@@ -83,53 +62,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
         [NetFieldExport("PredictionKey", RepLayoutCmdType.Property)]
         public FPredictionKey PredictionKey { get; set; }
 		*/
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "Def":
-					Def = (NetworkGUID)value;
-					break;
-				case "ModifiedAttributes":
-					ModifiedAttributes = (DebuggingObject[])value;
-					break;
-				case "AttributeName":
-					AttributeName = (string)value;
-					break;
-				case "Attribute":
-					Attribute = (NetworkGUID)value;
-					break;
-				case "AttributeOwner":
-					AttributeOwner = (NetworkGUID)value;
-					break;
-				case "TotalMagnitude":
-					TotalMagnitude = (float)value;
-					break;
-				case "EffectContext":
-					EffectContext = (FGameplayEffectContextHandle)value;
-					break;
-				case "AggregatedSourceTags":
-					AggregatedSourceTags = (FGameplayTagContainer)value;
-					break;
-				case "AggregatedTargetTags":
-					AggregatedTargetTags = (FGameplayTagContainer)value;
-					break;
-				case "Level":
-					Level = (float)value;
-					break;
-				case "AbilityLevel":
-					AbilityLevel = (float)value;
-					break;
-				case "PredictionKey":
-					PredictionKey = (FPredictionKey)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueExecuted_WithParams", ParseType.Normal)]
@@ -137,20 +69,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     {
         [NetFieldExport("GameplayCueParameters", RepLayoutCmdType.Ignore)]
         public FGameplayCueParameters GameplayCueParameters { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "GameplayCueParameters":
-					GameplayCueParameters = (FGameplayCueParameters)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
 
     }
 }

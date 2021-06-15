@@ -17,19 +17,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
         [NetFieldExport("OverheatState", RepLayoutCmdType.Enum)]
         public EFortWeaponOverheatState OverheatState { get; set; }
 
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "OverheatState":
-					OverheatState = (EFortWeaponOverheatState)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

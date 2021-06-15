@@ -23,20 +23,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     {
         [NetFieldExport("ItemDefinition", RepLayoutCmdType.Property)]
         public ItemDefinitionGUID ItemDefinition { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "ItemDefinition":
-					ItemDefinition = (ItemDefinitionGUID)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

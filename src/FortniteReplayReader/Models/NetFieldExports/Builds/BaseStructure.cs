@@ -89,95 +89,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
         [NetFieldExport("bUnderRepair", RepLayoutCmdType.PropertyBool)]
         public bool? bUnderRepair { get; set; }
 
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "bHidden":
-					bHidden = (bool)value;
-					break;
-				case "RemoteRole":
-					RemoteRole = (int)value;
-					break;
-				case "Role":
-					Role = (int)value;
-					break;
-				case "OwnerPersistentID":
-					OwnerPersistentID = (short)value;
-					break;
-				case "bDestroyed":
-					bDestroyed = (bool)value;
-					break;
-				case "bPlayerPlaced":
-					bPlayerPlaced = (bool)value;
-					break;
-				case "bInstantDeath":
-					bInstantDeath = (bool)value;
-					break;
-				case "bCollisionBlockedByPawns":
-					bCollisionBlockedByPawns = (bool)value;
-					break;
-				case "bIsInitiallyBuilding":
-					bIsInitiallyBuilding = (bool)value;
-					break;
-				case "TeamIndex":
-					TeamIndex = (int)value;
-					break;
-				case "BuildingAnimation":
-					BuildingAnimation = (EBuildingAnim)value;
-					break;
-				case "BuildTime":
-					BuildTime = (FQuantizedBuildingAttribute)value;
-					break;
-				case "RepairTime":
-					RepairTime = (FQuantizedBuildingAttribute)value;
-					break;
-				case "Health":
-					Health = (short)value;
-					break;
-				case "MaxHealth":
-					MaxHealth = (short)value;
-					break;
-				case "EditingPlayer":
-					EditingPlayer = (ActorGUID)value;
-					break;
-				case "ProxyGameplayCueDamagePhysicalMagnitude":
-					ProxyGameplayCueDamagePhysicalMagnitude = (DebuggingObject)value;
-					break;
-				case "EffectContext":
-					EffectContext = (DebuggingObject)value;
-					break;
-				case "bAttachmentPlacementBlockedFront":
-					bAttachmentPlacementBlockedFront = (bool)value;
-					break;
-				case "bAttachmentPlacementBlockedBack":
-					bAttachmentPlacementBlockedBack = (bool)value;
-					break;
-				case "bUnderConstruction":
-					bUnderConstruction = (bool)value;
-					break;
-				case "StaticMesh":
-					StaticMesh = (uint)value;
-					break;
-				case "Gnomed":
-					Gnomed = (bool)value;
-					break;
-				case "InitialOverlappingVehicles":
-					InitialOverlappingVehicles = (DebuggingObject)value;
-					break;
-				case "ReplicatedDrawScale3D":
-					ReplicatedDrawScale3D = (FVector)value;
-					break;
-				case "bUnderRepair":
-					bUnderRepair = (bool)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     public class BaseFloorStructure : BaseStructure
@@ -192,21 +103,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Builds
     {
         [NetFieldExport("bMirrored", RepLayoutCmdType.PropertyBool)]
         public bool? bMirrored { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "bMirrored":
-					bMirrored = (bool)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     public class BaseRoofStructure : BaseStructure

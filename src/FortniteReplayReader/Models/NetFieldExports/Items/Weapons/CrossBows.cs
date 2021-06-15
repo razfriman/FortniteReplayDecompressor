@@ -33,24 +33,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
 
         [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Ignore)]
         public DebuggingObject ChargeStatusPack { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "bIsChargingWeapon":
-					bIsChargingWeapon = (bool)value;
-					break;
-				case "ChargeStatusPack":
-					ChargeStatusPack = (DebuggingObject)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_DemonHunter_Crossbow_Athena.B_DemonHunter_Crossbow_Athena_C", ParseType.Normal)]

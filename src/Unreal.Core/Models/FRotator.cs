@@ -11,6 +11,7 @@
             Yaw = yaw;
             Roll = roll;
         }
+
         public float Pitch { get; set; }
         public float Yaw { get; set; }
         public float Roll { get; set; }
@@ -19,5 +20,7 @@
         {
             return $"Pitch: {Pitch}, Yaw: {Yaw}, Roll: {Roll}";
         }
+
+        public static FRotator Empty = new FRotator(0, 0, 0);
     }
 }

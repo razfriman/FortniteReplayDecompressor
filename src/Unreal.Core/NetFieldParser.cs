@@ -7,12 +7,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using FastMember;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Core.Extensions;
+using System.Reflection.Emit;
 
 namespace Unreal.Core
 {
@@ -79,6 +79,34 @@ namespace Unreal.Core
             return _parserInfo.NetFieldGroups.ToDictionary(x => x, x => x.Attribute.MinimumParseType);
         }
 
+        private static Action<object, object> CreateSetter(PropertyInfo propertyInfo)
+        {
+            FieldInfo field = GetBackingField(propertyInfo);
+
+            string methodName = field.ReflectedType.FullName + ".set_" + field.Name;
+            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[2] { typeof(object), typeof(object) }, true);
+            ILGenerator gen = setterMethod.GetILGenerator();
+            if (field.IsStatic)
+            {
+                gen.Emit(OpCodes.Ldarg_1);
+                gen.Emit(OpCodes.Stsfld, field);
+            }
+            else
+            {
+                gen.Emit(OpCodes.Ldarg_0);
+                gen.Emit(OpCodes.Ldarg_1);
+                gen.Emit(OpCodes.Unbox_Any, field.FieldType);
+                gen.Emit(OpCodes.Stfld, field);
+            }
+            gen.Emit(OpCodes.Ret);
+
+            return (Action<object, object>)setterMethod.CreateDelegate(typeof(Action<object, object>));
+
+            FieldInfo GetBackingField(PropertyInfo property)
+            {
+                return property.DeclaringType.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+        }
 
 #if DEBUG
 
@@ -432,6 +460,8 @@ namespace Unreal.Core
                                     fieldInfo.ElementTypeId = _parserInfo.LinqCache.AddExportType(elementType);
                                 }
                             }
+
+                            fieldInfo.SetMethod = CreateSetter(fieldInfo.PropertyInfo);
                         }
                     }
                 }
@@ -656,11 +686,7 @@ namespace Unreal.Core
 #endif
             if (data != null)
             {
-                if (!obj.ManualRead(netFieldInfo.PropertyInfo.Name, data))
-                {
-                    TypeAccessor typeAccessor = TypeAccessor.Create(groupInfo.Type);
-                    typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
-                }
+                netFieldInfo.SetMethod(obj, data);
             }
         }
 
@@ -958,6 +984,7 @@ namespace Unreal.Core
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
             public int TypeId { get; set; }
+
             public bool UsesHandles { get; set; }
             public bool SingleInstance { get; set; }
             public ISingleInstance Instance { get; set; }
@@ -971,6 +998,7 @@ namespace Unreal.Core
             public RepLayoutAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
             public int ElementTypeId { get; set; }
+            public Action<object, object> SetMethod { get; set; }
         }
 
         /// <summary>

@@ -50,56 +50,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Containers
 
         [NetFieldExport("bForceReplayRollback", RepLayoutCmdType.PropertyBool)]
         public bool? bForceReplayRollback { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "ForceMetadataRelevant":
-					ForceMetadataRelevant = (int)value;
-					break;
-				case "StaticMesh":
-					StaticMesh = (uint)value;
-					break;
-				case "bDestroyOnPlayerBuildingPlacement":
-					bDestroyOnPlayerBuildingPlacement = (bool)value;
-					break;
-				case "bInstantDeath":
-					bInstantDeath = (bool)value;
-					break;
-				case "SearchedMesh":
-					SearchedMesh = (uint)value;
-					break;
-				case "AltMeshIdx":
-					AltMeshIdx = (int)value;
-					break;
-				case "ProxyGameplayCueDamagePhysicalMagnitude":
-					ProxyGameplayCueDamagePhysicalMagnitude = (float)value;
-					break;
-				case "EffectContext":
-					EffectContext = (FGameplayEffectContextHandle)value;
-					break;
-				case "ChosenRandomUpgrade":
-					ChosenRandomUpgrade = (int)value;
-					break;
-				case "bMirrored":
-					bMirrored = (bool)value;
-					break;
-				case "ReplicatedDrawScale3D":
-					ReplicatedDrawScale3D = (FVector)value;
-					break;
-				case "bIsInitiallyBuilding":
-					bIsInitiallyBuilding = (bool)value;
-					break;
-				case "bForceReplayRollback":
-					bForceReplayRollback = (bool)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

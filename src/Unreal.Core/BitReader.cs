@@ -512,7 +512,7 @@ namespace Unreal.Core
 
             if (IsError)
             {
-                return new FRotator(0, 0, 0);
+                return FRotator.Empty;
             }
 
             return new FRotator(pitch, yaw, roll);

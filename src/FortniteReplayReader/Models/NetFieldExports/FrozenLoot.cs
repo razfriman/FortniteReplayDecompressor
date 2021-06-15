@@ -12,20 +12,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
     {
         [NetFieldExport("LoottoSpawn", RepLayoutCmdType.Property)]
         public ItemDefinitionGUID LootToSpawn { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "LoottoSpawn":
-					LootToSpawn = (ItemDefinitionGUID)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

@@ -38,48 +38,5 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
 		[NetFieldExport("FinalDestination", RepLayoutCmdType.PropertyVector)]
 		public FVector? FinalDestination { get; set; } //Type: FVector Bits: 96
-
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "bHidden":
-					bHidden = (bool)value;
-					break;
-				case "RemoteRole":
-					RemoteRole = value;
-					break;
-				case "ReplicatedMovement":
-					ReplicatedMovement = (FRepMovement)value;
-					break;
-				case "Role":
-					Role = value;
-					break;
-				case "bDestroyed":
-					bDestroyed = (bool)value;
-					break;
-				case "bEditorPlaced":
-					bEditorPlaced = (bool)value;
-					break;
-				case "bInstantDeath":
-					bInstantDeath = (bool)value;
-					break;
-				case "bHasSpawnedPickups":
-					bHasSpawnedPickups = (bool)value;
-					break;
-				case "Looted":
-					Looted = (bool)value;
-					break;
-				case "FinalDestination":
-					FinalDestination = (FVector)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
 	}
 }

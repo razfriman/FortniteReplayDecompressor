@@ -16,6 +16,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -90,15 +92,15 @@ namespace ConsoleReader
 
     unsafe class Program
     {
+
         static void Main(string[] args)
         {
-
             //Attempting to remove clock speed variation as performance suffers as day goes on.
             //Overall performance is slightly slower than previous
             //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
             //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
-#if DEBUG
+#if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
@@ -224,54 +226,68 @@ namespace ConsoleReader
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
 public unsafe class Pooling
 {
-    private System.IO.BinaryReader _reader;
+    private PlayerPawnC _obj = new PlayerPawnC();
+    private object _vect = new int?(123);
+    private int? _vectDirect = new int?(123);
+    private object _objVect = 123;
+    private Action<object, object> setDelegate;
 
     [GlobalSetup]
     public void GlobalSetup()
     {
-        byte[] bytes = new byte[10000000];
+        var field = typeof(PlayerPawnC).GetField("<RemoteRole>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        MemoryStream ms = new MemoryStream(bytes);
-
-        _reader = new System.IO.BinaryReader(ms);
+        setDelegate = CreateSetter(field);
     }
 
     [Benchmark]
-    public void ReadBytes()
+    public void Unbox()
     {
-        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-        for(int i =0; i < 1000000;i++)
+        for(int i = 0; i < 1000000;i++)
         {
-            Encoding.Default.GetString(_reader.ReadBytes(10));
+            _obj.RemoteRole = (int?)_vect;
         }
-
     }
 
     [Benchmark]
-    public void ReadBytesSpan()
+    public void DirectAccess()
     {
-        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
-        Span<byte> test = stackalloc byte[10];
-
         for (int i = 0; i < 1000000; i++)
         {
-            _reader.Read(test);
-            Encoding.Default.GetString(test);
+            _obj.RemoteRole = _vectDirect;
         }
     }
 
     [Benchmark]
-    public void ReadBytesArray()
+    public void ViaDelegate()
     {
-        _reader.BaseStream.Seek(0, SeekOrigin.Begin);
-        byte[] arr = new byte[10];
-
         for (int i = 0; i < 1000000; i++)
         {
-            _reader.Read(arr);
-            Encoding.Default.GetString(arr);
+            setDelegate(_obj, _objVect);
         }
+    }
+
+
+    public static Action<object, object> CreateSetter(FieldInfo field)
+    {
+        string methodName = field.ReflectedType.FullName + ".set_" + field.Name;
+        DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[2] { typeof(object), typeof(object) }, true);
+        ILGenerator gen = setterMethod.GetILGenerator();
+        if (field.IsStatic)
+        {
+            gen.Emit(OpCodes.Ldarg_1);
+            gen.Emit(OpCodes.Stsfld, field);
+        }
+        else
+        {
+            gen.Emit(OpCodes.Ldarg_0);
+            gen.Emit(OpCodes.Ldarg_1);
+            gen.Emit(OpCodes.Unbox_Any, field.FieldType);
+            gen.Emit(OpCodes.Stfld, field);
+        }
+        gen.Emit(OpCodes.Ret);
+
+        return (Action<object, object>)setterMethod.CreateDelegate(typeof(Action<object, object>));
     }
 }
 

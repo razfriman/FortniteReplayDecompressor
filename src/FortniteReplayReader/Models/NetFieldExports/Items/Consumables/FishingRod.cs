@@ -22,30 +22,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
 
         [NetFieldExport("OneHandGrip", RepLayoutCmdType.PropertyBool)]
         public bool? OneHandGrip { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "Projectile":
-					Projectile = (NetworkGUID)value;
-					break;
-				case "Wire":
-					Wire = (NetworkGUID)value;
-					break;
-				case "HideBobber":
-					HideBobber = (bool)value;
-					break;
-				case "OneHandGrip":
-					OneHandGrip = (bool)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     [NetFieldExportGroup("/Game/Athena/Items/Consumables/FloppingRabbit/B_Athena_FloppingRabbit_Wire.B_Athena_FloppingRabbit_Wire_C", ParseType.Normal)]
@@ -68,36 +44,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
 
         [NetFieldExport("Weapon", RepLayoutCmdType.Property)]
         public NetworkGUID Weapon { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "ReplicatedMovement":
-					ReplicatedMovement = (FRepMovement)value;
-					break;
-				case "Projectile":
-					Projectile = (NetworkGUID)value;
-					break;
-				case "ProjectileActor":
-					ProjectileActor = (NetworkGUID)value;
-					break;
-				case "PlayerPawn":
-					PlayerPawn = (NetworkGUID)value;
-					break;
-				case "CatchParticleOn":
-					CatchParticleOn = (bool)value;
-					break;
-				case "Weapon":
-					Weapon = (NetworkGUID)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     [NetFieldExportGroup("/Game/Athena/Items/Consumables/HappyGhost/B_HappyGhost_Athena.B_HappyGhost_Athena_C", ParseType.Normal)]
@@ -105,20 +51,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Consumables
     {
         [NetFieldExport("HideProj", RepLayoutCmdType.PropertyBool)]
         public bool? HideProj { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "HideProj":
-					HideProj = (bool)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

@@ -13,20 +13,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Functions
     {
         [NetFieldExport("SharedRepMovement", RepLayoutCmdType.RepMovement)]
         public FRepMovement SharedRepMovement { get; set; } //Type:  Bits: 1
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "SharedRepMovement":
-					SharedRepMovement = (FRepMovement)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

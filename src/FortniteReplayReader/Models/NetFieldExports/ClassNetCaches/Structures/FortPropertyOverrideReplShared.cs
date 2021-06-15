@@ -25,32 +25,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.ClassNetCaches.Structures
 
         [NetFieldExport("PropertyData", RepLayoutCmdType.Ignore)]
         public DebuggingObject PropertyData { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "RemoteRole":
-					RemoteRole = value;
-					break;
-				case "Role":
-					Role = value;
-					break;
-				case "Owner":
-					Owner = (NetworkGUID)value;
-					break;
-				case "PropertyScopedName":
-					PropertyScopedName = (string)value;
-					break;
-				case "PropertyData":
-					PropertyData = (DebuggingObject)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

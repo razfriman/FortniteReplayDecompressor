@@ -23,26 +23,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Containers
 
         [NetFieldExport("Quantity", RepLayoutCmdType.Ignore)]
         public DebuggingObject Quantity { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "SpawnItems":
-					SpawnItems = (DebuggingObject)value;
-					break;
-				case "PrimaryAssetName":
-					PrimaryAssetName = (DebuggingObject)value;
-					break;
-				case "Quantity":
-					Quantity = (DebuggingObject)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }

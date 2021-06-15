@@ -208,7 +208,7 @@ namespace OozSharp.MemoryPool
 
                     for(int i = 0; i < buckets.Length; i++)
                     {
-                        buckets[i].Dispose();
+                        buckets[i]?.Dispose();
                         buckets[i] = null;
                     }
                 }
@@ -392,8 +392,6 @@ namespace OozSharp.MemoryPool
                 {
                     if (_count > 0 && _firstStackItemMS > tickCount || (tickCount - _firstStackItemMS) > trimTicks)
                     {
-                        Console.WriteLine("Trim");
-
                         int trimCount = StackLowTrimCount;
                         switch (pressure)
                         {

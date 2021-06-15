@@ -18,21 +18,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items.Weapons
     {
         [NetFieldExport("FireStartLoc", RepLayoutCmdType.PropertyVector10)]
         public FVector? FireStartLoc { get; set; }
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "FireStartLoc":
-					FireStartLoc = (FVector)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/B_Rifle_Sniper_Athena.B_Rifle_Sniper_Athena_C", ParseType.Normal)]

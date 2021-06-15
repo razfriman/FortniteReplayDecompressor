@@ -32,41 +32,5 @@ namespace Unreal.Core.Models
         [NetFieldExport("PoiTagContainerTableSize", RepLayoutCmdType.PropertyInt)]
         public int? PoiTagContainerTableSize { get; set; } //Type: int32 Bits: 32
 
-
-		public override bool ManualRead(string property, object value)
-		{
-			switch(property)
-			{
-				case "WorldGridStart":
-					WorldGridStart = (FVector2D)value;
-					break;
-				case "WorldGridEnd":
-					WorldGridEnd = (FVector2D)value;
-					break;
-				case "WorldGridSpacing":
-					WorldGridSpacing = (FVector2D)value;
-					break;
-				case "GridCountX":
-					GridCountX = (int)value;
-					break;
-				case "GridCountY":
-					GridCountY = (int)value;
-					break;
-				case "WorldGridTotalSize":
-					WorldGridTotalSize = (FVector2D)value;
-					break;
-				case "PoiTagContainerTable":
-					PoiTagContainerTable = (FGameplayTagContainer[])value;
-					break;
-				case "PoiTagContainerTableSize":
-					PoiTagContainerTableSize = (int)value;
-					break;
-				default:
-					return base.ManualRead(property, value);
-			}
-
-			return true;
-		}
-
     }
 }
