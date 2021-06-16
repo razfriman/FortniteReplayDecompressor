@@ -94,10 +94,16 @@ namespace Unreal.Core
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
-            var flags = ReadBits(2).Span;
 
-            repMovement.bSimulatedPhysicSleep = flags[0];
-            repMovement.bRepPhysics = flags[1];
+            if(!CanRead(2))
+            {
+                IsError = true;
+
+                return repMovement;
+            }
+
+            repMovement.bSimulatedPhysicSleep = Bits[_position++];
+            repMovement.bRepPhysics = Bits[_position++];
 
             repMovement.Location = SerializeQuantizedVector(locationQuantizationLevel);
 
