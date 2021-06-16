@@ -14,6 +14,8 @@ namespace Unreal.Core
 
         private KeyList<Type, Func<INetFieldExportGroup>> _compiledBuilders = new KeyList<Type, Func<INetFieldExportGroup>>();
 
+        internal int TotalTypes => _compiledBuilders.Length;
+
         internal int AddExportType(Type type)
         {
             if(_compiledBuilders.TryGetIndex(type, out int index))
@@ -23,7 +25,7 @@ namespace Unreal.Core
 
             _compiledBuilders.Add(type, CreateFunction<INetFieldExportGroup>(type));
 
-            return _compiledBuilders.Count - 1;
+            return _compiledBuilders.Length - 1;
         }
 
         public INetFieldExportGroup CreateObject(int typeId)

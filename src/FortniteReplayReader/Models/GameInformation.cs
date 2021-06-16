@@ -781,7 +781,7 @@ namespace FortniteReplayReader.Models
         {
             if (inventory.ReplayPawn > 0)
             {
-                _inventories[channelId] = inventory;
+                _inventories[channelId] = (FortInventory)inventory.Clone();
             }
         }
 

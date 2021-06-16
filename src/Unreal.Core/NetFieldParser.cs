@@ -22,6 +22,8 @@ namespace Unreal.Core
 
         private NetFieldParserInfo _parserInfo;
 
+        private SingleInstanceExport[] _objects;
+
         internal NetFieldParser(Assembly callingAssembly)
         {
             lock (_parserInfoDict)
@@ -30,34 +32,49 @@ namespace Unreal.Core
                 {
                     //Already intialized data
                     _parserInfo = info;
-                    return;
+                }
+                else
+                {
+                    Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+
+                    HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+
+                    referencedAssemblies.Add(callingAssembly);
+
+                    IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
+
+                    //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
+
+                    List<Type> netFields = new List<Type>();
+                    List<Type> classNetCaches = new List<Type>();
+                    List<Type> propertyTypes = new List<Type>();
+
+                    //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
+                    netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
+                    classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
+                    propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
+
+                    _parserInfo = new NetFieldParserInfo();
+                    _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
+
+                    LoadNetFields(netFields);
+                    LoadClassNetCaches(classNetCaches);
+                    LoadPropertyTypes(propertyTypes);
                 }
 
-                Dictionary<string, Assembly> allAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToDictionary(x => x.FullName, x => x);
+                //Load object instances
+                _objects = new SingleInstanceExport[_parserInfo.LinqCache.TotalTypes];
 
-                HashSet<Assembly> referencedAssemblies = GetAllReferencedAssemblies(callingAssembly, allAssemblies);
+                for (int i = 0; i < _parserInfo.NetFieldGroups.Length; i++)
+                {
+                    NetFieldGroupInfo group = _parserInfo.NetFieldGroups[i];
 
-                referencedAssemblies.Add(callingAssembly);
-
-                IEnumerable<Type> allTypes = referencedAssemblies.SelectMany(x => x.GetTypes());
-
-                //UpdateFiles(allTypes.Where(x => typeof(INetFieldExportGroup).IsAssignableFrom(x)));
-
-                List<Type> netFields = new List<Type>();
-                List<Type> classNetCaches = new List<Type>();
-                List<Type> propertyTypes = new List<Type>();
-
-                //Loads all types from game reader assembly. Currently no support for referenced assemblies (TODO)
-                netFields.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportGroupAttribute>(false) != null));
-                classNetCaches.AddRange(allTypes.Where(x => x.GetCustomAttribute<NetFieldExportRPCAttribute>(false) != null));
-                propertyTypes.AddRange(allTypes.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract));
-
-                _parserInfo = new NetFieldParserInfo();
-                _parserInfoDict.Add(callingAssembly.FullName, _parserInfo);
-
-                LoadNetFields(netFields);
-                LoadClassNetCaches(classNetCaches);
-                LoadPropertyTypes(propertyTypes);
+                    _objects[group.TypeId] = new SingleInstanceExport
+                    {
+                        Instance = (INetFieldExportGroup)Activator.CreateInstance(group.Type),
+                        ChangedProperties = new FastClearArray<NetFieldInfo>(group.Properties.Length)
+                    };
+                }
             }
         }
 
@@ -79,12 +96,12 @@ namespace Unreal.Core
             return _parserInfo.NetFieldGroups.ToDictionary(x => x, x => x.Attribute.MinimumParseType);
         }
 
-        private static Action<object, object> CreateSetter(PropertyInfo propertyInfo)
+        private static Action<INetFieldExportGroup, object> CreateSetter(PropertyInfo propertyInfo)
         {
             FieldInfo field = GetBackingField(propertyInfo);
 
             string methodName = field.ReflectedType.FullName + ".set_" + field.Name;
-            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[2] { typeof(object), typeof(object) }, true);
+            DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[2] { typeof(INetFieldExportGroup), typeof(object) }, true);
             ILGenerator gen = setterMethod.GetILGenerator();
             if (field.IsStatic)
             {
@@ -100,7 +117,7 @@ namespace Unreal.Core
             }
             gen.Emit(OpCodes.Ret);
 
-            return (Action<object, object>)setterMethod.CreateDelegate(typeof(Action<object, object>));
+            return (Action<INetFieldExportGroup, object>)setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
 
             FieldInfo GetBackingField(PropertyInfo property)
             {
@@ -409,12 +426,7 @@ namespace Unreal.Core
                 info.Type = type;
                 info.Attribute = attribute;
                 info.UsesHandles = typeof(IHandleNetFieldExportGroup).IsAssignableFrom(type);
-                info.SingleInstance = typeof(ISingleInstance).IsAssignableFrom(type);
-
-                if(info.SingleInstance)
-                {
-                    info.Instance = (ISingleInstance)Activator.CreateInstance(type);
-                }
+                info.SingleInstance = true;// typeof(ISingleInstance).IsAssignableFrom(type);
 
                 _parserInfo.NetFieldGroups.Add(attribute.Path, info);
 
@@ -446,6 +458,14 @@ namespace Unreal.Core
                             PropertyInfo = property
                         };
 
+                        if (property.PropertyType.IsEnum)
+                        {
+                            fieldInfo.DefaultValue = Enum.GetValues(property.PropertyType).Cast<int>().Max();
+                        }
+                        else if (property.PropertyType.IsValueType)
+                        {
+                            fieldInfo.DefaultValue = Activator.CreateInstance(property.PropertyType);
+                        }
                         info.Properties.Add(netFieldExportAttribute.Name, fieldInfo);
 
                         //No reason to add ignored types
@@ -460,8 +480,6 @@ namespace Unreal.Core
                                     fieldInfo.ElementTypeId = _parserInfo.LinqCache.AddExportType(elementType);
                                 }
                             }
-
-                            fieldInfo.SetMethod = CreateSetter(fieldInfo.PropertyInfo);
                         }
                     }
                 }
@@ -592,7 +610,7 @@ namespace Unreal.Core
             return false;
         }
 
-        internal void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        internal void ReadField(INetFieldExportGroup obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader, bool singleInstance = true)
         {
             if(export.PropertyId == -2)
             {
@@ -659,10 +677,11 @@ namespace Unreal.Core
                 return;
             }
 
-            SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader);
+            SetType(obj, netFieldInfo, netGroupInfo, exportGroup, handle, netBitReader, singleInstance);
         }
 
-        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        private void SetType(INetFieldExportGroup obj, NetFieldInfo netFieldInfo, NetFieldGroupInfo groupInfo, NetFieldExportGroup exportGroup, 
+            uint handle, NetBitReader netBitReader, bool singleInstance)
         {
             object data;
 
@@ -686,6 +705,16 @@ namespace Unreal.Core
 #endif
             if (data != null)
             {
+                if (singleInstance)
+                {
+                    _objects[groupInfo.TypeId].ChangedProperties.Add(netFieldInfo);
+                }
+
+                if (netFieldInfo.SetMethod == null)
+                {
+                    netFieldInfo.SetMethod = CreateSetter(netFieldInfo.PropertyInfo);
+                }
+
                 netFieldInfo.SetMethod(obj, data);
             }
         }
@@ -885,7 +914,7 @@ namespace Unreal.Core
                         //Uses the same type for the array
                         if (groupInfo != null)
                         {
-                            ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, netBitReader);
+                            ReadField((INetFieldExportGroup)data, export, netfieldExportGroup, handle, netBitReader, false);
                         }
                         else //Probably primitive values
                         {
@@ -904,22 +933,28 @@ namespace Unreal.Core
 
         internal INetFieldExportGroup CreateType(int groupId)
         {
-            if (groupId == -1)
-            {
-                return null;
-            }
-
             NetFieldGroupInfo exportGroup = _parserInfo.NetFieldGroups[groupId];
 
-            if(exportGroup.SingleInstance)
-            {
-                exportGroup.Instance.ClearInstance();
+            var cachedEntry = _objects[exportGroup.TypeId];
 
-                return (INetFieldExportGroup)exportGroup.Instance;
+            if(cachedEntry.Instance is IHandleNetFieldExportGroup handleGroup)
+            {
+                handleGroup.UnknownHandles.Clear();
             }
 
+            for (int i = 0; i < cachedEntry.ChangedProperties.Count; i++)
+            {
+                NetFieldInfo fieldInfo = cachedEntry.ChangedProperties[i];
 
-            return _parserInfo.LinqCache.CreateObject(exportGroup.TypeId);
+                fieldInfo.SetMethod(cachedEntry.Instance, fieldInfo.DefaultValue);
+            }
+
+            cachedEntry.ChangedProperties.Clear();
+
+            return cachedEntry.Instance;
+
+
+            //return _parserInfo.LinqCache.CreateObject(exportGroup.TypeId);
         }
 
         /// <summary>
@@ -979,7 +1014,7 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
-        private class NetFieldGroupInfo
+        private sealed class NetFieldGroupInfo
         {
             public NetFieldExportGroupAttribute Attribute { get; set; }
             public Type Type { get; set; }
@@ -987,24 +1022,31 @@ namespace Unreal.Core
 
             public bool UsesHandles { get; set; }
             public bool SingleInstance { get; set; }
-            public ISingleInstance Instance { get; set; }
 
             public KeyList<string, NetFieldInfo> Properties { get; set; } = new KeyList<string, NetFieldInfo>();
             public Dictionary<uint, NetFieldInfo> HandleProperties { get; set; } = new Dictionary<uint, NetFieldInfo>();
         }
 
-        private class NetFieldInfo
+        private sealed class SingleInstanceExport
+        {
+            //Single instance
+            internal INetFieldExportGroup Instance { get; set; }
+            internal FastClearArray<NetFieldInfo> ChangedProperties { get; set; }
+        }
+
+        private sealed class NetFieldInfo
         {
             public RepLayoutAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
+            public object DefaultValue { get; set; }
             public int ElementTypeId { get; set; }
-            public Action<object, object> SetMethod { get; set; }
+            public Action<INetFieldExportGroup, object> SetMethod { get; set; }
         }
 
         /// <summary>
         /// Holds type info for assembly
         /// </summary>
-        private class NetFieldParserInfo
+        private sealed class NetFieldParserInfo
         {
             public KeyList<string, NetFieldGroupInfo> NetFieldGroups { get; private set; } = new KeyList<string, NetFieldGroupInfo>();
 
@@ -1017,14 +1059,14 @@ namespace Unreal.Core
         }
     }
 
-    internal class NetRPCFieldInfo
+    internal sealed class NetRPCFieldInfo
     {
         public NetFieldExportRPCPropertyAttribute Attribute { get; set; }
         public PropertyInfo PropertyInfo { get; set; }
         public bool IsCustomStructure { get; set; }
     }
 
-    internal class NetRPCFieldGroupInfo
+    internal sealed class NetRPCFieldGroupInfo
     {
         public ParseType ParseType { get; set; }
         public Dictionary<string, NetRPCFieldInfo> PathNames { get; set; } = new Dictionary<string, NetRPCFieldInfo>();

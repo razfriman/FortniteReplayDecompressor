@@ -1866,6 +1866,7 @@ namespace Unreal.Core
             }
 
             outExport = exportGroup;
+
             outExport.ChannelActor = Channels[channelIndex].Actor;
 
 
@@ -1947,19 +1948,6 @@ namespace Unreal.Core
 
                             _logger?.LogInformation($"Property {export.Name} ({export.Handle}) in {group.PathName} didn't read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
                         }
-#if DEBUG
-                        string name = $"{exportGroup.GetType().Name} - {export.Name}";
-
-                        if (!_failedTypes.TryGetValue(name, out var a))
-                        {
-
-                        }
-
-                        a++;
-
-                        _failedTypes[name] = a;
-
-#endif
 
                         continue;
                     }
@@ -2125,7 +2113,8 @@ namespace Unreal.Core
         /// <param name="packet"></param>
         protected virtual void ReceivedRawPacket(PlaybackPacket packet)
         {
-            if (Replay.Header.HasLevelStreamingFixes() && packet.SeenLevelIndex == 0)
+            if ((Replay.Header.Flags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes 
+                && packet.SeenLevelIndex == 0)
             {
                 return;
             }

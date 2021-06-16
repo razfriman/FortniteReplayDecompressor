@@ -11,6 +11,12 @@ namespace Unreal.Core.Extensions
     {
         private List<V> _vals = new List<V>();
         private Dictionary<K, int> _keys = new Dictionary<K, int>();
+        public int Length => _vals.Count;
+
+        public int Count(Func<V, bool> func)
+        {
+            return _vals.Count(func);
+        }
 
         public void Add(K key, V val)
         {
@@ -74,7 +80,5 @@ namespace Unreal.Core.Extensions
                 return _vals[index];
             }
         }
-
-        public int Count => _vals.Count;
     }
 }

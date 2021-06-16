@@ -27,16 +27,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("StealthMeterTargetTime5627E99734167FD2903748490D5FC2A57", RepLayoutCmdType.PropertyFloat)]
         public float? StealthMeterTargetTime { get; set; }
-		
-        public override void ClearInstance()
-        {
-			AlertLevel = null;
-			bIsStaggered = null;
-			StealthMeterTarget = null;
-			StealthMeterTargetTime = null;
-
-			base.ClearInstance();
-        }
     }
 
     [NetFieldExportGroup("/Game/Athena/AI/MANG/BP_MangPlayerPawn_Boss_AdventureGirl.BP_MangPlayerPawn_Boss_AdventureGirl_C", ParseType.Full)]

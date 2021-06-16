@@ -100,7 +100,7 @@ namespace ConsoleReader
             //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
             //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
-#if !DEBUG
+#if DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
