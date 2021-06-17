@@ -99,11 +99,11 @@ namespace Unreal.Core
             TotalFailedReplicatorReceives = 0;
             PropertyError = 0;
             TotalMappedGUIDs = 0;
-            FailedToRead = 0; 
+            FailedToRead = 0;
             SuccessProperties = 0;
             MissingProperty = 0;
 
-             Replay = new T();
+            Replay = new T();
 
             ParseType = parseType;
             _isReading = true;
@@ -359,15 +359,9 @@ namespace Unreal.Core
             // SerializeDemoFrameFromQueuedDemoPackets
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
             //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-            foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive))
-            {
-                if (packet.State == PacketState.Success)
-                {
-                    _packetIndex++;
 
-                    ReceivedRawPacket(packet, binaryArchive);
-                }
-            }
+            ReadDemoFrame(binaryArchive);
+
             _checkpointIndex++;
         }
 
@@ -419,21 +413,13 @@ namespace Unreal.Core
             using var binaryArchive = Decompress(decryptedReader, memorySizeInBytes);
 
 
-            int i = 0;
-
             while (!binaryArchive.AtEnd())
             {
                 //var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
 
-                foreach (var packet in ReadDemoFrameIntoPlaybackPackets(binaryArchive).Where(x => x.State == PacketState.Success))
-                {
-                    i++;
-
-                    _packetIndex++;
-                    ReceivedRawPacket(packet, binaryArchive);
-                }
+                ReadDemoFrame(binaryArchive);
             }
 
             _replayDataIndex++;
@@ -860,7 +846,7 @@ namespace Unreal.Core
         /// </summary>
         /// <returns></returns>
 
-        protected virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(BinaryReader archive)
+        protected virtual void ReadDemoFrame(BinaryReader archive)
         {
             var currentLevelIndex = 0;
 
@@ -939,15 +925,18 @@ namespace Unreal.Core
 
                 //playbackPackets.Add(packet);
 
-                toContinue = packet.State switch
+                switch (packet.State)
                 {
-                    PacketState.End => false,
-                    PacketState.Error => false,
-                    PacketState.Success => true,
-                    _ => false
-                };
+                    case PacketState.Success:
+                        ReceivedRawPacket(packet, archive);
+                        toContinue = true;
+                        break;
+                    default:
+                        toContinue = false;
+                        break;
+                }
 
-                yield return packet;
+                ++_packetIndex;
             }
 
             //return playbackPackets;
@@ -1482,7 +1471,7 @@ namespace Unreal.Core
                 {
                     innerArchiveError = bunch.Archive.IsError;
 
-                    if(payload > 0)
+                    if (payload > 0)
                     {
                         bunch.Archive.RestoreTemp(3);
                     }
@@ -1632,7 +1621,7 @@ namespace Unreal.Core
                 }
                 finally
                 {
-                    if(payload.HasValue)
+                    if (payload.HasValue)
                     {
                         archive.RestoreTemp(5);
                     }
@@ -2114,7 +2103,7 @@ namespace Unreal.Core
         /// <param name="packet"></param>
         protected virtual void ReceivedRawPacket(PlaybackPacket packet, BinaryReader reader)
         {
-            if ((Replay.Header.Flags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes 
+            if ((Replay.Header.Flags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes
                 && packet.SeenLevelIndex == 0)
             {
                 return;

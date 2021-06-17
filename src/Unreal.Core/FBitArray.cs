@@ -15,7 +15,6 @@ namespace Unreal.Core
 {
     public unsafe sealed class FBitArray : IDisposable
     {
-        public static int Pins;
         private bool* _pointer;
 
         public ReadOnlyMemory<bool> Items { get; private set; }
