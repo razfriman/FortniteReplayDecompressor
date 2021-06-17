@@ -65,25 +65,25 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/massive.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadLongReplay()
         {
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);
@@ -97,10 +97,10 @@ namespace ConsoleReader
         {
             //Attempting to remove clock speed variation as performance suffers as day goes on.
             //Overall performance is slightly slower than previous
-            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
-            Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
+            //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
+            //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
-#if !DEBUG
+#if DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);

@@ -210,7 +210,7 @@ namespace Unreal.Core
 
             if (length == 0)
             {
-                return "";
+                return String.Empty;
             }
 
             var isUnicode = length < 0;
@@ -248,6 +248,16 @@ namespace Unreal.Core
 
                 return Encoding.Default.GetString(data.Slice(0, trim));
             }
+        }
+
+        public void SkipFString()
+        {
+            var length = ReadInt32();
+
+            var isUnicode = length < 0;
+            length = isUnicode ? -2 * length : length;
+
+            SkipBytes(length);
         }
 
         /// <summary>

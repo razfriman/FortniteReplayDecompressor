@@ -43,21 +43,21 @@ namespace Unreal.Core
         protected ParseType ParseType;
         protected NetGuidCache GuidCache;
 
-        private int replayDataIndex = 0;
-        private int checkpointIndex = 0;
-        private int externalDataIndex = 0;
-        private int packetIndex = 0;
-        private int bunchIndex = 0;
+        private int _replayDataIndex = 0;
+        private int _checkpointIndex = 0;
+        private int _externalDataIndex = 0;
+        private int _packetIndex = 0;
+        private int _bunchIndex = 0;
 
-        private int InPacketId;
-        private DataBunch PartialBunch;
-        //private int?[] InReliable = new int?[DefaultMaxChannelSize];
-        private int InReliable = 0;
+        private int _inPacketId;
 
-        //private bool?[] ChannelActors = new bool?[DefaultMaxChannelSize];
-        private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
-        private List<string> PathNameTable = new List<string>();
-        private bool isReading = false;
+        private PlaybackPacket _currentPacket = new PlaybackPacket();
+        private DataBunch _currentBunch = new DataBunch();
+        private DataBunch _partialBunch;
+        private int _inReliable = 0;
+
+        private List<string> _pathNameTable = new List<string>();
+        private bool _isReading = false;
         private NetFieldParser _netFieldParser;
 
 #if DEBUG
@@ -86,7 +86,7 @@ namespace Unreal.Core
 
         public virtual T ReadReplay(FArchive archive, ParseType parseType)
         {
-            if (isReading)
+            if (_isReading)
             {
                 throw new InvalidOperationException("Multithreaded reading currently isn't supported");
             }
@@ -106,14 +106,14 @@ namespace Unreal.Core
              Replay = new T();
 
             ParseType = parseType;
-            isReading = true;
+            _isReading = true;
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
             Cleanup();
 
-            isReading = false;
+            _isReading = false;
 
             return Replay;
         }
@@ -144,18 +144,17 @@ namespace Unreal.Core
 
 #endif
 
-            InReliable = 0;
+            _inReliable = 0;
             //Array.Clear(InReliable, 0, InReliable.Length);
             Array.Clear(Channels, 0, Channels.Length);
-            Array.Clear(IgnoringChannels, 0, IgnoringChannels.Length);
 
-            PathNameTable.Clear();
+            _pathNameTable.Clear();
 
-            replayDataIndex = 0;
-            checkpointIndex = 0;
-            externalDataIndex = 0;
-            packetIndex = 0;
-            bunchIndex = 0;
+            _replayDataIndex = 0;
+            _checkpointIndex = 0;
+            _externalDataIndex = 0;
+            _packetIndex = 0;
+            _bunchIndex = 0;
 
             GuidCache.ClearCache();
         }
@@ -292,15 +291,15 @@ namespace Unreal.Core
                     {
                         cacheObject.PathName = binaryArchive.ReadFString();
 
-                        PathNameTable.Add(cacheObject.PathName);
+                        _pathNameTable.Add(cacheObject.PathName);
                     }
                     else
                     {
                         uint pathNameIndex = binaryArchive.ReadIntPacked();
 
-                        if (pathNameIndex < PathNameTable.Count)
+                        if (pathNameIndex < _pathNameTable.Count)
                         {
-                            cacheObject.PathName = PathNameTable[(int)pathNameIndex];
+                            cacheObject.PathName = _pathNameTable[(int)pathNameIndex];
                         }
                         else
                         {
@@ -364,12 +363,12 @@ namespace Unreal.Core
             {
                 if (packet.State == PacketState.Success)
                 {
-                    packetIndex++;
+                    _packetIndex++;
 
                     ReceivedRawPacket(packet, binaryArchive);
                 }
             }
-            checkpointIndex++;
+            _checkpointIndex++;
         }
 
         /// <summary>
@@ -432,12 +431,12 @@ namespace Unreal.Core
                 {
                     i++;
 
-                    packetIndex++;
+                    _packetIndex++;
                     ReceivedRawPacket(packet, binaryArchive);
                 }
             }
 
-            replayDataIndex++;
+            _replayDataIndex++;
         }
 
         /// <summary>
@@ -585,36 +584,34 @@ namespace Unreal.Core
         /// </summary>
         protected virtual PlaybackPacket ReadPacket(FArchive archive)
         {
-            var packet = new PlaybackPacket();
-
             var bufferSize = archive.ReadInt32();
             if (bufferSize == 0)
             {
-                packet.State = PacketState.End;
-                return packet;
+                _currentPacket.State = PacketState.End;
+                return _currentPacket;
             }
             else if (bufferSize > 2048)
             {
                 //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
                 _logger?.LogError("UDemoNetDriver::ReadPacket: OutBufferSize > 2048");
 
-                packet.State = PacketState.Error;
+                _currentPacket.State = PacketState.Error;
 
-                return packet;
+                return _currentPacket;
             }
             else if (bufferSize < 0)
             {
                 //UE_LOG(LogDemo, Error, TEXT("UDemoNetDriver::ReadPacket: OutBufferSize > MAX_DEMO_READ_WRITE_BUFFER"));
                 _logger?.LogError("UDemoNetDriver::ReadPacket: OutBufferSize < 0");
 
-                packet.State = PacketState.Error;
+                _currentPacket.State = PacketState.Error;
 
-                return packet;
+                return _currentPacket;
             }
 
-            packet.DataLength = bufferSize;
-            packet.State = PacketState.Success;
-            return packet;
+            _currentPacket.DataLength = bufferSize;
+            _currentPacket.State = PacketState.Success;
+            return _currentPacket;
         }
 
         /// <summary>
@@ -659,7 +656,7 @@ namespace Unreal.Core
                 //    var time = bitReader.ReadSingle();
                 //}
 
-                externalDataIndex++;
+                _externalDataIndex++;
             }
         }
 
@@ -885,7 +882,7 @@ namespace Unreal.Core
                 var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
                 {
-                    var levelName = archive.ReadFString();
+                    archive.SkipFString();
                 }
             }
             else
@@ -925,6 +922,7 @@ namespace Unreal.Core
             //var playbackPackets = new List<PlaybackPacket>();
 
             var toContinue = true;
+
             while (toContinue)
             {
                 uint seenLevelIndex = 0;
@@ -1111,7 +1109,7 @@ namespace Unreal.Core
             {
                 // Reliables should be ordered properly at this point
                 //check(Bunch.ChSequence == Connection->InReliable[Bunch.ChIndex] + 1);
-                InReliable = bunch.ChSequence;
+                _inReliable = bunch.ChSequence;
             }
 
             // merge
@@ -1119,11 +1117,11 @@ namespace Unreal.Core
             {
                 if (bunch.bPartialInitial)
                 {
-                    if (PartialBunch != null)
+                    if (_partialBunch != null)
                     {
-                        if (!PartialBunch.bPartialFinal)
+                        if (!_partialBunch.bPartialFinal)
                         {
-                            if (PartialBunch.bReliable)
+                            if (_partialBunch.bReliable)
                             {
                                 if (bunch.bReliable)
                                 {
@@ -1136,11 +1134,11 @@ namespace Unreal.Core
                             }
                             // Incomplete partial bunch. 
                         }
-                        PartialBunch = null;
+                        _partialBunch = null;
                     }
 
                     // InPartialBunch = new FInBunch(Bunch, false);
-                    PartialBunch = new DataBunch(bunch);
+                    _partialBunch = new DataBunch(bunch);
                     var bitsLeft = bunch.Archive.GetBitsLeft();
                     if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                     {
@@ -1150,7 +1148,7 @@ namespace Unreal.Core
                             return;
                         }
 
-                        PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
+                        _partialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
                     }
                     else
                     {
@@ -1168,25 +1166,25 @@ namespace Unreal.Core
                     // -Reliability flag matches
                     var bSequenceMatches = false;
 
-                    if (PartialBunch != null)
+                    if (_partialBunch != null)
                     {
-                        var bReliableSequencesMatches = bunch.ChSequence == PartialBunch.ChSequence + 1;
-                        var bUnreliableSequenceMatches = bReliableSequencesMatches || (bunch.ChSequence == PartialBunch.ChSequence);
+                        var bReliableSequencesMatches = bunch.ChSequence == _partialBunch.ChSequence + 1;
+                        var bUnreliableSequenceMatches = bReliableSequencesMatches || (bunch.ChSequence == _partialBunch.ChSequence);
 
                         // Unreliable partial bunches use the packet sequence, and since we can merge multiple bunches into a single packet,
                         // it's perfectly legal for the ChSequence to match in this case.
                         // Reliable partial bunches must be in consecutive order though
-                        bSequenceMatches = PartialBunch.bReliable ? bReliableSequencesMatches : bUnreliableSequenceMatches;
+                        bSequenceMatches = _partialBunch.bReliable ? bReliableSequencesMatches : bUnreliableSequenceMatches;
                     }
 
                     // if (InPartialBunch && !InPartialBunch->bPartialFinal && bSequenceMatches && InPartialBunch->bReliable == Bunch.bReliable)
-                    if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
+                    if (_partialBunch != null && !_partialBunch.bPartialFinal && bSequenceMatches && _partialBunch.bReliable == bunch.bReliable)
                     {
                         var bitsLeft = bunch.Archive.GetBitsLeft();
                         _logger?.LogDebug($"Merging Partial Bunch: {bitsLeft} Bytes");
                         if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                         {
-                            PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
+                            _partialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
 
                             //Dispose as we're done with it
                             bunch.Archive.Dispose();
@@ -1203,7 +1201,7 @@ namespace Unreal.Core
                         }
 
                         // Advance the sequence of the current partial bunch so we know what to expect next
-                        PartialBunch.ChSequence = bunch.ChSequence;
+                        _partialBunch.ChSequence = bunch.ChSequence;
 
                         if (bunch.bPartialFinal)
                         {
@@ -1216,17 +1214,17 @@ namespace Unreal.Core
                             }
 
                             // HandleBunch = InPartialBunch;
-                            PartialBunch.bPartialFinal = true;
-                            PartialBunch.bClose = bunch.bClose;
-                            PartialBunch.bDormant = bunch.bDormant;
-                            PartialBunch.CloseReason = bunch.CloseReason;
-                            PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
-                            PartialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
+                            _partialBunch.bPartialFinal = true;
+                            _partialBunch.bClose = bunch.bClose;
+                            _partialBunch.bDormant = bunch.bDormant;
+                            _partialBunch.CloseReason = bunch.CloseReason;
+                            //PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
+                            _partialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
 
-                            ReceivedSequencedBunch(PartialBunch);
+                            ReceivedSequencedBunch(_partialBunch);
 
                             //Done
-                            PartialBunch.Archive.Dispose();
+                            _partialBunch.Archive.Dispose();
 
                             return;
                         }
@@ -1597,7 +1595,7 @@ namespace Unreal.Core
                         {
                             if (exportGroup == null)
                             {
-                                _logger?.LogError($"Failed to find export group for function property {fieldCache.Name} {classNetCache.PathName}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                                _logger?.LogError($"Failed to find export group for function property {fieldCache.Name} {classNetCache.PathName}. BunchIndex: {_bunchIndex}");
 
                                 return false;
                             }
@@ -1620,7 +1618,7 @@ namespace Unreal.Core
                             {
                                 if (!ReceiveCustomDeltaProperty(reader, classNetCache, fieldCache.Handle, bunch.ChIndex))
                                 {
-                                    _logger?.LogError($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
+                                    _logger?.LogError($"Failed to find custom delta property {fieldCache.Name}. BunchIndex: {_bunchIndex}");
 
                                     return false;
                                 }
@@ -2033,7 +2031,7 @@ namespace Unreal.Core
 
             if (bunch.IsError)
             {
-                _logger?.LogError($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");
+                _logger?.LogError($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {_bunchIndex}, OutField: {netFieldExportHandle}");
                 return false;
             }
 
@@ -2163,7 +2161,7 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, $"failed ReceivedPacket, index: {packetIndex}");
+                    _logger?.LogError(ex, $"failed ReceivedPacket, index: {_packetIndex}");
                 }
             }
             else
@@ -2188,7 +2186,7 @@ namespace Unreal.Core
             const int OLD_MAX_ACTOR_CHANNELS = 10240;
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
-            InPacketId++;
+            _inPacketId++;
 
             //var rejectedChannels = new Dictionary<uint, uint>();
             while (!bitReader.AtEnd())
@@ -2202,10 +2200,10 @@ namespace Unreal.Core
                 // FInBunch
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataBunch.cpp#L18
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/DataBunch.h#L168
-                var bunch = new DataBunch();
+                var bunch = _currentBunch;
 
                 var bControl = bitReader.ReadBit();
-                bunch.PacketId = InPacketId;
+                //bunch.PacketId = InPacketId;
                 bunch.bOpen = bControl ? bitReader.ReadBit() : false;
                 bunch.bClose = bControl ? bitReader.ReadBit() : false;
 
@@ -2220,7 +2218,7 @@ namespace Unreal.Core
                     bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
                 }
 
-                bunch.bIsReplicationPaused = bitReader.ReadBit();
+                bitReader.ReadBit(); //Replication paused
                 bunch.bReliable = bitReader.ReadBit();
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_MAX_ACTOR_CHANNELS_CUSTOMIZATION)
@@ -2240,12 +2238,12 @@ namespace Unreal.Core
                 {
                     // We can derive the sequence for 100% reliable connections
 
-                    bunch.ChSequence = InReliable + 1;
+                    bunch.ChSequence = _inReliable + 1;
                 }
                 else if (bunch.bPartial)
                 {
                     // If this is an unreliable partial bunch, we simply use packet sequence since we already have it
-                    bunch.ChSequence = InPacketId;
+                    bunch.ChSequence = _inPacketId;
                 }
                 else
                 {
@@ -2345,7 +2343,7 @@ namespace Unreal.Core
                 bunch.Archive.NetworkVersion = bitReader.NetworkVersion;
                 bunch.Archive.ReplayHeaderFlags = bitReader.ReplayHeaderFlags;
 
-                bunchIndex++;
+                _bunchIndex++;
 
                 if (bunch.bHasPackageMapExports)
                 {
@@ -2353,7 +2351,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <= InReliable)
+                if (bunch.bReliable && bunch.ChSequence <= _inReliable)
                 {
                     continue;
                 }
@@ -2386,7 +2384,7 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, $"failed ReceivedRawBunch, index: {bunchIndex}");
+                    _logger?.LogError(ex, $"failed ReceivedRawBunch, index: {_bunchIndex}");
                 }
                 finally
                 {
