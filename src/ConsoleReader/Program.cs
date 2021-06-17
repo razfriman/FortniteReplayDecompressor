@@ -39,7 +39,7 @@ namespace ConsoleReader
 
         private byte[] test = new byte[100000];
 
-        [Params(/*ParseType.Minimal, ParseType.Normal, */ParseType.Full)]
+        [Params(ParseType.Minimal, ParseType.Normal, ParseType.Full)]
         public ParseType Type;
 
         public Benchmark()
@@ -100,7 +100,7 @@ namespace ConsoleReader
             //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
             //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
-#if DEBUG
+#if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
 
             Console.WriteLine(summary);
