@@ -59,7 +59,7 @@ namespace ConsoleReader
         }
         */
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadMassiveReplay()
         {
             return _reader.ReadReplay("Replays/massive.replay", Type);
@@ -97,8 +97,8 @@ namespace ConsoleReader
         {
             //Attempting to remove clock speed variation as performance suffers as day goes on.
             //Overall performance is slightly slower than previous
-            //Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
-            //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
+            Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
+            Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(0xFC0);
 
 #if !DEBUG
             var summary = BenchmarkRunner.Run<Benchmark>();
@@ -189,9 +189,9 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    //Console.Write($"Pins: {BitReader.count}");
+                    //Console.Write($"Pins: {MemoryBuffer.Count}");
 
-                    if(i == 4)
+                    if(i == 8)
                     {
                         return;
                     }
@@ -226,69 +226,25 @@ namespace ConsoleReader
 [Config(typeof(DontForceGcCollectionsConfig))] // we don't want to interfere with GC, we want to include it's impact
 public unsafe class Pooling
 {
-    private PlayerPawnC _obj = new PlayerPawnC();
-    private object _vect = new int?(123);
-    private int? _vectDirect = new int?(123);
-    private object _objVect = 123;
-    private Action<object, object> setDelegate;
+    List<int> list = new List<int>();
+    Dictionary<int, int> dict = new Dictionary<int, int>();
 
     [GlobalSetup]
     public void GlobalSetup()
     {
-        var field = typeof(PlayerPawnC).GetField("<RemoteRole>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        setDelegate = CreateSetter(field);
-    }
-
-    [Benchmark]
-    public void Unbox()
-    {
-        for(int i = 0; i < 1000000;i++)
+        for(int i =0; i < 100000; i++)
         {
-            _obj.RemoteRole = (int?)_vect;
+            dict.Add(i, i);
+            list.Add(i);
         }
     }
 
     [Benchmark]
-    public void DirectAccess()
+    public void TryGet()
     {
-        for (int i = 0; i < 1000000; i++)
-        {
-            _obj.RemoteRole = _vectDirect;
-        }
+
     }
 
-    [Benchmark]
-    public void ViaDelegate()
-    {
-        for (int i = 0; i < 1000000; i++)
-        {
-            setDelegate(_obj, _objVect);
-        }
-    }
-
-
-    public static Action<object, object> CreateSetter(FieldInfo field)
-    {
-        string methodName = field.ReflectedType.FullName + ".set_" + field.Name;
-        DynamicMethod setterMethod = new DynamicMethod(methodName, null, new Type[2] { typeof(object), typeof(object) }, true);
-        ILGenerator gen = setterMethod.GetILGenerator();
-        if (field.IsStatic)
-        {
-            gen.Emit(OpCodes.Ldarg_1);
-            gen.Emit(OpCodes.Stsfld, field);
-        }
-        else
-        {
-            gen.Emit(OpCodes.Ldarg_0);
-            gen.Emit(OpCodes.Ldarg_1);
-            gen.Emit(OpCodes.Unbox_Any, field.FieldType);
-            gen.Emit(OpCodes.Stfld, field);
-        }
-        gen.Emit(OpCodes.Ret);
-
-        return (Action<object, object>)setterMethod.CreateDelegate(typeof(Action<object, object>));
-    }
 }
 
 public class DontForceGcCollectionsConfig : ManualConfig

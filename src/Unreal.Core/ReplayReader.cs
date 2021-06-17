@@ -366,7 +366,7 @@ namespace Unreal.Core
                 {
                     packetIndex++;
 
-                    ReceivedRawPacket(packet);
+                    ReceivedRawPacket(packet, binaryArchive);
                 }
             }
             checkpointIndex++;
@@ -433,7 +433,7 @@ namespace Unreal.Core
                     i++;
 
                     packetIndex++;
-                    ReceivedRawPacket(packet);
+                    ReceivedRawPacket(packet, binaryArchive);
                 }
             }
 
@@ -612,7 +612,7 @@ namespace Unreal.Core
                 return packet;
             }
 
-            packet.Data = archive.ReadBytes(bufferSize);
+            packet.DataLength = bufferSize;
             packet.State = PacketState.Success;
             return packet;
         }
@@ -793,7 +793,8 @@ namespace Unreal.Core
                 // TODO seperate reader?
                 var size = archive.ReadInt32();
 
-                using NetBitReader reader = new NetBitReader(archive.ReadBytes(size));
+                using MemoryBuffer buffer = archive.GetMemoryBuffer(size);
+                using NetBitReader reader = new NetBitReader(buffer, buffer.Size * 8);
 
                 InternalLoadObject(reader, true);
             }
@@ -2111,7 +2112,7 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
         /// </summary>
         /// <param name="packet"></param>
-        protected virtual void ReceivedRawPacket(PlaybackPacket packet)
+        protected virtual void ReceivedRawPacket(PlaybackPacket packet, BinaryReader reader)
         {
             if ((Replay.Header.Flags & ReplayHeaderFlags.HasStreamingFixes) == ReplayHeaderFlags.HasStreamingFixes 
                 && packet.SeenLevelIndex == 0)
@@ -2119,18 +2120,20 @@ namespace Unreal.Core
                 return;
             }
 
-            if (packet.Data.Length == 0)
+            if (packet.DataLength == 0)
             {
                 _logger?.LogError($"Received zero-size packet");
 
                 return;
             }
 
-            var lastByte = packet.Data[packet.Data.Length - 1];
+            using MemoryBuffer buffer = reader.GetMemoryBuffer(packet.DataLength);
+
+            var lastByte = buffer.PositionPointer[buffer.Size - 1];
 
             if (lastByte != 0)
             {
-                var bitSize = (packet.Data.Length * 8) - 1;
+                var bitSize = (buffer.Size * 8) - 1;
 
                 // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
                 //while (!((lastByte & 0x80) >= 1))
@@ -2140,7 +2143,7 @@ namespace Unreal.Core
                     bitSize--;
                 }
 
-                using var bitArchive = new NetBitReader(packet.Data, bitSize)
+                using var bitArchive = new NetBitReader(buffer, bitSize)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,

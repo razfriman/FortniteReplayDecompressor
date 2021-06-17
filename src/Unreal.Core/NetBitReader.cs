@@ -9,10 +9,12 @@ namespace Unreal.Core
     /// A <see cref="BitReader"/> used for reading everything related to RepLayout. 
     /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L303
     /// </summary>
-    public sealed class NetBitReader : BitReader
+    public unsafe sealed class NetBitReader : BitReader
     {
-        public NetBitReader(byte[] input) : base(input) { }
-        public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
+        //public NetBitReader(byte[] input) : base(input) { }
+        //public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
+        public NetBitReader(MemoryBuffer buffer, int bitCount) : base(buffer, bitCount) { }
+
         public NetBitReader(FBitArray input) : base(input) { }
 
         public NetBitReader GetNetBitReader(int bitCount)
@@ -408,7 +410,9 @@ namespace Unreal.Core
                 {
                     var encodedSize = ReadByte();
 
-                    return Convert.ToHexString(ReadBytes(encodedSize));
+                    Span<byte> bytes = stackalloc byte[encodedSize];
+                    ReadBytes(bytes);
+                    return Convert.ToHexString(bytes);
                 }
                 else
                 {
@@ -416,7 +420,7 @@ namespace Unreal.Core
                 }
             }
 
-            return "";
+            return String.Empty;
         }
 
         /// <summary>

@@ -40,12 +40,19 @@ namespace Unreal.Core
         /// </summary>
         public int MarkPosition { get; private set; }
 
+        public BitReader(MemoryBuffer input, int bitCount)
+        {
+            LastBit = bitCount;
+            Bits = new FBitArray(input, LastBit);
+        }
+
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
         /// <param name="input">The input bytes.</param>
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
-        public BitReader(byte[] input)
+      
+        /*public BitReader(byte[] input)
         {
             Bits = new FBitArray(input);
 
@@ -56,7 +63,7 @@ namespace Unreal.Core
         {
             Bits = new FBitArray(input);
             LastBit = bitCount;
-        }
+        }*/
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bool[].
@@ -213,21 +220,14 @@ namespace Unreal.Core
 
             var pos = _position;
 
-            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
-            {
-                result = Bits.ByteArrayUsed[_position / 8];
-            }
-            else
-            {
-                result |= (Bits.GetAsByte(pos + 0));
-                result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
-                result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
-                result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
-                result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
-                result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
-                result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
-                result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
-            }
+            result |= (Bits.GetAsByte(pos + 0));
+            result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
+            result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
+            result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
+            result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
+            result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
+            result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
+            result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
 
             _position += 8;
 
@@ -285,19 +285,9 @@ namespace Unreal.Core
 
             var result = new byte[byteCount];
 
-            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
+            for (int i = 0; i < result.Length; i++)
             {
-                //Pull straight from byte array
-                Buffer.BlockCopy(Bits.ByteArrayUsed, _position / 8, result, 0, byteCount);
-
-                _position += byteCount * 8;
-            }
-            else
-            {
-                for (int i = 0; i < result.Length; i++)
-                {
-                    result[i] = ReadByteNoCheck();
-                }
+                result[i] = ReadByteNoCheck();
             }
 
             return result;

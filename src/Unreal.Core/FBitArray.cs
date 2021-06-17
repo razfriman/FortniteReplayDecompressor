@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Unreal.Core.Models;
 
 namespace Unreal.Core
 {
@@ -22,24 +23,38 @@ namespace Unreal.Core
 
         public int Length { get; private set; }
         public bool IsReadOnly => false;
-        public byte[] ByteArrayUsed;
 
         public FBitArray()
         {
 
         }
 
-        /*
-        public FBitArray(ReadOnlyMemory<bool> bits)
+        public FBitArray(MemoryBuffer buffer, int totalBits)
         {
-            Items = bits;
-            Length = bits.Length;
-            //_items = Items;
-        }*/
+            _owner = PinnedMemoryPool<bool>.Shared.Rent(totalBits);
+            Items = _owner.PinnedMemory.Memory;
+            Length = totalBits;
+            _pointer = (bool*)_owner.PinnedMemory.Pointer;
 
+            for (int i = 0; i < buffer.Size; i++)
+            {
+                int offset = i * 8;
+                byte deref = *(buffer.PositionPointer + i);
+
+                *(_pointer + offset) = (deref & 0x01) == 0x01;
+                *(_pointer + offset + 1) = (deref & 0x02) == 0x02;
+                *(_pointer + offset + 2) = (deref & 0x04) == 0x04;
+                *(_pointer + offset + 3) = (deref & 0x08) == 0x08;
+                *(_pointer + offset + 4) = (deref & 0x10) == 0x10;
+                *(_pointer + offset + 5) = (deref & 0x20) == 0x20;
+                *(_pointer + offset + 6) = (deref & 0x40) == 0x40;
+                *(_pointer + offset + 7) = (deref & 0x80) == 0x80;
+            }
+        }
+
+        /*
         public FBitArray(byte[] bytes)
         {
-            ByteArrayUsed = bytes;
             int totalBits = bytes.Length * 8;
 
             _owner = PinnedMemoryPool<bool>.Shared.Rent(totalBits);
@@ -65,8 +80,7 @@ namespace Unreal.Core
                 }
             }
         }
-
-        public static int Count;
+        */
 
         public FBitArray Slice(int start, int count)
         {
@@ -115,27 +129,6 @@ namespace Unreal.Core
             Buffer.MemoryCopy(afterPin.Pointer, _pointer + oldLength, after.Length, after.Length);
 
             afterPin.Dispose();
-
-            /*
-            Memory<bool> newMemory = newOwner.Memory;
-
-            int oldLength = Length;
-            Length = after.Length + Length;
-
-            //Copy old array
-            Items.CopyTo(newMemory);
-            Items = newMemory;
-
-            Unpin(); //Get rid of old
-            Pin(); //Pin new
-
-            MemoryHandle afterPin = after.Pin();
-
-            Buffer.MemoryCopy(afterPin.Pointer, _pointer + oldLength, after.Length, after.Length);
-
-            afterPin.Dispose();
-
-            _owner = newOwner;*/
         }
 
         public void Dispose()

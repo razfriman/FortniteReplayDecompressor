@@ -64,6 +64,16 @@ namespace Unreal.Core
 
         public unsafe MemoryBuffer GetMemoryBuffer(int count)
         {
+            //Removes the need for a MemoryPool Rent
+            if(_owner != null)
+            {
+                MemoryBuffer buffer = new MemoryBuffer(BasePointer + Position, count);
+
+                Reader.BaseStream.Seek(count, SeekOrigin.Current);
+
+                return buffer;
+            }
+            
             MemoryBuffer stream = new MemoryBuffer(count);
 
             Reader.Read(stream.Memory.Span.Slice(0, count));

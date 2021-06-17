@@ -8,7 +8,7 @@ namespace Unreal.Core.Models
     /// </summary>
     public class PlaybackPacket
     {
-        public byte[] Data { get; set; }
+        public int DataLength { get; set; }
         public float TimeSeconds { get; set; }
         public int LevelIndex { get; set; }
         public uint SeenLevelIndex { get; set; }
