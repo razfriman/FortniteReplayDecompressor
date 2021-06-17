@@ -794,7 +794,9 @@ namespace Unreal.Core
                 var size = archive.ReadInt32();
 
                 //using MemoryBuffer buffer = archive.GetMemoryBuffer(size);
-                using NetBitReader reader = new NetBitReader(archive.ReadBytes(size), size * 8);
+                using NetBitReader reader = new NetBitReader(archive.BasePointer + archive.Position, size, size * 8);
+
+                archive.Seek(size, SeekOrigin.Current);
 
                 InternalLoadObject(reader, true);
             }
@@ -2127,17 +2129,15 @@ namespace Unreal.Core
                 return;
             }
 
-            //using MemoryBuffer buffer = reader.GetMemoryBuffer(packet.DataLength);
+            byte* ptr = reader.BasePointer + reader.Position;
 
-            byte[] data = reader.ReadBytes(packet.DataLength);
+            reader.Seek(packet.DataLength, SeekOrigin.Current);
 
-            //var lastByte = buffer.PositionPointer[buffer.Size - 1];
-            var lastByte = data[data.Length - 1];
+            var lastByte = ptr[packet.DataLength - 1];
 
             if (lastByte != 0)
             {
-                //var bitSize = (buffer.Size * 8) - 1;
-                var bitSize = (data.Length * 8) - 1;
+                var bitSize = (packet.DataLength * 8) - 1;
 
                 // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
                 //while (!((lastByte & 0x80) >= 1))
@@ -2147,7 +2147,7 @@ namespace Unreal.Core
                     bitSize--;
                 }
 
-                using var bitArchive = new NetBitReader(data, bitSize)
+                using var bitArchive = new NetBitReader(ptr, packet.DataLength, bitSize)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,

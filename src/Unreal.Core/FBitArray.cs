@@ -29,17 +29,17 @@ namespace Unreal.Core
 
         }
 
-        public FBitArray(MemoryBuffer buffer, int totalBits)
+        public FBitArray(byte* ptr, int byteCount, int totalBits)
         {
             _owner = PinnedMemoryPool<bool>.Shared.Rent(totalBits);
             Items = _owner.PinnedMemory.Memory;
             Length = totalBits;
             _pointer = (bool*)_owner.PinnedMemory.Pointer;
 
-            for (int i = 0; i < buffer.Size; i++)
+            for (int i = 0; i < byteCount; i++)
             {
                 int offset = i * 8;
-                byte deref = *(buffer.PositionPointer + i);
+                byte deref = *(ptr + i);
 
                 *(_pointer + offset) = (deref & 0x01) == 0x01;
                 *(_pointer + offset + 1) = (deref & 0x02) == 0x02;
@@ -52,7 +52,7 @@ namespace Unreal.Core
             }
         }
 
-        
+        /*
         public FBitArray(byte[] bytes)
         {
             int totalBits = bytes.Length * 8;
@@ -80,7 +80,7 @@ namespace Unreal.Core
                 }
             }
         }
-        
+        */
 
         public FBitArray Slice(int start, int count)
         {

@@ -17,7 +17,7 @@ namespace Unreal.Core
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitArchive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitArchive.cpp
     /// </summary>
-    public class BitReader : FBitArchive
+    public unsafe class BitReader : FBitArchive
     {
         protected FBitArray Bits { get; set; }
 
@@ -43,10 +43,10 @@ namespace Unreal.Core
         /// </summary>
         public int MarkPosition { get; private set; }
 
-        public BitReader(MemoryBuffer input, int bitCount)
+        public BitReader(byte* ptr, int byteCount, int bitCount)
         {
             LastBit = bitCount;
-            Bits = new FBitArray(input, LastBit);
+            Bits = new FBitArray(ptr, byteCount, LastBit);
         }
 
         /// <summary>
@@ -55,6 +55,7 @@ namespace Unreal.Core
         /// <param name="input">The input bytes.</param>
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
       
+        /*
         public BitReader(byte[] input)
         {
             Bits = new FBitArray(input);
@@ -67,6 +68,7 @@ namespace Unreal.Core
             Bits = new FBitArray(input);
             LastBit = bitCount;
         }
+        */
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bool[].
