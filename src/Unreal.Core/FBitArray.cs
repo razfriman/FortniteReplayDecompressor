@@ -52,7 +52,7 @@ namespace Unreal.Core
             }
         }
 
-        /*
+        
         public FBitArray(byte[] bytes)
         {
             int totalBits = bytes.Length * 8;
@@ -80,7 +80,7 @@ namespace Unreal.Core
                 }
             }
         }
-        */
+        
 
         public FBitArray Slice(int start, int count)
         {

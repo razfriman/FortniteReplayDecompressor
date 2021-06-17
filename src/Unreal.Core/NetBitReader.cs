@@ -11,8 +11,8 @@ namespace Unreal.Core
     /// </summary>
     public unsafe sealed class NetBitReader : BitReader
     {
-        //public NetBitReader(byte[] input) : base(input) { }
-        //public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
+        public NetBitReader(byte[] input) : base(input) { }
+        public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
         public NetBitReader(MemoryBuffer buffer, int bitCount) : base(buffer, bitCount) { }
 
         public NetBitReader(FBitArray input) : base(input) { }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -32,8 +33,10 @@ namespace Unreal.Core
         /// </summary>
         public int LastBit { get; private set; }
 
-        private int[] _tempLastBit = new int[10];
-        private int[] _tempPosition = new int[10];
+        private int[] _tempLastBit = GetPool();
+        private int[] _tempPosition = GetPool();
+
+        private static ConcurrentQueue<int[]> _positionQueues = new ConcurrentQueue<int[]>();
 
         /// <summary>
         /// For pushing and popping FBitReaderMark positions.
@@ -52,7 +55,7 @@ namespace Unreal.Core
         /// <param name="input">The input bytes.</param>
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
       
-        /*public BitReader(byte[] input)
+        public BitReader(byte[] input)
         {
             Bits = new FBitArray(input);
 
@@ -63,7 +66,7 @@ namespace Unreal.Core
         {
             Bits = new FBitArray(input);
             LastBit = bitCount;
-        }*/
+        }
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bool[].
@@ -74,6 +77,18 @@ namespace Unreal.Core
         {
             Bits = input;
             LastBit = Bits.Length;
+        }
+
+        private static int[] GetPool()
+        {
+            if(_positionQueues.TryDequeue(out int[] result))
+            {
+                return result;
+            }
+
+            result = new int[8];
+
+            return result;
         }
 
         /// <summary>
@@ -684,6 +699,8 @@ namespace Unreal.Core
         public override void Dispose()
         {
             Bits.Dispose();
+            _positionQueues.Enqueue(_tempLastBit);
+            _positionQueues.Enqueue(_tempPosition);
         }
 
         public void SetTempEnd(int totalBits, int index = 0)
