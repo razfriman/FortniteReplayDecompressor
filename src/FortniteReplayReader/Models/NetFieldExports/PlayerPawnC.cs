@@ -19,8 +19,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
 	[NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", ParseType.Full)]
 	public class PlayerPawnC : INetFieldExportGroup
 	{
-		public FVector? Test;
-
 		[NetFieldExport("Owner", RepLayoutCmdType.Ignore)]
 		public NetworkGUID Owner { get; set; }
 

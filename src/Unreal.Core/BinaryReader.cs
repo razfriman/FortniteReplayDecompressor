@@ -64,6 +64,16 @@ namespace Unreal.Core
 
         public unsafe MemoryBuffer GetMemoryBuffer(int count)
         {
+            //Removes the need for a MemoryPool Rent
+            if(_owner != null)
+            {
+                MemoryBuffer buffer = new MemoryBuffer(BasePointer + Position, count);
+
+                Reader.BaseStream.Seek(count, SeekOrigin.Current);
+
+                return buffer;
+            }
+            
             MemoryBuffer stream = new MemoryBuffer(count);
 
             Reader.Read(stream.Memory.Span.Slice(0, count));
@@ -200,7 +210,7 @@ namespace Unreal.Core
 
             if (length == 0)
             {
-                return "";
+                return String.Empty;
             }
 
             var isUnicode = length < 0;
@@ -238,6 +248,16 @@ namespace Unreal.Core
 
                 return Encoding.Default.GetString(data.Slice(0, trim));
             }
+        }
+
+        public void SkipFString()
+        {
+            var length = ReadInt32();
+
+            var isUnicode = length < 0;
+            length = isUnicode ? -2 * length : length;
+
+            SkipBytes(length);
         }
 
         /// <summary>

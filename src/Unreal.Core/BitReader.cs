@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -16,7 +17,7 @@ namespace Unreal.Core
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitArchive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitArchive.cpp
     /// </summary>
-    public class BitReader : FBitArchive
+    public unsafe class BitReader : FBitArchive
     {
         protected FBitArray Bits { get; set; }
 
@@ -32,19 +33,29 @@ namespace Unreal.Core
         /// </summary>
         public int LastBit { get; private set; }
 
-        private int[] _tempLastBit = new int[10];
-        private int[] _tempPosition = new int[10];
+        private int[] _tempLastBit = GetPool();
+        private int[] _tempPosition = GetPool();
+
+        private static ConcurrentQueue<int[]> _positionQueues = new ConcurrentQueue<int[]>();
 
         /// <summary>
         /// For pushing and popping FBitReaderMark positions.
         /// </summary>
         public int MarkPosition { get; private set; }
 
+        public BitReader(byte* ptr, int byteCount, int bitCount)
+        {
+            LastBit = bitCount;
+            Bits = new FBitArray(ptr, byteCount, LastBit);
+        }
+
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
         /// <param name="input">The input bytes.</param>
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
+      
+        /*
         public BitReader(byte[] input)
         {
             Bits = new FBitArray(input);
@@ -57,6 +68,7 @@ namespace Unreal.Core
             Bits = new FBitArray(input);
             LastBit = bitCount;
         }
+        */
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bool[].
@@ -67,6 +79,18 @@ namespace Unreal.Core
         {
             Bits = input;
             LastBit = Bits.Length;
+        }
+
+        private static int[] GetPool()
+        {
+            if(_positionQueues.TryDequeue(out int[] result))
+            {
+                return result;
+            }
+
+            result = new int[8];
+
+            return result;
         }
 
         /// <summary>
@@ -213,21 +237,14 @@ namespace Unreal.Core
 
             var pos = _position;
 
-            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
-            {
-                result = Bits.ByteArrayUsed[_position / 8];
-            }
-            else
-            {
-                result |= (Bits.GetAsByte(pos + 0));
-                result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
-                result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
-                result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
-                result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
-                result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
-                result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
-                result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
-            }
+            result |= (Bits.GetAsByte(pos + 0));
+            result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
+            result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
+            result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
+            result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
+            result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
+            result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
+            result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
 
             _position += 8;
 
@@ -285,19 +302,9 @@ namespace Unreal.Core
 
             var result = new byte[byteCount];
 
-            if (Bits.ByteArrayUsed != null && _position % 8 == 0)
+            for (int i = 0; i < result.Length; i++)
             {
-                //Pull straight from byte array
-                Buffer.BlockCopy(Bits.ByteArrayUsed, _position / 8, result, 0, byteCount);
-
-                _position += byteCount * 8;
-            }
-            else
-            {
-                for (int i = 0; i < result.Length; i++)
-                {
-                    result[i] = ReadByteNoCheck();
-                }
+                result[i] = ReadByteNoCheck();
             }
 
             return result;
@@ -694,6 +701,8 @@ namespace Unreal.Core
         public override void Dispose()
         {
             Bits.Dispose();
+            _positionQueues.Enqueue(_tempLastBit);
+            _positionQueues.Enqueue(_tempPosition);
         }
 
         public void SetTempEnd(int totalBits, int index = 0)

@@ -617,18 +617,8 @@ namespace Unreal.Core
                 return;
             }
 
-            string group = exportGroup.PathName;
-
             string fixedExportName = export.Name;
-
-            /*
-            if (fixedExportName == null)
-            {
-                export.CleanedName = FixInvalidNames(export.Name);
-                fixedExportName = export.CleanedName;
-            }*/
-
-
+            
             bool isDebug = obj is DebuggingExportGroup;
             int groupId = exportGroup.GroupId;
 
