@@ -17,10 +17,8 @@ namespace Unreal.Core
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitArchive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitArchive.cpp
     /// </summary>
-    public unsafe class BitReader : FBitArchive
+    public unsafe partial class BitReader : FBitArchive
     {
-        protected FBitArray Bits { get; set; }
-
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
         /// </summary>
@@ -43,42 +41,20 @@ namespace Unreal.Core
         /// </summary>
         public int MarkPosition { get; private set; }
 
+        public BitReader()
+        {
+
+        }
+
         public BitReader(byte* ptr, int byteCount, int bitCount)
         {
+            CreateBitArray(ptr, byteCount, bitCount);
+        }
+
+        public BitReader(bool* boolPtr, int bitCount)
+        {
+            Bits = boolPtr;
             LastBit = bitCount;
-            Bits = new FBitArray(ptr, byteCount, LastBit);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the BitReader class based on the specified bytes.
-        /// </summary>
-        /// <param name="input">The input bytes.</param>
-        /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
-      
-        /*
-        public BitReader(byte[] input)
-        {
-            Bits = new FBitArray(input);
-
-            LastBit = Bits.Length;
-        }
-
-        public BitReader(byte[] input, int bitCount)
-        {
-            Bits = new FBitArray(input);
-            LastBit = bitCount;
-        }
-        */
-
-        /// <summary>
-        /// Initializes a new instance of the BitReader class based on the specified bool[].
-        /// </summary>
-        /// <param name="input">The input bool[].</param>
-
-        public BitReader(FBitArray input)
-        {
-            Bits = input;
-            LastBit = Bits.Length;
         }
 
         private static int[] GetPool()
@@ -152,7 +128,7 @@ namespace Unreal.Core
 
             for (var i = 0; i < bitCount; i++)
             {
-                result |= (byte)(Bits.GetAsByte(_position + i) << i);
+                result |= (byte)(GetAsByte(_position + i) << i);
             }
 
             _position += bitCount;
@@ -175,33 +151,13 @@ namespace Unreal.Core
             }
 
 
-            var result = Bits.Items.Slice(_position, bitCount);
+            var result = _items.Slice(_position, bitCount);
 
             _position += bitCount;
 
             return result;
         }
 
-        /*
-        public override void Read(bool[] buffer, int count)
-        {
-            if (!CanRead(count) || count < 0)
-            {
-                IsError = true;
-
-                return;
-            }
-
-            Buffer.BlockCopy(Bits.Items.ToArray(), _position, buffer, 0, count);
-
-            _position += count;
-        }*/
-
-        /// <summary>
-        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
-        /// </summary>
-        /// <param name="bits">The number of bits to read.</param>
-        /// <returns>bool[]</returns>
         public override ReadOnlyMemory<bool> ReadBits(uint bitCount)
         {
             return ReadBits((int)bitCount);
@@ -237,14 +193,14 @@ namespace Unreal.Core
 
             var pos = _position;
 
-            result |= (Bits.GetAsByte(pos + 0));
-            result |= (byte)(Bits.GetAsByte(pos + 1) << 1);
-            result |= (byte)(Bits.GetAsByte(pos + 2) << 2);
-            result |= (byte)(Bits.GetAsByte(pos + 3) << 3);
-            result |= (byte)(Bits.GetAsByte(pos + 4) << 4);
-            result |= (byte)(Bits.GetAsByte(pos + 5) << 5);
-            result |= (byte)(Bits.GetAsByte(pos + 6) << 6);
-            result |= (byte)(Bits.GetAsByte(pos + 7) << 7);
+            result |= (GetAsByte(pos + 0));
+            result |= (byte)(GetAsByte(pos + 1) << 1);
+            result |= (byte)(GetAsByte(pos + 2) << 2);
+            result |= (byte)(GetAsByte(pos + 3) << 3);
+            result |= (byte)(GetAsByte(pos + 4) << 4);
+            result |= (byte)(GetAsByte(pos + 5) << 5);
+            result |= (byte)(GetAsByte(pos + 6) << 6);
+            result |= (byte)(GetAsByte(pos + 7) << 7);
 
             _position += 8;
 
@@ -387,7 +343,7 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                value |= Bits.GetAsByte(_position++) << count++;
+                value |= GetAsByte(_position++) << count++;
             }
             
             return (uint)value;
@@ -447,13 +403,13 @@ namespace Unreal.Core
 
                 remaining = Bits[_position];
 
-                value |= Bits.GetAsByte(_position + 1) << count;
-                value |= Bits.GetAsByte(_position + 2) << (count + 1);
-                value |= Bits.GetAsByte(_position + 3) << (count + 2);
-                value |= Bits.GetAsByte(_position + 4) << (count + 3);
-                value |= Bits.GetAsByte(_position + 5) << (count + 4);
-                value |= Bits.GetAsByte(_position + 6) << (count + 5);
-                value |= Bits.GetAsByte(_position + 7) << (count + 6);
+                value |= GetAsByte(_position + 1) << count;
+                value |= GetAsByte(_position + 2) << (count + 1);
+                value |= GetAsByte(_position + 3) << (count + 2);
+                value |= GetAsByte(_position + 4) << (count + 3);
+                value |= GetAsByte(_position + 5) << (count + 4);
+                value |= GetAsByte(_position + 6) << (count + 5);
+                value |= GetAsByte(_position + 7) << (count + 6);
 
                 _position += 8;
                 count += 7;
@@ -694,13 +650,13 @@ namespace Unreal.Core
         /// <param name="data"></param>
         public override void AppendDataFromChecked(ReadOnlyMemory<bool> data)
         {
-            LastBit += data.Length;
-            Bits.Append(data);
+            AppendBits(data);
         }
 
         public override void Dispose()
         {
-            Bits.Dispose();
+            DisposeBits();
+
             _positionQueues.Enqueue(_tempLastBit);
             _positionQueues.Enqueue(_tempPosition);
         }

@@ -72,7 +72,7 @@ namespace FortniteReplayReader
         }
 
         protected override void OnChannelActorRead(uint channel, Actor actor)
-        {
+        { 
             Replay.GameInformation.AddActor(channel, actor);
         }
 
@@ -459,13 +459,19 @@ namespace FortniteReplayReader
         {
             if(!this.Replay.Info.Encrypted)
             {
-                var decryptedReader = new Unreal.Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                //Not the best way as it's 2 rents, but it works for now
+                using var buffer = archive.GetMemoryBuffer(size);
+
+                var decryptedReader = new Unreal.Core.BinaryReader(size)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
                     ReplayHeaderFlags = Replay.Header.Flags,
                     ReplayVersion = Replay.Info.FileVersion
                 };
+
+                buffer.Stream.CopyTo(decryptedReader.BaseStream);
+                decryptedReader.BaseStream.Seek(0, SeekOrigin.Begin);
 
                 return decryptedReader;
             }

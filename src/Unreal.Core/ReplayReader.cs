@@ -53,6 +53,10 @@ namespace Unreal.Core
 
         private PlaybackPacket _currentPacket = new PlaybackPacket();
         private DataBunch _currentBunch = new DataBunch();
+        private NetBitReader _packetReader = new NetBitReader();
+        private NetBitReader _exportReader = new NetBitReader();
+        private NetDeltaUpdate _deltaUpdate = new NetDeltaUpdate();
+
         private DataBunch _partialBunch;
         private int _inReliable = 0;
 
@@ -125,7 +129,7 @@ namespace Unreal.Core
 
             foreach (var exportGroupMap in GuidCache.NetFieldExportGroupMap)
             {
-                builder.AppendLine($"Path: {exportGroupMap.Key}");
+                builder.AppendLine($"Path: {exportGroupMap.Value.PathName} - Index: {exportGroupMap.Value.PathNameIndex}");
 
                 foreach (var exportGroup in exportGroupMap.Value.NetFieldExports)
                 {
@@ -140,7 +144,7 @@ namespace Unreal.Core
 
             var s = builder.ToString();
 
-            var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
+             var n = String.Join("\n", GuidCache.NetGuidToPathName.Select(x => $"{x.Key} - {x.Value}"));
 
 #endif
 
@@ -502,6 +506,14 @@ namespace Unreal.Core
             archive.EngineNetworkVersion = header.EngineNetworkVersion;
             archive.NetworkVersion = header.NetworkVersion;
 
+            //Update the reader
+            _packetReader.EngineNetworkVersion = header.EngineNetworkVersion;
+            _exportReader.EngineNetworkVersion = header.EngineNetworkVersion;
+            _packetReader.NetworkVersion = header.NetworkVersion;
+            _exportReader.NetworkVersion = header.NetworkVersion;
+            _packetReader.ReplayHeaderFlags = header.Flags;
+            _exportReader.ReplayHeaderFlags = header.Flags;
+
             Replay.Header = header;
         }
 
@@ -776,12 +788,19 @@ namespace Unreal.Core
                 // TODO seperate reader?
                 var size = archive.ReadInt32();
 
-                //using MemoryBuffer buffer = archive.GetMemoryBuffer(size);
-                using NetBitReader reader = new NetBitReader(archive.BasePointer + archive.Position, size, size * 8);
+                try
+                {
+                    _exportReader.SetBits(archive.BasePointer + archive.Position, size, size * 8);
 
-                archive.Seek(size, SeekOrigin.Current);
+                    archive.Seek(size, SeekOrigin.Current);
 
-                InternalLoadObject(reader, true);
+                    InternalLoadObject(_exportReader, true);
+                }
+                finally
+                {
+                    _exportReader.DisposeBits();
+                }
+
             }
         }
 
@@ -1723,16 +1742,15 @@ namespace Unreal.Core
 
                 if (propertyExportGroup != null)
                 {
-                    OnNetDeltaRead(new NetDeltaUpdate
-                    {
-                        Deleted = true,
-                        ChannelIndex = channelIndex,
-                        ElementIndex = elementIndex,
-                        ExportGroup = netFieldExportGroup,
-                        PropertyExport = propertyExportGroup,
-                        Handle = handle,
-                        Header = header
-                    });
+                    _deltaUpdate.Deleted = true;
+                    _deltaUpdate.ChannelIndex = channelIndex;
+                    _deltaUpdate.ElementIndex = elementIndex;
+                    _deltaUpdate.ExportGroup = netFieldExportGroup;
+                    _deltaUpdate.PropertyExport = propertyExportGroup;
+                    _deltaUpdate.Handle = handle;
+                    _deltaUpdate.Header = header;
+
+                    OnNetDeltaRead(_deltaUpdate);
                 }
             }
 
@@ -1742,16 +1760,16 @@ namespace Unreal.Core
 
                 if (ReceiveProperties(reader, propertyExportGroup, channelIndex, out INetFieldExportGroup export, !readChecksumBit, true))
                 {
-                    OnNetDeltaRead(new NetDeltaUpdate
-                    {
-                        ChannelIndex = channelIndex,
-                        ElementIndex = elementIndex,
-                        Export = export,
-                        ExportGroup = netFieldExportGroup,
-                        PropertyExport = propertyExportGroup,
-                        Handle = handle,
-                        Header = header
-                    });
+
+                    _deltaUpdate.ChannelIndex = channelIndex;
+                    _deltaUpdate.ElementIndex = elementIndex;
+                    _deltaUpdate.Export = export;
+                    _deltaUpdate.ExportGroup = netFieldExportGroup;
+                    _deltaUpdate.PropertyExport = propertyExportGroup;
+                    _deltaUpdate.Handle = handle;
+                    _deltaUpdate.Header = header;
+
+                    OnNetDeltaRead(_deltaUpdate);
                 }
             }
 
@@ -2134,23 +2152,22 @@ namespace Unreal.Core
                     bitSize--;
                 }
 
-                using var bitArchive = new NetBitReader(ptr, packet.DataLength, bitSize)
-                {
-                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                    NetworkVersion = Replay.Header.NetworkVersion,
-                    ReplayHeaderFlags = Replay.Header.Flags
-                };
+                _packetReader.SetBits(ptr, packet.DataLength, bitSize);
 
                 try
                 {
-                    if (bitArchive.GetBitsLeft() > 0)
+                    if (_packetReader.GetBitsLeft() > 0)
                     {
-                        ReceivedPacket(bitArchive);
+                        ReceivedPacket(_packetReader);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, $"failed ReceivedPacket, index: {_packetIndex}");
+                }
+                finally
+                {
+                    _packetReader.DisposeBits();
                 }
             }
             else
@@ -2432,6 +2449,43 @@ namespace Unreal.Core
             return decompressed;
         }
 
+#if DEBUG
+        //Can be used at the start of the ProcessBunch method to search for data
+        private void Find(NetBitReader reader, byte[] bytes)
+        {
+            reader.Reset();
+
+            int totalBits = reader.GetBitsLeft();
+
+            for(int i = 0; i < totalBits - (bytes.Length * 8); i++)
+            {
+                reader.Seek(i, SeekOrigin.Begin);
+
+                byte[] testBytes = reader.ReadBytes(bytes.Length);
+
+                bool found = true;
+
+                for(int z = 0; z < testBytes.Length; z++)
+                {
+                    if(testBytes[z] != bytes[z])
+                    {
+                        found = false;
+
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+
+                }
+
+                reader.Reset();
+            }
+
+            reader.Reset();
+        }
+#endif
         /// <summary>
         /// Changes the parsing mode for specific NetFieldExport types
         /// </summary>

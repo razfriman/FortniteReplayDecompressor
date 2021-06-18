@@ -791,11 +791,9 @@ namespace Unreal.Core
                     netBitReader.Seek(netBitReader.GetBitsLeft(), SeekOrigin.Current);
                     break;
                 case RepLayoutCmdType.Debug:
-                    //Fix later
-                    /*
-                    data = _parserInfo.LinqCache.CreateObject(typeof(DebuggingObject));
+                    data = _parserInfo.LinqCache.CreatePropertyObject(typeof(DebuggingObject));
                     (data as IProperty).Serialize(netBitReader);
-                    */
+                    
                     break;
             }
 

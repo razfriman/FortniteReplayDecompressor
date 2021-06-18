@@ -15,7 +15,7 @@ namespace OozSharp.MemoryPool
     internal sealed partial class PinnedArrayPool<T>
     {
         /// <summary>The number of buckets (array sizes) in the pool, one for each array length, starting from length 16.</summary>
-        private const int NumBuckets = 18; // Utilities.SelectBucketIndex(2*1024*1024)
+        private const int NumBuckets = 20; // Utilities.SelectBucketIndex(2*1024*1024)
         /// <summary>Maximum number of per-core stacks to use per array size.</summary>
         private const int MaxPerCorePerArraySizeStacks = 64; // selected to avoid needing to worry about processor groups
         /// <summary>The maximum number of buffers to store in a bucket's global queue.</summary>

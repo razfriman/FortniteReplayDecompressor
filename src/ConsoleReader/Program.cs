@@ -65,7 +65,7 @@ namespace ConsoleReader
             return _reader.ReadReplay("Replays/server.replay", Type);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public FortniteReplay ReadMassiveReplay()
         {
             return _reader.ReadReplay("Replays/massive.replay", Type);
@@ -143,7 +143,7 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/season12_arena.replay";
             //var replayFile = "Replays/season11.31.replay
-            var replayFile = "Replays/newSeason.replay"; //Used for testing
+            var replayFile = "Replays/server.replay"; //Used for testing
             //var replayFile = @"C:\Users\TnT\Source\Repos\FortniteReplayDecompressor_Shiqan\src\ConsoleReader\bin\Release\netcoreapp3.1\Replays\collectPickup.replay";
 
             //var replayFile = "Replays/season11.11.replay"; //Used for testing
@@ -195,7 +195,7 @@ namespace ConsoleReader
                     sw.Stop();
                      
                     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds}ms. Total Groups Read: {reader?.TotalGroupsRead}. Failed Bunches: {reader?.TotalFailedBunches}. Failed Replicator: {reader?.TotalFailedReplicatorReceives} Null Exports: {reader?.NullHandles} Property Errors: {reader?.PropertyError} Failed Property Reads: {reader?.FailedToRead}. Missing Properties: {reader?.MissingProperty}. Success Properties: {reader?.SuccessProperties}");
-                    //Console.Write($"Pins: {MemoryBuffer.Count}");
+                    //Console.Write($"Pins: {MemoryBuffer.pins}");
 
                     if(i == 8)
                     {

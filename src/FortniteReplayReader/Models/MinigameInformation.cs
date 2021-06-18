@@ -14,6 +14,7 @@ namespace FortniteReplayReader.Models
         public float WarmupDuration { get; set; }
         public float GameResetDelay { get; set; }
         public float RoundScoreDisplayTime { get; set; }
+        public float RoundWinnerDisplayTime { get; set; }
         public float GameScoreDisplayTime { get; set; }
         public float WinnerDisplayTime { get; set; }
         /// <summary>

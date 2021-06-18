@@ -1281,6 +1281,7 @@ namespace FortniteReplayReader.Models
             MinigameInformation.GameResetDelay = minigame.PostGameResetDelay ?? MinigameInformation.GameResetDelay;
             MinigameInformation.RoundScoreDisplayTime = minigame.RoundScoreDisplayTime ?? MinigameInformation.RoundScoreDisplayTime;
             MinigameInformation.GameScoreDisplayTime = minigame.GameScoreDisplayTime ?? MinigameInformation.GameScoreDisplayTime;
+            MinigameInformation.RoundWinnerDisplayTime = minigame.RoundWinnerDisplayTime ?? MinigameInformation.RoundWinnerDisplayTime;
             MinigameInformation.WinnerDisplayTime = minigame.GameWinnerDisplayTime ?? MinigameInformation.WinnerDisplayTime;
             MinigameInformation.WinCondition = minigame.WinCondition != EMinigameWinCondition.EMinigameWinCondition_MAX ? minigame.WinCondition : MinigameInformation.WinCondition;
             MinigameInformation.State = minigame.CurrentState != EFortMinigameState.EFortMinigameState_MAX ? minigame.CurrentState : MinigameInformation.State;
@@ -1289,9 +1290,22 @@ namespace FortniteReplayReader.Models
             GameRound currentRound = MinigameInformation.Rounds.LastOrDefault();
             bool roundOver = MinigameInformation.State == EFortMinigameState.PostGameReset || MinigameInformation.State == EFortMinigameState.PostGameEnd;
 
-            if (currentRound != null && minigame.StartTime != null)
+            if (currentRound != null)
             {
-                currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime;
+                if (minigame.StartTime != null)
+                {
+                    currentRound.DeltaStartTime = minigame.StartTime.Value - GameState.GameWorldStartTime + MinigameInformation.WarmupDuration;
+                }
+                else if (minigame.ResetTime.HasValue)
+                {
+                    currentRound.DeltaEndTime = minigame.ResetTime.Value -
+                        (GameState.GameWorldStartTime + MinigameInformation.RoundWinnerDisplayTime + MinigameInformation.RoundScoreDisplayTime);
+                }
+                else if (minigame.EndTime.HasValue)
+                {
+                    currentRound.DeltaEndTime = minigame.EndTime.Value -
+                        (GameState.GameWorldStartTime + MinigameInformation.WinnerDisplayTime + MinigameInformation.GameScoreDisplayTime);
+                }
             }
 
             //New round
@@ -1304,7 +1318,7 @@ namespace FortniteReplayReader.Models
                 currentRound = new GameRound();
                 MinigameInformation.Rounds.Add(currentRound);
             }
-
+            
             if (minigame.TeamArray != null)
             {
                 for (int i = 0; i < minigame.TeamArray.Length; i++)
