@@ -774,7 +774,7 @@ namespace FortniteReplayReader.Models
                 tagContainer.UpdateTags(networkGameplayTagNode);
             }
 
-            GameState.PoiManager = poiManager;
+            GameState.PoiManager = (FortPoiManager)poiManager.Clone();
         }
 
         internal void UpdateFortInventory(uint channelId, FortInventory inventory)

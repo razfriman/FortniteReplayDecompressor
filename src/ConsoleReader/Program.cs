@@ -39,7 +39,7 @@ namespace ConsoleReader
 
         private byte[] test = new byte[100000];
 
-        [Params(ParseType.Minimal, ParseType.Normal, ParseType.Full)]
+        [Params(/*ParseType.Minimal, ParseType.Normal,*/ ParseType.Full)]
         public ParseType Type;
 
         public Benchmark()
@@ -60,30 +60,36 @@ namespace ConsoleReader
         */
 
         [Benchmark]
+        public FortniteReplay ReadServerReplay()
+        {
+            return _reader.ReadReplay("Replays/server.replay", Type);
+        }
+
+        //[Benchmark]
         public FortniteReplay ReadMassiveReplay()
         {
             return _reader.ReadReplay("Replays/massive.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadLongReplay()
         {
             return _reader.ReadReplay("Replays/newSeason.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadShortReplay()
         {
             return _reader.ReadReplay("Replays/replay_Bow.replay", Type);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadOldReplay()
         {
             return _reader.ReadReplay("Replays/season11.11.replay", Type);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public FortniteReplay ReadRoundReplay()
         {
             return _reader.ReadReplay("Replays/rounds.replay", Type);

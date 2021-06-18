@@ -296,8 +296,8 @@ namespace FortniteReplayReader
             }
 
             _logger?.LogWarning($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
-            // optionally throw?
-            throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+
+            //throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
         }
 
         protected virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
